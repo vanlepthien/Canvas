@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test canvas</title>
+<link rel="stylesheet" type="text/css" href="canvas.css" />
+</head>
+<body>
+	<p>Canvas</p>
+	<div id="canvasses">
+		<canvas id="model" width="1200" height="600" style="z-index: -1;"></canvas>
+	</div>
+	<p>Before SigDiv</p>
+	<div id="svgDiv">
+		<p>Sample Def</p>
+		<svg id="svgContainerSample">
+			<defs id="svgDefsSample">
+			<g id="svg_sample">
+                <g
+				transform="translate(0.000000,186.000000) scale(0.100000,-0.100000)"
+				fill="#000000" stroke="none">
+                    <path
+				d="M516 1747 c-14 -13 -26 -30 -26 -36 0 -7 -4 -10 -8 -7 -4 2 -9 -5 -11 -17 -6 -36 -3 -487 4 -549 l6 -58 -51 0 -50 0 0 38 c0 21 -6 62 -14 92 -8 30 -12 58 -10 62 2 3 -1 10 -7 14 -8 5 -10 2 -5 -7 4 -8 1 -6 -7 4 -11 13 -26 17 -55 16 -24 -2 -38 -7 -35 -13 4 -6 -1 -7 -13 -2 -10 4 -15 4 -11 0 4 -4 -2 -14 -13 -21 -18 -13 -20 -24 -18 -98 2 -45 6 -81 9 -79 3 2 9 -34 12 -79 8 -127 -2 -119 153 -115 l134 3 -1 -90 c0 -49 7 -184 16 -299 9 -115 15 -225 13 -246 -2 -21 0 -36 5 -33 5 3 7 -24 5 -60 -1 -36 0 -63 5 -60 4 2 7 -12 7 -31 0 -19 5 -38 12 -42 7 -4 8 -3 4 4 -5 8 -2 10 8 6 9 -3 14 -9 12 -13 -2 -3 20 -6 49 -6 29 0 51 3 49 6 -2 4 7 9 21 11 13 3 22 2 20 -2 -2 -4 7 -5 20 -2 l25 4 0 165 c0 90 3 162 8 160 4 -3 6 45 4 107 l-3 112 113 13 c62 7 129 15 150 18 l36 5 8 96 c4 61 2 129 -6 187 -6 49 -12 98 -13 107 -1 9 -4 15 -8 12 -6 -4 -22 33 -20 48 0 4 -7 4 -16 1 -9 -4 -14 -2 -11 3 4 5 -9 9 -27 9 -18 0 -32 -2 -31 -5 3 -7 -52 -59 -57 -54 -2 3 -4 -45 -3 -106 l1 -110 -71 0 -72 0 -7 123 c-8 141 -44 654 -47 679 -1 9 -6 14 -10 12 -7 -4 -10 8 -7 31 0 5 -13 23 -61 81 -5 7 -7 14 -4 16 2 3 -2 5 -8 6 -7 1 -25 4 -39 7 -19 5 -33 1 -53 -18z"></path>
+                    </g>
+                </g>
+            </defs>
+        </svg>
+		<p>Sample Ref</p>
+		<svg id="ref_sample" width="126.000000px" height="186.000000px"
+			viewBox="0 0 126.000000 186.000000"
+			preserveAspectRatio="xMidYMid meet"
+			style="top: 200px; left: 200px; z-index: 20; opacity: 0.1;">
+            <!--  style="position: absolute; top: 200px; left: 200px; z-index: 20;"> -->
+			<use xmlns:xlink="http://www.w3.org/1999/xlink"
+			         onclick="alert('boop')"
+				xlink:href="#svg_sample" x="0" y="0"></use>
+		</svg>
+		<p>Generated Refs</p>
+	</div>
+	<p>After SigDef</p>
+</body>
+<script type="text/javascript" src="jquery-3.2.1.js"></script>
+<script type="text/javascript" src="requestAnimFrame.js"></script>
+<script type="text/javascript" src="defaults.js"></script>
+<script type="text/javascript" src="configuration/mcs.js"></script>
+<script type="text/javascript" src="customization/customization.js"></script>
+<script type="text/javascript" src="canvas.js"></script>
+</html>
