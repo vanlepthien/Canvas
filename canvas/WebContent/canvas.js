@@ -18,7 +18,7 @@ function init(){
 	createRuntime()
 	generateCanvasses(canvascontainer, canvasmodel)
 	generateAudio();
-	generateOperations()
+//	generateOperations()
 	generateImageInfo(
 			function(){
 				generateImageMasks(
@@ -35,12 +35,18 @@ var runtime = {}
 function createRuntime(){
 	for(var key in configuration){
 		runtime[key] = {}
+		runtime[key]["name"] = key
+		runtime[key]["configuration"] = configuration[key]
+
 		if("operation" in configuration[key]){
-			runtime[key]["operations"] = {}
-			for(op_id in configuration[key].operation){
-				runtime[key].operations[op_id] = {}
-				var rt_op = runtime[key].operations[op_id]
-				rt.op["initialized"] = false
+			runtime[key]["operation"] = {}
+			for(var op_id in configuration[key].operation){
+				runtime[key].operation[op_id] = {}
+				var rt_op = runtime[key].operation[op_id]
+				rt_op["name"] = op_id
+				rt_op["configuration"] = configuration[key].operation[op_id]
+				rt_op["initialized"] = false
+				rt_op["meta"] = {}
 			}
 		}
 	}
@@ -78,9 +84,10 @@ function generateCanvasses(id,cm_id){
 	}
 	for (var key in configuration){
 		var element = configuration[key]
+		var rt_element = runtime[key]
 		if("usecanvas" in element){
-			var base_element = configuration[element.usecanvas]
-			element["canvas"] = base_element.canvas
+			var base_element = runtime[element.usecanvas]
+			rt_element["canvas"] = base_element.canvas
 		} else if("distance" in element){
 			var c  = document.createElement("canvas")
 			div.appendChild(c)
@@ -122,7 +129,7 @@ function generateCanvasses(id,cm_id){
 			c.style.position = "absolute"
 			c.style.left = left + "px"
 			c.style.top = top + "px"
-			element["canvas"] = c
+			rt_element["canvas"] = c
 		}
 	}
 }
@@ -131,18 +138,23 @@ function generateAudio(){
 	var audios =getElement("audios","div").element
 	for (var key in configuration){
 		var element =  configuration[key]
+		var rt_element =  runtime[key]
 		if("operation" in element){
 			var operations = element.operation
+			var rt_operations = rt_element.operation
 			for(var op_name in operations){
 				if("sound" == op_name){
 					var operation = operations.sound
-					if(!Array.isArray(operation.sound)){
-						operation.sound = [operation.sound]
+					var rt_operation = rt_operations.sound
+					if(Array.isArray(operation.sound)){
+						rt_operation.sound = operation.sound
+					} else {
+						rt_operation.sound = [operation.sound]
 					}
 					var audioList = []
 					var url_ix
-					for(url_ix in operation.sound){
-						var url = operation.sound[url_ix]
+					for(url_ix in rt_operation.sound){
+						var url = rt_operation.sound[url_ix]
 						var audio = document.createElement("audio")
 						if(operation.loop){
 							audio.loop = true
@@ -173,12 +185,12 @@ function generateAudio(){
 								audeoType = "audio/wav"
 						}
 						source.setAttribute("type", audioType)
-						operation["switch_audio"] = false
+						rt_operation["switch_audio"] = false
 						audio.onended=function(){
-							switchAudio(element,operation)
+							switchAudio(rt_element, rt_operation)
 						}
 					}
-					operation["audios"] = audioList
+					rt_operation["audios"] = audioList
 				}
 			}
 		}
@@ -196,9 +208,9 @@ function generateImageInfo(callback){
 			}
 		}
 	}
-	for(var key in configuration){
-		var element = configuration[key]
-		element["name"] = key
+	for(var key in runtime){
+		var rt_element = runtime[key]
+		var element = rt_element.configuration
 		var imageInfo = {}
  		if("image" in element){
 			if(element.image == null){
@@ -206,6 +218,7 @@ function generateImageInfo(callback){
 			} else {
 				var img = new Image();
 				imageInfo["image"] = img
+				rt_element["imageinfo"] = imageInfo		
 				img.onload = function(){
 					imageCnt --
 					if(imageCnt == 0){
@@ -216,7 +229,6 @@ function generateImageInfo(callback){
 				img.src = imageLoc+element.image
 			}
 		}
-		element["imageinfo"] = imageInfo		
 	}
 }
 
@@ -224,9 +236,10 @@ var shapeCnt = 0
 
 var loadedShapes = {}
 
-var svgRequest = function(operation,callback){
+var svgRequest = function(rt_operation,callback){
+	var operation = rt_operation.configuration
 	if(operation.shape in loadedShapes){
-		createSvgRef(operation, loadedShapes[operation.shape])
+		createSvgRef(rt_operation, loadedShapes[operation.shape])
 		shapeCnt --
 		if(shapeCnt == 0){
 			callback()
@@ -244,7 +257,7 @@ var svgRequest = function(operation,callback){
 				svgDef.setAttribute('id',operation.id)
 				addTriggers(svgDef,operation)
 				loadedShapes[operation.shape] = svgDef
-				createSvgRef(operation, svgDef)
+				createSvgRef(rt_operation, svgDef)
 			} else {
 				console.error(req.statusText);
 			}
@@ -295,14 +308,17 @@ function createDefFromDocument(svgDocument){
 	return g
 }
 
-function createSvgRef(operation,svgDef){
+function createSvgRef(rt_operation,svgDef){
 	var ref_element
 	var ref_operation = null
-	if(operation.action.reference.element in configuration){
-		ref_element = configuration[operation.action.reference.element]
-		if (operation.action.reference.operation in ref_element.operation){
-			ref_operation = ref_element.operation[operation.action.reference.operation]
-			operation["ref_operation"] = ref_operation
+	var operation = rt_operation.configuration
+	var refElementName = operation.action.reference.element
+	if(refElementName in configuration){
+		ref_element = configuration[refElementName]
+		var refOperationName = operation.action.reference.operation
+		if (refOperationName in ref_element.operation){
+			ref_operation = ref_element.operation[refOperationName]
+			rt_operation["ref_operation"] = ref_operation
 		}
 	}
 	if(ref_operation == undefined){
@@ -316,7 +332,7 @@ function createSvgRef(operation,svgDef){
 	var svgRef = document.createElementNS("http://www.w3.org/2000/svg","svg")
 	svgDiv.appendChild(svgRef)
 // TODO add real height & width
-	svgRef.setAttribute("id","ref_"+operation.id)
+	svgRef.setAttribute("id","ref_"+rt_operation.id)
 	svgRef.setAttribute("width","126.000000px" )
 	svgRef.setAttribute("height","186.000000px" )
 	svgRef.setAttribute("viewBox","0 0 126.000000 186.000000" )
@@ -326,10 +342,10 @@ function createSvgRef(operation,svgDef){
 	svgRef.style.left = "200px"
 	svgRef.style.zIndex = 20;
 	svgRef.style.opacity= 0
-	operation["svg_ref"] = svgRef
+	rt_operation["svg_ref"] = svgRef
 	var svgUse = document.createElementNS("http://www.w3.org/2000/svg","use")
 	svgRef.appendChild(svgUse)
-	svgUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', "#"+operation.id);
+	svgUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', "#"+rt_operation.id);
 	svgUse.setAttribute("x", 0);
 	svgUse.setAttribute("y", 0);
 	svgRef.setAttribute("onclick","alert('"+operation.action.reference.element+": "+operation.action.reference.operation+" "+operation.name+"')")
@@ -370,16 +386,19 @@ function generateImageMasks(callback){
 		callback()
 		return
 	}
-	for(var key in configuration){
-		var element = configuration[key]
-		if("operation" in element){
-			if("button" in element.operation){
-				if("shape" in element.operation.button){
-					element.operation.button["id"] = generateId(element.operation.button.shape)
+	for(var key in runtime){
+		var rt_element = runtime[key]
+		var element = rt_element.configuration
+		if("operation" in rt_element){
+			if("button" in rt_element.operation){
+				var rt_operation = rt_element.operation.button
+				var operation = rt_operation.configuration
+				if("shape" in operation){
+					rt_operation["id"] = generateId(operation.shape)
 					if(typeof SVGPathElement === "undefined"){
 						
 					} else {
-						svgRequest(element.operation.button, callback)
+						svgRequest(rt_operation, callback)
 					}
 				}
 			}
@@ -402,33 +421,34 @@ function getSvgDefs(){
 	return svgDefs
 }
 
-function generateOperations(){
-	for(var key in configuration){
-		var element = configuration[key]
-		if("operation" in element){
-			var operations = element.operation
-			for(var op_name in operations){
-				var operation = operations[op_name]
-				console.log("Creating "+ element.name+"::"+op_name)
-				operation["name"] = op_name
-			}
-		}
-	}
-}
+//function generateOperations(){
+//	for(var key in configuration){
+//		var element = configuration[key]
+//		var element = rt_element[key]
+//		if("operation" in element){
+//			var operations = element.operation
+//			for(var op_name in operations){
+//				var operation = operations[op_name]
+//				console.log("Creating "+ element.name+"::"+op_name)
+//				operation["name"] = op_name
+//			}
+//		}
+//	}
+//}
 
 function setImageAttributes(){
 	
-	for(var key in configuration){
-		var element = configuration[key]
-		if("imageinfo" in element){
-			var image = element.imageinfo.image
+	for(var key in runtime){
+		var rt_element = runtime[key]
+		if("imageinfo" in rt_element){
+			var image = rt_element.imageinfo.image
 			if(image == null){
-				element.imageinfo["width"] = 0
-				element.imageinfo["height"] = 0
+				rt_element.imageinfo["width"] = 0
+				rt_element.imageinfo["height"] = 0
 				
 			} else {
-				element.imageinfo["width"] = image.width
-				element.imageinfo["height"] = image.height
+				rt_element.imageinfo["width"] = image.width
+				rt_element.imageinfo["height"] = image.height
 			}
 		}
 	}
@@ -456,25 +476,26 @@ function draw(){
 			prev = now
 		}
 	}
-	for (var key in configuration){
-		var element = configuration[key]
-		if (inInterval(element)){
-			element["active"] = true
-			run(element)
+	for (var key in runtime){
+		var rt_element = runtime[key]
+		if (inInterval(rt_element)){
+			rt_element["active"] = true
+			run(rt_element)
 		} else {
-			if("active" in element){
-				if(element.active){
-					inactivate(element)
+			if("active" in rt_element){
+				if(rt_element.active){
+					inactivate(rt_element)
 				}
 			}
-			element["active"] = false
+			rt_element["active"] = false
 		}
 	}
 	tick ++;
 	requestAnimFrame(function(){draw()})
 }
 
-function inInterval(element){
+function inInterval(rt_element){
+	var element = rt_element.configuration
 	if("duration" in element){
 		var duration = element.duration
 		if(Array.isArray(duration)){
@@ -531,8 +552,8 @@ function inSecondsInterval(interval){
 	return false
 }
 
-function getBoundaries(element) {
-	  var rect = element.getBoundingClientRect();
+function getBoundaries(htmlElement) {
+	  var rect = htmlElement.getBoundingClientRect();
 	  return {
 	    left: rect.left + window.scrollX,
 	    top: rect.top + window.scrollY,
@@ -544,147 +565,152 @@ function getBoundaries(element) {
 	}
 
 
-function run(element){
-	if("operation" in element){
-		var operations = element["operation"]
-		for (var op_key in operations){
-			var operation = operations[op_key]
-			if("canvas" in element){
-				if(!("context" in operation)){
-					var context = element.canvas.getContext("2d")
-					operation["context"] = context
+function run(rt_element){
+	if("operation" in rt_element){
+		var rt_operations = rt_element["operation"]
+		for (var op_key in rt_operations){
+			var rt_operation = rt_operations[op_key]
+			if("canvas" in rt_element){
+				if(!("context" in rt_operation)){
+					var context = rt_element.canvas.getContext("2d")
+					rt_operation["context"] = context
 				}
 			}
-//			console.log("Invoking "+element.name+"::"+op_key)
+			console.log("Invoking "+rt_element.name+"::"+op_key)
 			try{
-				window[op_key](element,operation)
+				window[op_key](rt_element, rt_operation)
 			} catch (e){
 			}
 		}
 	}
 }
 
-function inactivate(element){
-	if("operation" in element){
-		var operations = element["operation"]
-		for (var op_key in operations){
-			var operation = operations[op_key]
+function inactivate(rt_element){
+	var element = rt_element.configuration
+	if("operation" in rt_element){
+		var rt_operations = rt_element["operation"]
+		for (var op_key in rt_operations){
+			var rt_operation = rt_operations[op_key]
 			if("canvas" in element){
-				if(!("context" in operation)){
+				if(!("context" in rt_operation)){
 					var context = element.canvas.getContext("2d")
-					operation["context"] = context
+					rt_operation["context"] = context
 				}
 			}
 			var inactivate = op_key+"_inactivate"
 			console.log("Invoking "+element.name+"::"+inactivate)
 			try{
-				window[inactivate](element,operation)
+				window[inactivate](rt_element,rt_operation)
 			} catch (e){
-				if("context" in operation){
-					operation.context.clearRect(0,0,element.canvas.width,element.canvas.height)
+				if("context" in rt_operation){
+					rt_operation.context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
 				}
 			}
-// operation.function(element,operation)
 		}
 	}
 }
 
-function sound(element, operation){
+function sound(rt_element, rt_operation){
 	var state 
-	if("state" in operation){
-		nextAudioState(element, operation)
+	if(rt_operation.initialized){
+		nextAudioState(rt_element, rt_operation)
 	} else {
-		newAudioState(element, operation)
+		newAudioState(rt_element, rt_operation)
+		rt_operation.initialized = true
 	}
 }
 
-function newAudioState(element, operation){
-	operation["state"] = {}
-	operation.state["sound_iteration"] = 0
-	operation.state["current_audio"] =  operation.audios[operation.state.sound_iteration]
-	operation.state["switch_audio"] =  operation.switch_audio
-	operation.state.current_audio.play()
-	console.log("Playing "+operation.state.current_audio.getAttribute("src"))
+function newAudioState(rt_element, rt_operation){
+	var operation = rt_operation.configuration
+	rt_operation["state"] = {}
+	rt_operation.state["sound_iteration"] = 0
+	rt_operation.state["current_audio"] =  operation.audios[rt_operation.state.sound_iteration]
+	rt_operation.state["switch_audio"] =  operation.switch_audio
+	rt_operation.state.current_audio.play()
+	console.log("Playing "+rt_operation.state.current_audio.getAttribute("src"))
 }
 
-function nextAudioState(element, operation){
-	if(operation.state.switch_audio){
-		operation.state.current_audio.pause()
-		operation.state.switch_audio = false
-		if(operation.state.sound_iteration < 0){
-			operation.state.sound_iteration = 0
+function nextAudioState(rt_element, rt_operation){
+	if(rt_operation.state.switch_audio){
+		rt_operation.state.current_audio.pause()
+		rt_operation.state.switch_audio = false
+		if(rt_operation.state.sound_iteration < 0){
+			rt_operation.state.sound_iteration = 0
 		} else {
-			operation.state.sound_iteration ++
+			rt_operation.state.sound_iteration ++
 		}
-		if(operation.state.sound_iteration < operation.audios.length){
-			operation.state.current_audio = operation.audios[operation.state.sound_iteration]
-			operation.state.current_audio.play()
-			console.log("Playing "+operation.state.current_audio.getAttribute("src")+"("+operation.state.sound_iteration+")")
+		if(rt_operation.state.sound_iteration < rt_operation.audios.length){
+			rt_operation.state.current_audio = operation.audios[rt_operation.state.sound_iteration]
+			rt_operation.state.current_audio.play()
+			console.log("Playing "+rt_operation.state.current_audio.getAttribute("src")+"("+rt_operation.state.sound_iteration+")")
 		} 
 		if(operation.loop){
-			operation.state.sound_iteration = 0
-			operation.state.current_audio = operation.audios[operation.state.sound_iteration]
-			operation.state.current_audio.play()
-			console.log("Replaying "+operation.state.current_audio.getAttribute("src"))
+			rt_operation.state.sound_iteration = 0
+			rt_operation.state.current_audio = rt_operation.audios[rt_operation.state.sound_iteration]
+			rt_operation.state.current_audio.play()
+			console.log("Replaying "+rt_operation.state.current_audio.getAttribute("src"))
 		}
 	}
 }
 
-function sound_inactivation(element,operation){
-	if(operation.state.current_audio.ended ){
+function sound_inactivation(rt_element, rt_operation){
+	if(rt_operation.state.current_audio.ended ){
 		
 	} else {
-		operation.state.current_audio.pause()
-		operation.state.current_audio.current_time = 0
+		rt_operation.state.current_audio.pause()
+		rt_operation.state.current_audio.current_time = 0
 	}
-	operation.state.sound_iteration = -1
+	rt_operation.state.sound_iteration = -1
 }
 
-function switchAudio(element, operation){
+function switchAudio(rt_element, rt_operation){
+	var operation = rt_operation.configuration
 	if(!operation.loop){
 		console.log("Sound Switch")
-		operation.state["switch_audio"] = true
+		rt_operation.state["switch_audio"] = true
 		// Don't wait for next interval
-		nextAudioState(element, operation)
+		nextAudioState(rt_element, rt_operation)
 	} else {
 		console.log("Sound loop")
 	}
 }
 
-function bounce(element, operation){
-	if("state" in operation){
-		nextBounceState(element, operation)
+function bounce(rt_element, rt_operation){
+	if(rt_operation.initialized){
+		nextBounceState(rt_element, rt_operation)
 	} else {
-		newBounceState(element, operation)
+		newBounceState(rt_element, rt_operation)
+		rt_operation.initialized = true
 	}
-	var state = operation.state
-	var context = operation.context
-	context.clearRect(0,0,element.canvas.width,element.canvas.height)
-	context.drawImage(element.imageinfo.image, state.x, state.y)
+	var state = rt_operation.state
+	var context = rt_operation.context
+	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
+	context.drawImage(rt_element.imageinfo.image, state.x, state.y)
 }
 
-function newBounceState(element,operation){
+function newBounceState(rt_element, rt_operation){
 	var top, bottom
+	var operation = rt_operation.configuration
 	if("top" in operation){
-		top = valueToPosition(operation.top, element.canvas.height,-1)
+		top = valueToPosition(operation.top, rt_element.canvas.height,-1)
 	} else {
-		top = valueToPosition("80%", element.canvas.height,-1)
+		top = valueToPosition("80%", rt_element.canvas.height,-1)
 	}
 	if("bottom" in operation){
-		bottom = valueToPosition(operation.bottom, element.canvas.height,-1)
+		bottom = valueToPosition(operation.bottom, rt_element.canvas.height,-1)
 	} else {
-		bottom = valueToPosition("20%", element.canvas.height,-1)
+		bottom = valueToPosition("20%", rt_element.canvas.height,-1)
 	}
 	
 	var x = null
 	var y = null
 	if("reference" in operation){
-		x = getReference(operation,"state","x")
-		y = getReference(operation,"state","y")
+		x = getReference(rt_operation,"state","x")
+		y = getReference(rt_operation,"state","y")
 	}
 	
 	if(x == null || y == null){
-		var xy = getPosition(element,operation)
+		var xy = getPosition(rt_element, rt_operation)
 		if(x == null) {
 			x = xy[0]
 		}
@@ -700,26 +726,26 @@ function newBounceState(element,operation){
 		y = (top + bottom) / 2
 	}
 	
-	var speed = getSpeed(element,operation)
+	var speed = getSpeed(rt_element, rt_operation)
 
 	var state = {}
 	state["x"] = x
 	state["y"] = y
 	state["direction"] = 1
-	operation.state = state
+	rt_operation.state = state
 	
 	var meta = {}
 	meta["top"] = top
 	meta["bottom"] = bottom
 	meta["hspeed"] = speed.hspeed
 	meta["vspeed"] = speed.vspeed
-	operation["meta"] = meta
+	rt_operation.meta = meta
 }
 
-function nextBounceState(element,operation){
+function nextBounceState(rt_element, rt_operation){
 // Less is more in the y direction
-	var state = operation.state
-	var meta = operation.meta
+	var state = rt_operation.state
+	var meta = rt_operation.meta
 	
 	var x = state.x + meta.hspeed
 	var y = state.y + (state.direction * meta.vspeed)
@@ -751,72 +777,74 @@ function valueToPosition(field,range,direction=1){
 	return result
 }
 
-function move(element, operation){
-	if("state" in operation){
-		nextMoveState(element, operation)
+function move(rt_element, rt_operation){
+	if(rt_operation.initialized){
+		nextMoveState(rt_element, rt_operation)
 	} else {
-		newMoveState(element, operation)
+		newMoveState(rt_element, rt_operation)
+		rt_operation.initialized = true
 	}
-	var state = operation.state
-	var context = operation.context
-	context.clearRect(0,0,element.canvas.width,element.canvas.height)
-	context.drawImage(element.imageinfo.image, state.x, state.y)
+	var state = rt_operation.state
+	var context = rt_operation.context
+	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
+	context.drawImage(rt_element.imageinfo.image, state.x, state.y)
 	for(var x_ix in state.x_vector){
 		for(var y_ix in state.y_vector){
 			context.drawImage(
-					element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
+					rt_element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
 		}
 	}
 }
 
-function newMoveState(element, operation){
+function newMoveState(rt_element, rt_operation){
 	var state = {}
-	operation["state"] = state
+	rt_operation["state"] = state
 	var meta = {}
-	meta["width"] =  element.canvas.width
-	meta["height"] =  element.canvas.height
-	meta["imagewidth"] =  element.imageinfo.width
-	meta["imageheight"] =  element.imageinfo.height
-	var speed = getSpeed(element,operation)
+	meta["width"] =  rt_element.canvas.width
+	meta["height"] =  rt_element.canvas.height
+	meta["imagewidth"] =  rt_element.imageinfo.width
+	meta["imageheight"] =  rt_element.imageinfo.height
+	var speed = getSpeed(rt_element, rt_operation)
 	meta["hspeed"] = speed.hspeed
 	meta["vspeed"] = speed.vspeed
-	operation["meta"] = meta
+	rt_operation["meta"] = meta
 	var x = Number.MAX_VALUE
 	var y = Number.MAX_VALUE
+	var operation = rt_operation.configuration
 	if("position" in operation){
 		var x, y
 		if(Array.isArray(operation.position)){
 			if(operation.position.length > 0){
-				x = valueToPosition(operation.position[0], element.canvas.width)
+				x = valueToPosition(operation.position[0], rt_element.canvas.width)
 				if(operation.position.length > 1){
-					y = valueToPosition(operation.position[1], element.canvas.height, -1)
+					y = valueToPosition(operation.position[1], rt_element.canvas.height, -1)
 				}
 			}
 		}
 	} 
 	if (x == Number.MAX_VALUE){
-		x = element.canvas.width / 2
+		x = rt_element.canvas.width / 2
 	}
 	if (y == Number.MAX_VALUE){
-		x = element.canvas.height / 2
+		x = rt_element.canvas.height / 2
 	}
 	state["x"] = x
 	state["y"] = y
-	updateMoveState(element,operation)
+	updateMoveState(rt_element, rt_operation)
 
 }
 
-function nextMoveState(element, operation){
-	var state = operation.state
-	var meta = operation.meta
+function nextMoveState(rt_element, rt_operation){
+	var state = rt_operation.state
+	var meta = rt_operation.meta
 	state.x = (state.x + meta.hspeed) %  meta.width 
 	state.y = (state.y + meta.vspeed) %  meta.height
-	updateMoveState(element,operation)
+	updateMoveState(rt_element, rt_operation)
 }
 
-function updateMoveState(element,operation){
-	var state = operation.state
-	var meta = operation.meta
+function updateMoveState(rt_element, rt_operation){
+	var state = rt_operation.state
+	var meta = rt_operation.meta
 	state["x_pos"] = state.x
 	if(state.x_pos > 0){
 		state.x_pos -= meta.width
@@ -826,8 +854,8 @@ function updateMoveState(element,operation){
 		state.y_pos -= meta.width
 	}
 	
-	state["x_vector"] = getMoveVector(state.x_pos, meta.width, element.canvas.width)
-	state["y_vector"] = getMoveVector(state.y_pos, meta.height, element.canvas.height)
+	state["x_vector"] = getMoveVector(state.x_pos, meta.width, rt_element.canvas.width)
+	state["y_vector"] = getMoveVector(state.y_pos, meta.height, rt_element.canvas.height)
 }
 
 function getMoveVector(pos,image_size,canvas_size){
@@ -843,23 +871,25 @@ function getMoveVector(pos,image_size,canvas_size){
 }
 
 function clear(context,element, operation){
-	var context = operation.context
-	context.clearRect(0,0,element.canvas.width,element.canvas.height)
+	var context = rt_operation.context
+	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
 }
 
-function fixed(element, operation){
-	if(!("meta" in operation)){
-		newFixedState(element,operation)
+function fixed(rt_element, rt_operation){
+	if(!("state" in rt_operation)){
+		newFixedState(rt_element, rt_operation)
 	}
-	var meta = operation.meta
-	var context = operation.context
-	context.clearRect(0,0,element.canvas.width,element.canvas.height)
+	var meta = rt_operation.meta
+	var context = rt_operation.context
+	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
 	context.drawImage(
-			element.imageinfo.image, meta.x, meta.y)
+			rt_element.imageinfo.image, meta.x, meta.y)
 }
 
-function newFixedState(element, operation){
-	var canvas = element.canvas
+function newFixedState(rt_element, rt_operation){
+	rt_operation["state"] = {}
+	var operation = rt_operation.configuration
+	var canvas = rt_element.canvas
 	var position, align
 	if("position" in operation){
 		position = operation.position
@@ -875,23 +905,23 @@ function newFixedState(element, operation){
 	var y = Number.MAX_VALUE
 	if(Array.isArray(operation.position)){
 		if(operation.position.length > 0){
-			x = valueToPosition(operation.position[0], element.canvas.width)
+			x = valueToPosition(operation.position[0], rt_element.canvas.width)
 			if(operation.position.length > 1){
-				y = valueToPosition(operation.position[1], element.canvas.height, -1)
+				y = valueToPosition(operation.position[1], rt_element.canvas.height, -1)
 			} else {
-				y = valueToPosition("50%", element.canvas.height, -1)					
+				y = valueToPosition("50%", rt_element.canvas.height, -1)					
 			}
 		} else {
-			x = valueToPosition("50%", element.canvas.width, -1)					
-			y = valueToPosition("50%", element.canvas.height, -1)								
+			x = valueToPosition("50%", rt_element.canvas.width, -1)					
+			y = valueToPosition("50%", rt_element.canvas.height, -1)								
 		}
 	}
 	
 	if (x == Number.MAX_VALUE){
-		x = element.canvas.width / 2
+		x = rt_element.canvas.width / 2
 	}
 	if (y == Number.MAX_VALUE){
-		y =  element.canvas.height / 2
+		y =  rt_element.canvas.height / 2
 	}
 	
 	var x_align, y_align
@@ -909,55 +939,56 @@ function newFixedState(element, operation){
 	}
 	
 	var meta ={}
-	meta["x"] = x += element.imageinfo.width * x_align
-	meta["y"] = y += element.imageinfo.height * y_align
+	meta["x"] = x += rt_element.imageinfo.width * x_align
+	meta["y"] = y += rt_element.imageinfo.height * y_align
 	
-	operation.meta  = meta
+	rt_operation.meta  = meta
 }
 
 
-function pan(element, operation){
-	if("state" in operation){
-		nextPanState(element,operation)
+function pan(rt_element, rt_operation){
+	if(rt_operation.initialized){
+		nextPanState(rt_element, rt_operation)
 	} else {
-		newPanState(element,operation)
+		newPanState(rt_element, rt_operation)
+		rt_operation.initialized = true
 	}
-	var state = operation.state
-	var context = operation.context
+	var state = rt_operation.state
+	var context = rt_operation.context
 	for(var x_ix in state.x_vector){
 		for(var y_ix in state.y_vector){
 			context.drawImage(
-					element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
+					rt_element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
 		}
 	}
 }
 
-function newPanState(element,operation){
+function newPanState(rt_element, rt_operation){
 	var state = {}
 	state["x"] = 0
 	state["y"] = 0
-	operation["state"] = state
+	rt_operation["state"] = state
 	var meta = {}
-	meta["width"] =  element.imageinfo.width
-	meta["height"] =  element.imageinfo.height
-	var speed = getSpeed(element,operation)
+	meta["width"] =  rt_element.imageinfo.width
+	meta["height"] =  rt_element.imageinfo.height
+	var speed = getSpeed(rt_element, rt_operation)
 	meta["hspeed"] = speed.hspeed
 	meta["vspeed"] = speed.vspeed
-	operation["meta"] = meta
-	updatePanState(element,operation)
+	rt_operation["meta"] = meta
+	updatePanState(rt_element, rt_operation)
 }
 
-function nextPanState(element,operation){
-	var state = operation.state
-	var meta = operation.meta
+function nextPanState(rt_element, rt_operation){
+	var state = rt_operation.state
+	var meta = rt_operation.meta
 	state["x"] = (state.x + meta.hspeed) %  meta.width 
 	state["y"] = (state.y + meta.vspeed) %  meta.height
-	updatePanState(element,operation)
+	updatePanState(rt_element, rt_operation)
 }
 
-function updatePanState(element,operation){
-	var state = operation.state
-	var meta = operation.meta
+function updatePanState(rt_element, rt_operation){
+	var state = rt_operation.state
+	var meta = rt_operation.meta
 	state["x_pos"] = state.x
 	if(state.x_pos > 0){
 		state.x_pos -= meta.width
@@ -967,8 +998,8 @@ function updatePanState(element,operation){
 		state.y_pos -= meta.width
 	}
 	
-	state["x_vector"] = getPositionVector(state.x_pos, meta.width, element.canvas.width)
-	state["y_vector"] = getPositionVector(state.y_pos, meta.height, element.canvas.height)
+	state["x_vector"] = getPositionVector(state.x_pos, meta.width, rt_element.canvas.width)
+	state["y_vector"] = getPositionVector(state.y_pos, meta.height, rt_element.canvas.height)
 }
 
 function getPositionVector(pos,image_size,canvas_size){
@@ -981,22 +1012,23 @@ function getPositionVector(pos,image_size,canvas_size){
 	return vector
 }
 
-function button(element, operation){
+function button(rt_element, rt_operation){
 //	console.log("Button")
 //	console.log("style:  "+operation.svg_ref.style.cssText)
 //	console.log("x:    "+operation.ref_operation.state.x)
 //	console.log("y:    "+operation.ref_operation.state.y)
-	var x = (operation.ref_operation.state.x + operation.ref_operation.meta.width) %  operation.ref_operation.meta.width
-	var y = (operation.ref_operation.state.y + operation.ref_operation.meta.height) %  operation.ref_operation.meta.height
-	operation.svg_ref.style.left = x
-	operation.svg_ref.style.top = y
-	operation.svg_ref.style.fillOpacity = 0
-	operation.svg_ref.fill = "#ff0000"
+	var x = (rt_operation.ref_operation.state.x + rt_operation.ref_operation.meta.width) %  rt_operation.ref_operation.meta.width
+	var y = (rt_operation.ref_operation.state.y + rt_operation.ref_operation.meta.height) %  rt_operation.ref_operation.meta.height
+	rt_operation.svg_ref.style.left = x
+	rt_operation.svg_ref.style.top = y
+	rt_operation.svg_ref.style.fillOpacity = 0
+	rt_operation.svg_ref.fill = "#ff0000"
 //	console.log("New x: "+ x + " svg.style.left: "+operation.svg_ref.style.left)
 //	console.log("New y: "+ y + " svg.style.top: "+operation.svg_ref.style.top)
 }
 
-function getSpeed(element, operation){
+function getSpeed(rt_element, rt_operation){
+	var element = rt_element.configuration
 	var d
 	if("distance" in element){
 		d = element.distance
@@ -1007,6 +1039,7 @@ function getSpeed(element, operation){
 	var scale = max_distance / d;
 	
 	var speed
+	var operation = rt_operation.configuration
 	if("speed" in operation){
 		speed = operation.speed
 	} else {
@@ -1043,17 +1076,18 @@ function nominal_ticks(){
 	return (new Date() - start) / 60
 }
 
-function getReference(operation,group,field){
+function getReference(rt_operation,group,field){
+	var operation = rt_operation.configuration
 	if("reference" in operation){
 		var element_name = operation.reference.element
 		var operation_name = operation.reference.operation
-		if(element_name in configuration){
-			var element = configuration[element_name]
-			if(operation_name in element.operation){
-				operation = element.operation[operation_name]
-				if(group in operation){
-					if(field in operation[group]){
-						return operation[group][field]
+		if(element_name in runtime){
+			var rt_element = runtime[element_name]
+			if(operation_name in rt_element.operation){
+				var ref_operation = rt_element.operation[operation_name]
+				if(group in ref_operation){
+					if(field in ref_operation[group]){
+						return ref_operation[group][field]
 					}
 				}
 			}
@@ -1062,15 +1096,16 @@ function getReference(operation,group,field){
 	return null
 }
 
-function getPosition(element, operation){
+function getPosition(rt_element, rt_operation){
 	var x = null
 	var y = null
+	var operation = rt_operation.configuration
 	if("position" in operation){
 		if(Array.isArray(operation.position)){
 			if(operation.position.length > 0){
-				x = valueToPosition(operation.position[0], element.canvas.width)
+				x = valueToPosition(operation.position[0], rt_element.canvas.width)
 				if(operation.position.length > 1){
-					y = valueToPosition(operation.position[1], element.canvas.height, -1)
+					y = valueToPosition(operation.position[1], rt_element.canvas.height, -1)
 				}
 			}
 		}
