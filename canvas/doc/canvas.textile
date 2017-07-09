@@ -1,0 +1,99 @@
+h1. Overview
+
+Canvas is a lightweight framework for HTML5 / JavaScript animation. 
+
+Canvas is configuration-based - instead of defining animation behavior in 
+executable code, behavior is defined in configuration files. Because the 
+framework code is reused for different elements, it is much smaller than a 
+fully executable animation.
+
+h1. Configuration
+
+h2. Elements
+
+Canvas elements have several attributes.
+
+- identifier := the element's unique identifier. May be textually meaningful
+- image := for displayable elements, the image associated with the element
+- distance := for displayable elements, the relative distance to the associated image
+- duration := start and stop times for an element's visibility; multiple pairs of times may be specified.
+For elements triggered by other than timing events, the start time is specified as "*". =:
+- operation := the operation attribute contains the operations that are to be executed for the element
+- usecanvas := specifies an element whose canvas this element should be drawn on
+
+h2. Operations
+
+Operation configurations supply parameters to the operations that applied to elements.
+
+h3. Defined operations
+
+The following is a list of currently defined operations and their corresponding parameters
+
+- banner := displays rotating text 
+
+* "display parameters":'#display_parameters'
+* align
+* text
+* rotate
+* per_second
+
+- bounce := image is bounced 
+
+* top
+* bottom
+
+- button := create a clickable area over the image for another operation
+
+* shape
+* action
+
+- clear := clear the image
+
+- fixed := draw an element on the canvas at a fixed position
+
+- move := move the image on the canvas
+
+* "display parameters":'#display_parameters'
+* cycle 
+
+- pan := fills the background with the element image, and moves it as specified
+
+* speed
+
+
+h4. Parameter definitions
+
+- bottom := identifies the lower range of motion for operation *bounce*
+- top := identifies the upper range of motion for operation *bounce*
+
+- cycle := if true, the element reenters the display from the edge opposite the one it disappeared from. [1]
+
+- per_second := the number of rotations to make each second for operation *banner*
+- rotate := the number of characters to move each rotation for operation *banner*
+- text := the text to be displayed for operation *banner*
+
+- speed := the nominal velocity in pixels per (second / 60) that an element moves on the
+screen. This is normalized 
+
+h5(display_parameters). Display parameters
+
+Display parameters denote where elements are to be placed
+
+- align := adjusts a display image location reference point. Default is [top, left]. [2] 
+
+- position := initial image position. May be percent of screen
+
+- speed := Speed at which the element image moves across the screen. Scaled by 
+element distance and screen refresh rate. =:
+
+fn1. "true" is the current behavior.
+
+fn2. Currently implemented for operation *fixed*.
+
+h1. TODO
+
+* consolidate fixed and move
+* add option to use image center
+* add "align" to other operations
+* make bounce top and bottom relative to image top and bottom
+* make bounce work in a box, not just up and down

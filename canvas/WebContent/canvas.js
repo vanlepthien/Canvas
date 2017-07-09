@@ -13,21 +13,36 @@ var max_distance = 0
 
 var x_alignment = {"left": 0, "center": -.5 , "right": -1}
 var y_alignment = {"top": 0, "center": -.5 , "bottom": -1}
+var playable_audios = []
 
 function init(){
 	createRuntime()
 	generateCanvasses(canvascontainer, canvasmodel)
-	generateAudio();
-//	generateOperations()
+	generateAudio()
+	loadAudio()
+// generateOperations()
 	generateImageInfo(
 			function(){
 				generateImageMasks(
 						function(){
-							draw()
+							runapp()
 							}
 						)
 				}
 			)
+}
+
+function loadAudio(){
+	$("#audios").children("audio").each(function(){
+		this.load()
+		this.play()
+		this.pause()
+	})
+}
+
+function runapp(){
+	$("#start_button").attr("hidden","hidden")
+	draw()
 }
 
 var runtime = {}
@@ -47,6 +62,7 @@ function createRuntime(){
 				rt_op["configuration"] = configuration[key].operation[op_id]
 				rt_op["initialized"] = false
 				rt_op["meta"] = {}
+				rt_op["element"] = runtime[key]
 			}
 		}
 	}
@@ -189,6 +205,9 @@ function generateAudio(){
 						audio.onended=function(){
 							switchAudio(rt_element, rt_operation)
 						}
+						audio.oncanplay= function(){
+							playable_audios.push(this)
+						}
 					}
 					rt_operation["audios"] = audioList
 				}
@@ -208,17 +227,21 @@ function generateImageInfo(callback){
 			}
 		}
 	}
+	if(imageCnt == 0){
+		callback()
+		return
+	}
 	for(var key in runtime){
 		var rt_element = runtime[key]
 		var element = rt_element.configuration
-		var imageInfo = {}
+		var image_info = {}
  		if("image" in element){
 			if(element.image == null){
-				imageInfo["image"] = null
+				image_info["image"] = null
 			} else {
 				var img = new Image();
-				imageInfo["image"] = img
-				rt_element["imageinfo"] = imageInfo		
+				image_info["image"] = img
+				rt_element["imageinfo"] = image_info		
 				img.onload = function(){
 					imageCnt --
 					if(imageCnt == 0){
@@ -333,13 +356,13 @@ function createSvgRef(rt_operation,svgDef){
 	svgDiv.appendChild(svgRef)
 // TODO add real height & width
 	svgRef.setAttribute("id","ref_"+rt_operation.id)
-	svgRef.setAttribute("width","126.000000px" )
-	svgRef.setAttribute("height","186.000000px" )
-	svgRef.setAttribute("viewBox","0 0 126.000000 186.000000" )
+	svgRef.setAttribute("width",rt_operation.element.imageinfo.width )
+	svgRef.setAttribute("height",rt_operation.element.imageinfo.height )
+	svgRef.setAttribute("viewBox","0 0 "+rt_operation.element.imageinfo.width +" "+ rt_operation.element.imageinfo.height )
 	svgRef.setAttribute("preserveAspectRatio","xMinYMin meet" )
 	svgRef.style.position = "absolute"
-	svgRef.style.top = "200px"
-	svgRef.style.left = "200px"
+	svgRef.style.top = "0px"
+	svgRef.style.left = "0px"
 	svgRef.style.zIndex = 20;
 	svgRef.style.opacity= 0
 	rt_operation["svg_ref"] = svgRef
@@ -414,6 +437,7 @@ function getSvgDefs(){
 	var svgDefs = document.getElementById("svgDefs")
 	if(!svgDefs){
 		var svgElement =getElement("svgContainer","svg","http://www.w3.org/2000/svg").element
+		svgElement.setAttribute("hidden","hidden")
 		svgDefs = document.createElementNS("http://www.w3.org/2000/svg","defs")
 		svgDefs.setAttribute("id","svgDefs")
 		svgElement.appendChild(svgDefs)
@@ -421,24 +445,25 @@ function getSvgDefs(){
 	return svgDefs
 }
 
-//function generateOperations(){
-//	for(var key in configuration){
-//		var element = configuration[key]
-//		var element = rt_element[key]
-//		if("operation" in element){
-//			var operations = element.operation
-//			for(var op_name in operations){
-//				var operation = operations[op_name]
-//				console.log("Creating "+ element.name+"::"+op_name)
-//				operation["name"] = op_name
-//			}
-//		}
-//	}
-//}
+// function generateOperations(){
+// for(var key in configuration){
+// var element = configuration[key]
+// var element = rt_element[key]
+// if("operation" in element){
+// var operations = element.operation
+// for(var op_name in operations){
+// var operation = operations[op_name]
+// console.log("Creating "+ element.name+"::"+op_name)
+// operation["name"] = op_name
+// }
+// }
+// }
+// }
 
 function setImageAttributes(){
 	
 	for(var key in runtime){
+		
 		var rt_element = runtime[key]
 		if("imageinfo" in rt_element){
 			var image = rt_element.imageinfo.image
@@ -454,6 +479,7 @@ function setImageAttributes(){
 	}
 }
 
+
 var prev = Date.now()
 var prev_second_ticks = 0
 var interval_adjustment = 1
@@ -465,6 +491,7 @@ function draw(){
 		var now = Date.now()
 		var elapsed = (now - prev) / 1000
 		if(elapsed > 1){
+			// adjust at one second increments
 			var nominal_second = (tick - prev_second_ticks)/(60 * interval_adjustment)
 			console.log("Time:" +(now - start)/1000+" tick: " + tick +" Tick seconds " + tick / (60 * interval_adjustment))
 			console.log("   Nominal second: " + nominal_second+ " Elapsed Ticks: " + (tick - prev_second_ticks))
@@ -576,7 +603,7 @@ function run(rt_element){
 					rt_operation["context"] = context
 				}
 			}
-			console.log("Invoking "+rt_element.name+"::"+op_key)
+//			console.log("Invoking "+rt_element.name+"::"+op_key)
 			try{
 				window[op_key](rt_element, rt_operation)
 			} catch (e){
@@ -598,7 +625,7 @@ function inactivate(rt_element){
 				}
 			}
 			var inactivate = op_key+"_inactivate"
-			console.log("Invoking "+element.name+"::"+inactivate)
+//			console.log("Invoking "+element.name+"::"+inactivate)
 			try{
 				window[inactivate](rt_element,rt_operation)
 			} catch (e){
@@ -624,8 +651,8 @@ function newAudioState(rt_element, rt_operation){
 	var operation = rt_operation.configuration
 	rt_operation["state"] = {}
 	rt_operation.state["sound_iteration"] = 0
-	rt_operation.state["current_audio"] =  operation.audios[rt_operation.state.sound_iteration]
-	rt_operation.state["switch_audio"] =  operation.switch_audio
+	rt_operation.state["current_audio"] =  rt_operation.audios[rt_operation.state.sound_iteration]
+	rt_operation.state["switch_audio"] =  rt_operation.switch_audio
 	rt_operation.state.current_audio.play()
 	console.log("Playing "+rt_operation.state.current_audio.getAttribute("src"))
 }
@@ -726,8 +753,6 @@ function newBounceState(rt_element, rt_operation){
 		y = (top + bottom) / 2
 	}
 	
-	var speed = getSpeed(rt_element, rt_operation)
-
 	var state = {}
 	state["x"] = x
 	state["y"] = y
@@ -737,8 +762,6 @@ function newBounceState(rt_element, rt_operation){
 	var meta = {}
 	meta["top"] = top
 	meta["bottom"] = bottom
-	meta["hspeed"] = speed.hspeed
-	meta["vspeed"] = speed.vspeed
 	rt_operation.meta = meta
 }
 
@@ -746,9 +769,10 @@ function nextBounceState(rt_element, rt_operation){
 // Less is more in the y direction
 	var state = rt_operation.state
 	var meta = rt_operation.meta
+	var speed = getSpeed(rt_element, rt_operation)
 	
-	var x = state.x + meta.hspeed
-	var y = state.y + (state.direction * meta.vspeed)
+	var x = state.x + speed.hspeed
+	var y = state.y + (state.direction * speed.vspeed)
 	if(state.direction < 0){
 		if(y <= meta.top){
 			y = meta.top
@@ -804,9 +828,6 @@ function newMoveState(rt_element, rt_operation){
 	meta["height"] =  rt_element.canvas.height
 	meta["imagewidth"] =  rt_element.imageinfo.width
 	meta["imageheight"] =  rt_element.imageinfo.height
-	var speed = getSpeed(rt_element, rt_operation)
-	meta["hspeed"] = speed.hspeed
-	meta["vspeed"] = speed.vspeed
 	rt_operation["meta"] = meta
 	var x = Number.MAX_VALUE
 	var y = Number.MAX_VALUE
@@ -837,8 +858,9 @@ function newMoveState(rt_element, rt_operation){
 function nextMoveState(rt_element, rt_operation){
 	var state = rt_operation.state
 	var meta = rt_operation.meta
-	state.x = (state.x + meta.hspeed) %  meta.width 
-	state.y = (state.y + meta.vspeed) %  meta.height
+	var speed = getSpeed(rt_element, rt_operation)
+	state.x = (state.x + speed.hspeed) %  meta.width 
+	state.y = (state.y + speed.vspeed) %  meta.height
 	updateMoveState(rt_element, rt_operation)
 }
 
@@ -876,8 +898,9 @@ function clear(context,element, operation){
 }
 
 function fixed(rt_element, rt_operation){
-	if(!("state" in rt_operation)){
+	if(!rt_operation.initialized){
 		newFixedState(rt_element, rt_operation)
+		rt_operation.initialized = true;
 	}
 	var meta = rt_operation.meta
 	var context = rt_operation.context
@@ -887,7 +910,6 @@ function fixed(rt_element, rt_operation){
 }
 
 function newFixedState(rt_element, rt_operation){
-	rt_operation["state"] = {}
 	var operation = rt_operation.configuration
 	var canvas = rt_element.canvas
 	var position, align
@@ -971,9 +993,6 @@ function newPanState(rt_element, rt_operation){
 	var meta = {}
 	meta["width"] =  rt_element.imageinfo.width
 	meta["height"] =  rt_element.imageinfo.height
-	var speed = getSpeed(rt_element, rt_operation)
-	meta["hspeed"] = speed.hspeed
-	meta["vspeed"] = speed.vspeed
 	rt_operation["meta"] = meta
 	updatePanState(rt_element, rt_operation)
 }
@@ -981,8 +1000,9 @@ function newPanState(rt_element, rt_operation){
 function nextPanState(rt_element, rt_operation){
 	var state = rt_operation.state
 	var meta = rt_operation.meta
-	state["x"] = (state.x + meta.hspeed) %  meta.width 
-	state["y"] = (state.y + meta.vspeed) %  meta.height
+	var speed = getSpeed(rt_element, rt_operation)
+	state["x"] = (state.x + speed.hspeed) %  meta.width 
+	state["y"] = (state.y + speed.vspeed) %  meta.height
 	updatePanState(rt_element, rt_operation)
 }
 
@@ -1013,18 +1033,18 @@ function getPositionVector(pos,image_size,canvas_size){
 }
 
 function button(rt_element, rt_operation){
-//	console.log("Button")
-//	console.log("style:  "+operation.svg_ref.style.cssText)
-//	console.log("x:    "+operation.ref_operation.state.x)
-//	console.log("y:    "+operation.ref_operation.state.y)
+// console.log("Button")
+// console.log("style: "+operation.svg_ref.style.cssText)
+// console.log("x: "+operation.ref_operation.state.x)
+// console.log("y: "+operation.ref_operation.state.y)
 	var x = (rt_operation.ref_operation.state.x + rt_operation.ref_operation.meta.width) %  rt_operation.ref_operation.meta.width
 	var y = (rt_operation.ref_operation.state.y + rt_operation.ref_operation.meta.height) %  rt_operation.ref_operation.meta.height
 	rt_operation.svg_ref.style.left = x
 	rt_operation.svg_ref.style.top = y
 	rt_operation.svg_ref.style.fillOpacity = 0
 	rt_operation.svg_ref.fill = "#ff0000"
-//	console.log("New x: "+ x + " svg.style.left: "+operation.svg_ref.style.left)
-//	console.log("New y: "+ y + " svg.style.top: "+operation.svg_ref.style.top)
+// console.log("New x: "+ x + " svg.style.left: "+operation.svg_ref.style.left)
+// console.log("New y: "+ y + " svg.style.top: "+operation.svg_ref.style.top)
 }
 
 function getSpeed(rt_element, rt_operation){
@@ -1046,8 +1066,8 @@ function getSpeed(rt_element, rt_operation){
 		speed = [0, 0]
 	}
 	return {
-		hspeed: speed[0] * scale * interval_adjustment,
-		vspeed: speed[1] * scale * interval_adjustment
+		hspeed: speed[0] * scale / interval_adjustment,
+		vspeed: speed[1] * scale / interval_adjustment
 	}
 }
 
@@ -1113,6 +1133,3 @@ function getPosition(rt_element, rt_operation){
 	return [x, y]
 }
 
-init()
-
-// draw()

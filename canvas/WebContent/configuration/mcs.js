@@ -22,8 +22,8 @@ var configuration = {
 				"position" : [ "50%", "40%" ],
 				"align" : [ "center", "center" ],
 				"text" : [ "This is a test. This is an emergency system test.     " ],
-				"rotate": 1,
-				"per_second": 1
+				"rotate" : 1,
+				"per_second" : 1
 			}
 		},
 		"image" : "banner.png",
@@ -95,7 +95,7 @@ var configuration = {
 			"move" : {
 				"speed" : drift,
 				"position" : [ "20%", "60%" ],
-				"cycle" : 1
+				"cycle" : true
 			}
 		},
 		"image" : "cactus5.png"
@@ -107,19 +107,19 @@ var configuration = {
 			"move" : {
 				"speed" : drift,
 				"position" : [ "40%", "60%" ],
-				"cycle" : 1
+				"cycle" : true
 			},
 			"button" : {
-				"shape": "cactus7.mask.svg",
+				"shape" : "cactus7.mask.svg",
 				"action" : {
 					"reference" : {
 						"element" : "cactus2",
 						"operation" : "move"
+					},
+					"sound" : {
+						"sounds" : [ "boop1.mp3", "boop2.mp3" ],
+						"select" : "random"
 					}
-				},
-				"sound" : {
-					"sounds" : [ "boop1.mp3", "boop2.mp3" ],
-					"select" : "random"
 				}
 			}
 		},
