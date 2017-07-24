@@ -32,7 +32,8 @@ var configuration = {
 		"distance" : 1,
 		"duration" : [ 0, 5 ],
 		"operation" : {
-			"fixed" : {
+			"move" : {
+				"speed": [0,0],
 				"position" : [ "50%", "50%" ],
 				"align" : [ "center", "center" ]
 			}

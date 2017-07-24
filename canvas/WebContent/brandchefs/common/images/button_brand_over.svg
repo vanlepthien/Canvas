@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 234.4 60.4">
+	<defs>
+		<style>.cls-1{opacity:0.12;}.cls-2{fill:#63a1a8;opacity:0.7;}.cls-3,.cls-8{fill:#fff;}.cls-3{opacity:0.6;}.cls-4,.cls-5{fill:#82b4b9;}.cls-4{opacity:0.2;}.cls-5{opacity:0.33;}.cls-6{fill:#00d5ee;}.cls-7{fill:#41aade;}.cls-9{font-size:36px;fill:#408c94;font-family:BurbankBigCondensed-Medium,
+			Burbank Big Condensed;}.cls-10{letter-spacing:-0.01em;}</style>
+	</defs>
+	<title>button_brand_over</title>
+	<g id="Layer_2" data-name="Layer 2">
+		<g id="buttons_Over">
+			<path class="cls-1"
+				d="M219.4,51.83H0V60.4H213.92a14.81,14.81,0,0,0,14.93-13.21A12,12,0,0,1,219.4,51.83Z" />
+			<path class="cls-2"
+				d="M219.4,0H0V2.9H219.4a11.83,11.83,0,0,1,12,11.58V39.94a11.83,11.83,0,0,1-12,11.58H0v2.9H219.4a14.76,14.76,0,0,0,15-14.48V14.48A14.76,14.76,0,0,0,219.4,0Z" />
+			<path class="cls-3"
+				d="M219.4,1.23H0v50.6H219.4a12,12,0,0,0,12-12V13.23A12,12,0,0,0,219.4,1.23Z" />
+			<path class="cls-4"
+				d="M89.44,44.09c-9.53-.14-52-.34-89.44-.6v8.34H219.4a12,12,0,0,0,12-12V13.43C223.79,40.66,177,45.34,89.44,44.09Z" />
+			<path class="cls-5"
+				d="M223.47,6.48a10.8,10.8,0,0,1,1.07,4.67V34.83a11,11,0,0,1-10.92,10.92H0V50H217.24a11,11,0,0,0,10.92-10.92V15.43A10.92,10.92,0,0,0,223.47,6.48Z" />
+			<path class="cls-3"
+				d="M217.26,3.63H0V9.18H215.52A11.56,11.56,0,0,1,227,20.71l1.74-5.55A11.56,11.56,0,0,0,217.26,3.63Z" />
+		</g>
+		<g id="icons_Over">
+			<circle class="cls-3" cx="29.04" cy="26.7" r="16.79" />
+			<circle class="cls-6" cx="28.84" cy="26.29" r="14.04" />
+			<path class="cls-7"
+				d="M38.82,26.43C39.12,32,34.43,37.53,29,38.34A9.93,9.93,0,0,1,17.72,30c-.82-5.42,3-11.69,8.38-12.5S38.53,21,38.82,26.43Z" />
+			<circle class="cls-8" cx="28.91" cy="26.18" r="9.93" />
+			<circle class="cls-6" cx="28.84" cy="26.29" r="6.74" />
+			<path class="cls-7"
+				d="M27.83,21.86a6.69,6.69,0,0,1,6.55,8.27,6.73,6.73,0,1,0-12.08-5.36A6.72,6.72,0,0,1,27.83,21.86Z" />
+			<path class="cls-7"
+				d="M28.84,12.26A14,14,0,0,0,18,17.37a14,14,0,0,1,19.43,20,14,14,0,0,0-8.59-25.12Z" />
+			<path class="cls-7"
+				d="M32.21,26.81c0,1.86-2.05,4.19-3.92,4.19a3.38,3.38,0,0,1-3.38-3.38c0-1.86,1.21-4.38,3.08-4.38S32.21,25,32.21,26.81Z" />
+			<circle class="cls-8" cx="28.84" cy="26.29" r="3.38" />
+		</g>
+		<g id="ButtonText">
+			<text class="cls-9" transform="translate(55.75 38.14)">
+				The B
+				<tspan class="cls-10" x="50.04" y="0">r</tspan>
+				<tspan x="57.78" y="0">and Bist</tspan>
+				<tspan class="cls-10" x="133.05" y="0">r</tspan>
+				<tspan x="140.79" y="0">o</tspan>
+			</text>
+		</g>
+	</g>
+</svg>

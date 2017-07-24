@@ -15,21 +15,39 @@ var x_alignment = {"left": 0, "center": -.5 , "right": -1}
 var y_alignment = {"top": 0, "center": -.5 , "bottom": -1}
 var playable_audios = []
 
-function init(){
+function preload(){
+	// start button should be hidden, but make sure
+	// TODO: dynamically create start button here?
 	createRuntime()
 	generateCanvasses(canvascontainer, canvasmodel)
+	loadSvgImages( // function to trigger the next initialization (dependent on
+					// this)
+			function (){
+				runNextInitialization ("SVG")})
+}
+
+function init(){
+	// This must be run by a button click to activate audios on mobile devices
 	generateAudio()
 	loadAudio()
-// generateOperations()
-	generateImageInfo(
-			function(){
-				generateImageMasks(
-						function(){
-							runapp()
-							}
-						)
-				}
-			)
+	runapp()
+}
+
+// Defines ordering of initializer execution
+var initializations = {
+		"SVG": function(){generateImageInfo(function(){runNextInitialization("Images")})},
+		"Images": function(){}
+		}
+
+function runNextInitialization(initializer){
+	if(initializer in initializations){
+		var f = initializations[initializer]
+		f()
+	}
+}
+
+function makeButtonVisible(){
+	$("#start_button").removeAttr("hidden")
 }
 
 function loadAudio(){
@@ -49,24 +67,52 @@ var runtime = {}
 
 function createRuntime(){
 	for(var key in configuration){
-		runtime[key] = {}
-		runtime[key]["name"] = key
-		runtime[key]["configuration"] = configuration[key]
+		var element  = configuration[key]
+		var rt_element = {}
+		runtime[key] = rt_element
+		rt_element["name"] = key
+		rt_element["configuration"] = element
+		
+		// default to show element without duration
+		
+		if("show" in configuration[key]){
+			rt_element["show"] = element.show
+		} else {
+			rt_element["show"] = true
+		}
 
-		if("operation" in configuration[key]){
-			runtime[key]["operation"] = {}
-			for(var op_id in configuration[key].operation){
-				runtime[key].operation[op_id] = {}
-				var rt_op = runtime[key].operation[op_id]
-				rt_op["name"] = op_id
-				rt_op["configuration"] = configuration[key].operation[op_id]
-				rt_op["initialized"] = false
-				rt_op["meta"] = {}
-				rt_op["element"] = runtime[key]
+		if("operation" in element){
+			rt_element["operation"] = {}
+			for(var op_id in element.operation){
+				var rt_operation = {}
+				rt_element.operation[op_id] = rt_operation
+				rt_operation["name"] = op_id
+				rt_operation["configuration"] = configuration[key].operation[op_id]
+				rt_operation["initialized"] = false
+				rt_operation["meta"] = {}
+				rt_operation["element"] = runtime[key]
 			}
 		}
 	}
+}	
+
+var canvasMap = {}
+
+var canvasIx = 0
+
+function addCanvas(canvas) {
+	var zIx = canvas.style.zIndex
+	var zMap
+	if (zIx in canvasMap) {
+		zMap = canvasMap[zIx]
+	} else {
+		zMap = {}
+		canvasMap[zIx] = zMap
+	}
+	zMap[canvasIx] = canvas
+	canvasIx ++
 }
+
 
 function generateCanvasses(id,cm_id){
 	var distances = []
@@ -107,47 +153,101 @@ function generateCanvasses(id,cm_id){
 		} else if("distance" in element){
 			var c  = document.createElement("canvas")
 			div.appendChild(c)
+			c.setAttribute("class","drawing_canvas")
 			var zix = distanceMap[element.distance]
 			c.id = key
 			c.style.zIndex = zix
-			if("size" in element){
-				var _width, _height
-				if(Array.isArray(element.size)){
-					var x_value = toNumber(element.size[0])
-					var y_value = toNumber(element.size[1])
-					if(x_value.isPercent){
-						_width = x_value.value * width
-					} else {
-						_width = x_value.value
-					}
-					if(y_value.isPercent){
-						_height = y_value.value * height
-					} else {
-						_height = y_value.value
-					}
-				} else {
-					var value = toNumber(element.size)
-					if(value.isPercent){
-						_width = value.value * width
-						_height = value.value * height
-					} else {
-						_width = value.value
-						_height = value.value
-					}
-					
-				}
-				c.width = _width
-				c.height = _height
-			} else {
-				c.width = width
-				c.height = height
-			}
+			c.width = width
+			c.height = height
 			c.style.position = "absolute"
 			c.style.left = left + "px"
 			c.style.top = top + "px"
 			rt_element["canvas"] = c
+			addCanvas(c)
 		}
 	}
+	$(".drawing_canvas").click(function (event) { clickOnCanvas(event)})
+	$(".drawing_canvas").mousemove(function (event) { mousemoveOnCanvas(event)})
+}
+
+//Walk through canvases until non-transparent item found
+
+function walkcanvasses(f) {
+	var zKeys = Object.keys(canvasMap).sort().reverse()
+	for(var zIx in zKeys){
+		var zKey = zKeys[zIx] 
+		var zMap = canvasMap[zKey]
+		var oKeys = Object.keys(zMap).sort().reverse()
+		for(var oIx in oKeys){
+			var oKey = oKeys[oIx]
+			var canvas = zMap[oKey]
+			if(f(canvas)){
+				return
+			}
+		}
+	}
+}
+
+// This function is called when you click the canvas.
+
+function clickOnCanvas(event) {
+
+	event = event || window.event
+	var x = event.clientX
+	var y = event.clientY
+
+	walkcanvasses(function(src){
+		var dx = x - src.offsetLeft
+		var dy = y - src.offsetTop
+
+		var ctx = src.getContext("2d")
+
+		var c = ctx.getImageData(dx, dy, 1, 1).data;
+
+		if (transparent(c)) {
+			return false
+		} else {
+			var operation = configuration[src.id]
+			if(operation.events.click){
+				operation.events.click(operation)
+			}
+			console.log("click "+ src.id);
+			return true
+		}
+	})
+}
+
+var overCanvas = ""
+
+function mousemoveOnCanvas(event){
+	event = event || window.event
+	var x = event.clientX
+	var y = event.clientY
+
+	walkcanvasses(function(src){
+		var id = src.id
+		var dx = x - src.offsetLeft
+		var dy = y - src.offsetTop
+
+		var ctx = src.getContext("2d")
+
+		var c = ctx.getImageData(dx, dy, 1, 1).data;
+
+		if (transparent(c)) {
+			overCanvas = ""
+			return false
+		} else {
+			overCanvas = src.id
+			console.log("over "+ src.id);
+			return true
+		}
+	})
+
+}
+
+function transparent(color) {
+	var t = (color[0] + color[1] + color[2]) * color[3]
+	return t == 0
 }
 
 function generateAudio(){
@@ -216,6 +316,85 @@ function generateAudio(){
 	}
 }
 
+var isFileType = function (type) {
+	return function(fileName){
+		if(fileName.toLowerCase().endsWith(type)){
+			return true
+		}
+		return false
+	}
+}
+
+var isSvg = isFileType(".svg")
+
+var loadedSVGs = 0
+var svgImages = {}
+
+
+function loadSvgImages(callback){
+	svgImages = {}
+	for(var key in configuration){
+		var element = configuration[key]
+		if("image" in element){
+			if(element.image != null){
+				if(isSvg(element.image)){
+					var svgList = []
+					if(element.image in svgImages){
+						svgList = svgImages[element.image].list
+					} else {
+						svgImages[element.image] = {}
+						svgImages[element.image]["list"] = svgList
+					}
+					if(svgList.indexOf(key) < 0){
+						svgList.push(key)
+					}
+				}
+			}
+		}
+	}
+	
+	if(Object.keys(svgImages).length == 0){
+		callback()
+		return
+	}
+		
+	for(var image in svgImages){
+		var req = new XMLHttpRequest()
+		req.open("GET", imageLoc + image, true)					
+		req.overrideMimeType("image/svg+xml");
+		req.onload = function(){
+			if (this.status === 200) {
+				var basesvg = this.response;
+				var url = this.responseURL
+				var pieces = url.split("/")
+				var fName = pieces[pieces.length - 1]
+				for(var ix in svgImages[fName].list){
+					var key = svgImages[fName].list[ix]
+					var rt_element = runtime[key]
+// var element = rt_element.configuration
+					var svg = basesvg
+					rt_element["svg"] = svg
+// if("size" in element){
+// svg.width = element.size[0]
+// svg.height = element.size[1]
+// } else { // use viewBox
+// svg.width = svg.viewBox.baseVal.width
+// svg.height = svg.viewBox.baseVal.height
+// }
+				}
+			} else {
+				console.error(this.statusText);
+			}
+			loadedSVGs ++
+			var images = Object.keys(svgImages).length
+			if(loadedSVGs == images){
+				callback()
+			}
+		}
+		req.send()
+	}
+}
+
 var imageCnt = 0
 
 function generateImageInfo(callback){
@@ -234,148 +413,197 @@ function generateImageInfo(callback){
 	for(var key in runtime){
 		var rt_element = runtime[key]
 		var element = rt_element.configuration
-		var image_info = {}
- 		if("image" in element){
+		var imageinfo = {}
+		rt_element["imageinfo"] = imageinfo	
+		if("image" in element){
 			if(element.image == null){
-				image_info["image"] = null
+				imageinfo["image"] = null
 			} else {
-				var img = new Image();
-				image_info["image"] = img
-				rt_element["imageinfo"] = image_info		
-				img.onload = function(){
-					imageCnt --
-					if(imageCnt == 0){
-						setImageAttributes()
-						callback()
-					}
+				var img
+				var imageSize = null
+				if("size" in element){
+					imageSize = element.size
+				} else if("sizetype" in element){
+					imageSize = sizes[element.sizetype]
 				}
-				img.src = imageLoc+element.image
+				if(rt_element.svg){
+					var xml = rt_element.svg
+					img = new Image();
+					imageinfo["image"] = img	
+					if(!imageSize){
+						imageSize = getImageSize(xml)
+					}
+					xml = insertImageSize(xml,imageSize)
+					rt_element.imageinfo.width = imageSize[0]
+					rt_element.imageinfo.height = imageSize[1]
+					var DOMURL = window.URL || window.webkitURL || window;
+					var svg = new Blob([xml], {type: 'image/svg+xml'})
+					var url = DOMURL.createObjectURL(svg)
+					img.onload = function(){
+						DOMURL.revokeObjectURL(url)
+						imageCnt --
+						if(imageCnt == 0){
+							callback()
+						}
+					}
+					img.src = url
+				} else {
+					if(imageSize){
+						img = new Image(imageSize[0], imageSize[1])
+					} else {
+						img = new Image();
+					}
+					imageinfo["image"] = img					
+					img.onload = function(){
+						imageCnt --
+						if(imageCnt == 0){
+							callback()
+						}
+					}
+					img.src = imageLoc+element.image
+				}
 			}
 		}
 	}
+}
+
+var svg_regex = /([\s\S]*[<]svg[\s\S]*)(viewBox=)(\"|\')\s*(\S+)\s*(\S+)\s*(\S+)\s*(\S*)\s*\3([\s\S]*)/
+var svg_replace2 = "$1 width='$6' height='$7' $2$3$4 $5 $6 $7$3$8"
+
+
+function insertImageSize(svg, imageSize){
+		var svg_replace1 = "$1 width='"+imageSize[0]+"' height='"+imageSize[1]+"' $2$3$4 $5 $6 $7$3$8"
+		return svg.replace(svg_regex, svg_replace1)
+}
+
+function getImageSize(svg){
+	var imageSize = []
+	imageSize[0] = parseFloat(svg.replace(svg_regex,"$6"))
+	imageSize[1] = parseFloat(svg.replace(svg_regex,"$7"))
+	return imageSize
 }
 
 var shapeCnt = 0
 
 var loadedShapes = {}
 
-var svgRequest = function(rt_operation,callback){
-	var operation = rt_operation.configuration
-	if(operation.shape in loadedShapes){
-		createSvgRef(rt_operation, loadedShapes[operation.shape])
-		shapeCnt --
-		if(shapeCnt == 0){
-			callback()
-		}
-	} else {
-		var req = new XMLHttpRequest()
-	
-		req.open("GET", imageLoc + operation.shape, true)					
-		req.overrideMimeType("image/svg+xml");
-		req.onload = function(){
-			if (req.status === 200) {
-				var svgDefs = getSvgDefs()
-				var svg = req.responseXML.documentElement;
-				var svgDef = addSvgDef(svgDefs,svg)
-				svgDef.setAttribute('id',operation.id)
-				addTriggers(svgDef,operation)
-				loadedShapes[operation.shape] = svgDef
-				createSvgRef(rt_operation, svgDef)
-			} else {
-				console.error(req.statusText);
-			}
-			shapeCnt --
-			if(shapeCnt == 0){
-				callback()
-			}
-		}
-		req.send()
-	}
-}
-
-function addTriggers(svg, operation){
-	
-	var svgElements = svg.getElementsByTagName("*")
-	for (var ix = 0; ix < svgElements.length; ix++){
-		var e = svgElements.item(ix)
-		if(e.tagName.toLowerCase() != "g"){
-			if(operation.callback){
-				$(e).on("click",operation, function(operation){operation.onclick()})
-			} else {
-				$(e).on("click", function(){alert(operation.name)})
-			}
-		}
-	}
-}
-
-function addSvgDef(svgDefs, svgDocument){
-	var fragment = createDefFromDocument( svgDocument)
-	svgDefs.appendChild(fragment)
-	return fragment
-}
-
-function createDefFromDocument(svgDocument){
-	var svg
-	if(svgDocument.tagName == "svg"){
-		svg = svgDocument
-	} else {
-		svg = svgDocument.getElementsByTagName("svg")[0]
-	}
-	var g = document.createElement("g")
-	var children = svg.childNodes
-	for(var ix =0; ix < children.length; ix++){
-		var child =  svg.childNodes[ix]
-		var clone = child.cloneNode(true)
-		g.appendChild(clone)
-	}
-	return g
-}
-
-function createSvgRef(rt_operation,svgDef){
-	var ref_element
-	var ref_operation = null
-	var operation = rt_operation.configuration
-	var refElementName = operation.action.reference.element
-	if(refElementName in configuration){
-		ref_element = configuration[refElementName]
-		var refOperationName = operation.action.reference.operation
-		if (refOperationName in ref_element.operation){
-			ref_operation = ref_element.operation[refOperationName]
-			rt_operation["ref_operation"] = ref_operation
-		}
-	}
-	if(ref_operation == undefined){
-		return
-	}
-	var svgDivFetch = getElement("svgDiv", "div")
-	var svgDiv = svgDivFetch.element
-	if(svgDivFetch.generated){
-		svgDiv.innerHTML = "<p>Generated References to SVG definitions</p>"
-	}
-	var svgRef = document.createElementNS("http://www.w3.org/2000/svg","svg")
-	svgDiv.appendChild(svgRef)
-// TODO add real height & width
-	svgRef.setAttribute("id","ref_"+rt_operation.id)
-	svgRef.setAttribute("width",rt_operation.element.imageinfo.width )
-	svgRef.setAttribute("height",rt_operation.element.imageinfo.height )
-	svgRef.setAttribute("viewBox","0 0 "+rt_operation.element.imageinfo.width +" "+ rt_operation.element.imageinfo.height )
-	svgRef.setAttribute("preserveAspectRatio","xMinYMin meet" )
-	svgRef.style.position = "absolute"
-	svgRef.style.top = "0px"
-	svgRef.style.left = "0px"
-	svgRef.style.zIndex = 20;
-	svgRef.style.opacity= 0
-	rt_operation["svg_ref"] = svgRef
-	var svgUse = document.createElementNS("http://www.w3.org/2000/svg","use")
-	svgRef.appendChild(svgUse)
-	svgUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', "#"+rt_operation.id);
-	svgUse.setAttribute("x", 0);
-	svgUse.setAttribute("y", 0);
-	svgRef.setAttribute("onclick","alert('"+operation.action.reference.element+": "+operation.action.reference.operation+" "+operation.name+"')")
-	svgUse.setAttribute("onclick","alert('"+operation.action.reference.element+": "+operation.action.reference.operation+" "+operation.name+"')")
-	
-// svgUse.setAttribute("hidden","hidden")
-}
+//var svgRequest = function(rt_operation,callback){
+//	var operation = rt_operation.configuration
+//	if(operation.shape in loadedShapes){
+//		createSvgRef(rt_operation, loadedShapes[operation.shape])
+//		shapeCnt --
+//		if(shapeCnt == 0){
+//			callback()
+//		}
+//	} else {
+//		var req = new XMLHttpRequest()
+//	
+//		req.open("GET", imageLoc + operation.shape, true)					
+//		req.overrideMimeType("image/svg+xml");
+//		req.onload = function(){
+//			if (req.status === 200) {
+//				var svgDefs = getSvgDefs()
+//				var svg = req.responseXML.documentElement;
+//				var svgDef = addSvgDef(svgDefs,svg)
+//				svgDef.setAttribute('id',operation.id)
+//				addTriggers(svgDef,operation)
+//				loadedShapes[operation.shape] = svgDef
+//				createSvgRef(rt_operation, svgDef)
+//			} else {
+//				console.error(req.statusText);
+//			}
+//			shapeCnt --
+//			if(shapeCnt == 0){
+//				callback()
+//			}
+//		}
+//		req.send()
+//	}
+//}
+//
+//function addTriggers(svg, operation){
+//	
+//	var svgElements = svg.getElementsByTagName("*")
+//	for (var ix = 0; ix < svgElements.length; ix++){
+//		var e = svgElements.item(ix)
+//		if(e.tagName.toLowerCase() != "g"){
+//			if(operation.callback){
+//				$(e).on("click",operation, function(operation){operation.onclick()})
+//			} else {
+//				$(e).on("click", function(){alert(operation.name)})
+//			}
+//		}
+//	}
+//}
+//
+//function addSvgDef(svgDefs, svgDocument){
+//	var fragment = createDefFromDocument( svgDocument)
+//	svgDefs.appendChild(fragment)
+//	return fragment
+//}
+//
+//function createDefFromDocument(svgDocument){
+//	var svg
+//	if(svgDocument.tagName == "svg"){
+//		svg = svgDocument
+//	} else {
+//		svg = svgDocument.getElementsByTagName("svg")[0]
+//	}
+//	var g = document.createElement("g")
+//	var children = svg.childNodes
+//	for(var ix =0; ix < children.length; ix++){
+//		var child =  svg.childNodes[ix]
+//		var clone = child.cloneNode(true)
+//		g.appendChild(clone)
+//	}
+//	return g
+//}
+//
+//function createSvgRef(rt_operation,svgDef){
+//	var ref_element
+//	var ref_operation = null
+//	var operation = rt_operation.configuration
+//	var refElementName = operation.action.reference.element
+//	if(refElementName in configuration){
+//		ref_element = configuration[refElementName]
+//		var refOperationName = operation.action.reference.operation
+//		if (refOperationName in ref_element.operation){
+//			ref_operation = ref_element.operation[refOperationName]
+//			rt_operation["ref_operation"] = ref_operation
+//		}
+//	}
+//	if(ref_operation == undefined){
+//		return
+//	}
+//	var svgDivFetch = getElement("svgDiv", "div")
+//	var svgDiv = svgDivFetch.element
+//	if(svgDivFetch.generated){
+//		svgDiv.innerHTML = "<p>Generated References to SVG definitions</p>"
+//	}
+//	var svgRef = document.createElementNS("http://www.w3.org/2000/svg","svg")
+//	svgDiv.appendChild(svgRef)
+//// TODO add real height & width
+//	svgRef.setAttribute("id","ref_"+rt_operation.id)
+//	svgRef.setAttribute("width",rt_operation.element.imageinfo.width )
+//	svgRef.setAttribute("height",rt_operation.element.imageinfo.height )
+//	svgRef.setAttribute("viewBox","0 0 "+rt_operation.element.imageinfo.width +" "+ rt_operation.element.imageinfo.height )
+//	svgRef.setAttribute("preserveAspectRatio","xMinYMin meet" )
+//	svgRef.style.position = "absolute"
+//	svgRef.style.top = "0px"
+//	svgRef.style.left = "0px"
+//	svgRef.style.zIndex = 20;
+//	svgRef.style.opacity= 0
+//	rt_operation["svg_ref"] = svgRef
+//	var svgUse = document.createElementNS("http://www.w3.org/2000/svg","use")
+//	svgRef.appendChild(svgUse)
+//	svgUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', "#"+rt_operation.id);
+//	svgUse.setAttribute("x", 0);
+//	svgUse.setAttribute("y", 0);
+//	svgRef.setAttribute("onclick","alert('"+operation.action.reference.element+": "+operation.action.reference.operation+" "+operation.name+"')")
+//	svgUse.setAttribute("onclick","alert('"+operation.action.reference.element+": "+operation.action.reference.operation+" "+operation.name+"')")
+//	
+//// svgUse.setAttribute("hidden","hidden")
+//}
 
 function getElement(id, tag, ns){
 	
@@ -465,11 +693,13 @@ function setImageAttributes(){
 	for(var key in runtime){
 		
 		var rt_element = runtime[key]
+		var element = rt_element.configuration
 		if("imageinfo" in rt_element){
-			var image = rt_element.imageinfo.image
+			var imageinfo = rt_element.imageinfo
+			var image = imageinfo.image
 			if(image == null){
-				rt_element.imageinfo["width"] = 0
-				rt_element.imageinfo["height"] = 0
+				imageinfo["width"] = 0
+				imageinfo["height"] = 0
 				
 			} else {
 				rt_element.imageinfo["width"] = image.width
@@ -539,6 +769,10 @@ function inInterval(rt_element){
 				}
 			}
 		}
+		return false
+	}
+	if(rt_element.show){
+		return true
 	}
 	return false
 }
@@ -567,9 +801,21 @@ function currentInterval(element){
 function inSecondsInterval(interval){
 	if(Array.isArray(interval)){
 		if(interval.length == 2 ){
-			if(!(Number.isNaN(interval[0]) ||Number.isNaN(interval[1]) || (interval[0] > interval[1]))){
-				var first = interval[0]* 60 * interval_adjustment
-				var last = interval[1]* 60 * interval_adjustment
+			var i0 = interval[0]
+			if (i0 == "*") { 
+				i0 = Number.NEGATIVE_INFINITY
+			} else {
+				i0 = parseFloat(i0)
+			}
+			var i1 = interval[1]
+			if (i1 == "*") { 
+				i1 = Number.POSITIVE_INFINITY
+			} else {
+				i1 = parseFloat(i1)
+			}
+			if(!(Number.isNaN(i0) || Number.isNaN(i1) || i0 > i1)){
+				var first = i0 * 60 * interval_adjustment
+				var last = i1 * 60 * interval_adjustment
 				if((tick >= first) && (tick <= last)){
 					return true
 				}
@@ -603,7 +849,7 @@ function run(rt_element){
 					rt_operation["context"] = context
 				}
 			}
-//			console.log("Invoking "+rt_element.name+"::"+op_key)
+			console.log("Invoking "+rt_element.name+"::"+op_key)
 			try{
 				window[op_key](rt_element, rt_operation)
 			} catch (e){
@@ -625,7 +871,7 @@ function inactivate(rt_element){
 				}
 			}
 			var inactivate = op_key+"_inactivate"
-//			console.log("Invoking "+element.name+"::"+inactivate)
+// console.log("Invoking "+element.name+"::"+inactivate)
 			try{
 				window[inactivate](rt_element,rt_operation)
 			} catch (e){
@@ -719,14 +965,14 @@ function newBounceState(rt_element, rt_operation){
 	var top, bottom
 	var operation = rt_operation.configuration
 	if("top" in operation){
-		top = valueToPosition(operation.top, rt_element.canvas.height,-1)
+		top = valueToPosition(operation.top, rt_element.canvas.height)
 	} else {
-		top = valueToPosition("80%", rt_element.canvas.height,-1)
+		top = valueToPosition("20%", rt_element.canvas.height)
 	}
 	if("bottom" in operation){
-		bottom = valueToPosition(operation.bottom, rt_element.canvas.height,-1)
+		bottom = valueToPosition(operation.bottom, rt_element.canvas.height)
 	} else {
-		bottom = valueToPosition("20%", rt_element.canvas.height,-1)
+		bottom = valueToPosition("80%", rt_element.canvas.height)
 	}
 	
 	var x = null
@@ -801,6 +1047,20 @@ function valueToPosition(field,range,direction=1){
 	return result
 }
 
+function functions(rt_element,rt_operation){
+	var operation = rt_operation.configuration
+	for(var func_name in operation){
+		var func =operation[func_name]
+		var conditionValue = true
+		if("condition" in func){
+			conditionValue = func.condition(rt_element)
+		}
+		if(conditionValue){
+			func.action(rt_element)
+		}
+	}
+}
+
 function move(rt_element, rt_operation){
 	if(rt_operation.initialized){
 		nextMoveState(rt_element, rt_operation)
@@ -808,19 +1068,26 @@ function move(rt_element, rt_operation){
 		newMoveState(rt_element, rt_operation)
 		rt_operation.initialized = true
 	}
+	var operation = rt_operation.configuration
 	var state = rt_operation.state
 	var context = rt_operation.context
 	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
-	context.drawImage(rt_element.imageinfo.image, state.x, state.y)
-	for(var x_ix in state.x_vector){
-		for(var y_ix in state.y_vector){
-			context.drawImage(
-					rt_element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
+	console.log("image: ("+state.x+", "+state.y+", "+rt_element.imageinfo.image.width+", "+rt_element.imageinfo.image.height+")")
+	if(operation.cycle){
+		for(var x_ix in state.x_vector){
+			for(var y_ix in state.y_vector){
+				context.drawImage(
+						rt_element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
+			}
 		}
+	} else {
+		context.drawImage(rt_element.imageinfo.image, state.x, state.y)
 	}
 }
 
 function newMoveState(rt_element, rt_operation){
+	var operation = rt_operation.configuration
+	var element = rt_element.configuration
 	var state = {}
 	rt_operation["state"] = state
 	var meta = {}
@@ -831,14 +1098,12 @@ function newMoveState(rt_element, rt_operation){
 	rt_operation["meta"] = meta
 	var x = Number.MAX_VALUE
 	var y = Number.MAX_VALUE
-	var operation = rt_operation.configuration
 	if("position" in operation){
-		var x, y
 		if(Array.isArray(operation.position)){
 			if(operation.position.length > 0){
 				x = valueToPosition(operation.position[0], rt_element.canvas.width)
 				if(operation.position.length > 1){
-					y = valueToPosition(operation.position[1], rt_element.canvas.height, -1)
+					y = valueToPosition(operation.position[1], rt_element.canvas.height)
 				}
 			}
 		}
@@ -847,10 +1112,34 @@ function newMoveState(rt_element, rt_operation){
 		x = rt_element.canvas.width / 2
 	}
 	if (y == Number.MAX_VALUE){
-		x = rt_element.canvas.height / 2
+		y = rt_element.canvas.height / 2
 	}
-	state["x"] = x
-	state["y"] = y
+	
+	var align
+	if("align" in element){
+		align = element.align
+	} else {
+		align = ["center","center"]
+	}
+	
+	var x_align, y_align
+	
+	if(align[0] in x_alignment){
+		x_align = x_alignment[align[0]]
+	} else {
+		x_align = x_alignment.center
+	}
+	
+	if(align[1] in y_alignment){
+		y_align = y_alignment[align[1]]
+	} else {
+		y_align = y_alignment.center
+	}
+	
+	var meta ={}
+	state["x"] = x += rt_element.imageinfo.width * x_align
+	state["y"] = y += rt_element.imageinfo.height * y_align
+
 	updateMoveState(rt_element, rt_operation)
 
 }
@@ -911,6 +1200,7 @@ function fixed(rt_element, rt_operation){
 
 function newFixedState(rt_element, rt_operation){
 	var operation = rt_operation.configuration
+	var element = rt_element.configuration
 	var canvas = rt_element.canvas
 	var position, align
 	if("position" in operation){
@@ -918,24 +1208,19 @@ function newFixedState(rt_element, rt_operation){
 	} else {
 		position = ["50%","50%"]
 	}
-	if("align" in operation){
-		align = operation.align
-	} else {
-		align = ["center","center"]
-	}
 	var x = Number.MAX_VALUE
 	var y = Number.MAX_VALUE
 	if(Array.isArray(operation.position)){
 		if(operation.position.length > 0){
 			x = valueToPosition(operation.position[0], rt_element.canvas.width)
 			if(operation.position.length > 1){
-				y = valueToPosition(operation.position[1], rt_element.canvas.height, -1)
+				y = valueToPosition(operation.position[1], rt_element.canvas.height)
 			} else {
-				y = valueToPosition("50%", rt_element.canvas.height, -1)					
+				y = valueToPosition("50%", rt_element.canvas.height)					
 			}
 		} else {
-			x = valueToPosition("50%", rt_element.canvas.width, -1)					
-			y = valueToPosition("50%", rt_element.canvas.height, -1)								
+			x = valueToPosition("50%", rt_element.canvas.width)					
+			y = valueToPosition("50%", rt_element.canvas.height)								
 		}
 	}
 	
@@ -944,6 +1229,12 @@ function newFixedState(rt_element, rt_operation){
 	}
 	if (y == Number.MAX_VALUE){
 		y =  rt_element.canvas.height / 2
+	}
+	
+	if("align" in element){
+		align = element.align
+	} else {
+		align = ["center","center"]
 	}
 	
 	var x_align, y_align
@@ -1087,7 +1378,7 @@ function toNumber(string){
 	}
 	return {
 		 "isPercent": false,
-		 "value": string		
+		 "value": parseFloat(string)		
 		}
 
 }
@@ -1125,7 +1416,7 @@ function getPosition(rt_element, rt_operation){
 			if(operation.position.length > 0){
 				x = valueToPosition(operation.position[0], rt_element.canvas.width)
 				if(operation.position.length > 1){
-					y = valueToPosition(operation.position[1], rt_element.canvas.height, -1)
+					y = valueToPosition(operation.position[1], rt_element.canvas.height)
 				}
 			}
 		}
@@ -1133,3 +1424,13 @@ function getPosition(rt_element, rt_operation){
 	return [x, y]
 }
 
+function showCanvas(name){
+	var rt_element = runtime[name]
+	rt_element.show = true;
+	
+}
+
+function hideCanvas(name){
+	var rt_element = runtime[name]
+	rt_element.show = false;
+}

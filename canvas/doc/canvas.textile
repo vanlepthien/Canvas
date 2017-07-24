@@ -92,8 +92,10 @@ fn2. Currently implemented for operation *fixed*.
 
 h1. TODO
 
-* consolidate fixed and move
-* add option to use image center
-* add "align" to other operations
-* make bounce top and bottom relative to image top and bottom
-* make bounce work in a box, not just up and down
+* consolidate fixed and move - Issue #1
+* add option to use image center - Issue #2
+* add "align" to other operations Issue #2
+* make bounce top and bottom relative to image top and bottom - Issue #3
+* make bounce work in a box, not just up and down - Issue #3
+* add event mechanism - Issue 4
+* fix button processing - Issue 5

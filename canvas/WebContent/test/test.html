@@ -4,19 +4,19 @@
 <meta charset="UTF-8">
 <title>Test canvas</title>
 <link rel="stylesheet" type="text/css" href="canvas.css" />
+<script type="text/javascript" src="jquery-3.2.1.js"></script>
+<script type="text/javascript" src="requestAnimFrame.js"></script>
+<script type="text/javascript" src="defaults.js"></script>
+<script type="text/javascript" src="configuration/test.js"></script>
+<script type="text/javascript" src="customization/customization.js"></script>
+<script type="text/javascript" src="test.js"></script>
 </head>
-<body>
+<body onload="preload()">
 	<button id="start_button" onclick="init()" style="width: 200; height: 100; font-size: xx-large;">Start</button>
 	<div id="canvasses">
-		<canvas id="model" width="1200" height="600"
+		<canvas id="model" width="1280" height="720"
 			style="z-index: -1; border-width: 8px;">Browser does not support HTML5 Canvas</canvas>
 	</div>
 	<div id="svgDiv"></div>
 </body>
-<script type="text/javascript" src="jquery-3.2.1.js"></script>
-<script type="text/javascript" src="requestAnimFrame.js"></script>
-<script type="text/javascript" src="defaults.js"></script>
-<script type="text/javascript" src="configuration/mcs.js"></script>
-<script type="text/javascript" src="customization/customization.js"></script>
-<script type="text/javascript" src="canvas.js"></script>
 </html>
