@@ -13,6 +13,7 @@ var max_distance = 0
 
 var x_alignment = {"left": 0, "center": -.5 , "right": -1}
 var y_alignment = {"top": 0, "center": -.5 , "bottom": -1}
+
 var playable_audios = []
 
 function preload(){
@@ -743,12 +744,15 @@ function draw(){
 		var elapsed = (now - prev) / 1000
 		if(elapsed > 1){
 			// adjust at one second increments
-			var nominal_second = (tick - prev_second_ticks)/(60 * interval_adjustment)
-			console.log("Time:" +(now - start)/1000+" tick: " + tick +" Tick seconds " + tick / (60 * interval_adjustment))
-			console.log("   Nominal second: " + nominal_second+ " Elapsed Ticks: " + (tick - prev_second_ticks))
-			console.log("   Elapsed: " + elapsed+ " Nominal/Elapsed: "+ (nominal_second / elapsed))
-			console.log("   Old Interval Adjustment: "+interval_adjustment)
-			interval_adjustment = ((nominal_second / elapsed) + interval_adjustment)/2
+// var nominal_second = (tick - prev_second_ticks)/(60 * interval_adjustment)
+// console.log("Time:" +(now - start)/1000+" tick: " + tick +" Tick seconds " +
+// tick / (60 * interval_adjustment))
+// console.log(" Nominal second: " + nominal_second+ " Elapsed Ticks: " + (tick
+// - prev_second_ticks))
+// console.log(" Elapsed: " + elapsed+ " Nominal/Elapsed: "+ (nominal_second /
+// elapsed))
+// console.log(" Old Interval Adjustment: "+interval_adjustment)
+// interval_adjustment = ((nominal_second / elapsed) + interval_adjustment)/2
 			console.log("   New Interval Adjustment: "+interval_adjustment)
 			prev_second_ticks = tick
 			prev = now
@@ -983,8 +987,15 @@ function bounce(rt_element, rt_operation){
 }
 
 function newBounceState(rt_element, rt_operation){
+	
+	// [x,y] are the coordinates of the top left corner
+	// x_left = x
+	// x_right = x + imageinfo.width
+	// y_top = y
+	// y_bottom = y + imageinfo.height
 	var top, bottom
 	var operation = rt_operation.configuration
+	var element = rt_element.configuration
 	if("top" in operation){
 		top = valueToPosition(operation.top, rt_element.canvas.height)
 	} else {
@@ -998,19 +1009,34 @@ function newBounceState(rt_element, rt_operation){
 	
 	var x = null
 	var y = null
+	var direction = null
 	if("reference" in operation){
 		x = getReference(rt_operation,"state","x")
 		y = getReference(rt_operation,"state","y")
+		direction = getReference(rt_operation,"state","direction")
+	}
+	if(!direction){
+		direction = 1
 	}
 	
+	var align 
+	if("align" in element){
+		align = element.align
+	} else {
+		align = ["canter", "center"]
+	}
+
 	if(x == null || y == null){
 		var xy = getPosition(rt_element, rt_operation)
 		if(x == null) {
 			x = xy[0]
+			x = getAlignedPosition(x, rt_element.imageinfo.width, align[0], x_alignment)
 		}
 		if(y == null){
 			y = xy[1]
+			y = getAlignedPosition(y, rt_element.imageinfo.height, align[1], y_alignment)
 		}
+		
 	}
 	
 	if (x == null){
@@ -1020,10 +1046,19 @@ function newBounceState(rt_element, rt_operation){
 		y = (top + bottom) / 2
 	}
 	
+	
+	
+	var x_left = x 
+	var x_right = x + rt_element.imageinfo.width
+	var y_top = y
+	var y_bottom = y + rt_element.imageinfo.height
+	
 	var state = {}
+
+	
 	state["x"] = x
 	state["y"] = y
-	state["direction"] = 1
+	state["direction"] = direction
 	rt_operation.state = state
 	
 	var meta = {}
@@ -1040,14 +1075,19 @@ function nextBounceState(rt_element, rt_operation){
 	
 	var x = state.x + speed.hspeed
 	var y = state.y + (state.direction * speed.vspeed)
+	
+	var x_left = x 
+	var x_right = x + rt_element.imageinfo.width
+	var y_top = y
+	var y_bottom = y + rt_element.imageinfo.height
+
+	
 	if(state.direction < 0){
-		if(y <= meta.top){
-			y = meta.top
+		if(y_top <= meta.top){
 			state.direction = 1
 		}
 	} else {
-		if(y >= meta.bottom){
-			y = meta.bottom
+		if(y_bottom >= meta.bottom){
 			state.direction = -1
 		}
 	}
@@ -1068,6 +1108,24 @@ function valueToPosition(field,range,direction=1){
 	return result
 }
 
+function getAlignedPosition(num, dimension, alignment, alignmentDef){
+	var align
+	
+	if(!alignment){
+		alignment = "center"
+	}
+	if(alignment in alignmentDef){
+		align = alignmentDef[alignment]
+	} else {
+		align = alignmentDef.center
+	}
+		
+	var pos = num + align * dimension
+	
+	return pos
+
+}
+
 function move(rt_element, rt_operation){
 	if(rt_operation.initialized){
 		nextMoveState(rt_element, rt_operation)
@@ -1079,7 +1137,9 @@ function move(rt_element, rt_operation){
 	var state = rt_operation.state
 	var context = rt_operation.context
 	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
-	console.log("image: ("+state.x+", "+state.y+", "+rt_element.imageinfo.image.width+", "+rt_element.imageinfo.image.height+")")
+// console.log("image: ("+state.x+", "+state.y+",
+// "+rt_element.imageinfo.image.width+",
+// "+rt_element.imageinfo.image.height+")")
 	if(operation.cycle){
 		for(var x_ix in state.x_vector){
 			for(var y_ix in state.y_vector){
@@ -1204,8 +1264,8 @@ function fixed(rt_element, rt_operation){
 	context.drawImage(
 			rt_element.imageinfo.image, meta.x, meta.y)
 	if(rt_element.configuration.image.startsWith("button_home")){
-		console.log("drawing "+rt_element.configuration.image)
-		console.log("overCanvas "+ overCanvas)
+// console.log("drawing "+rt_element.configuration.image)
+// console.log("overCanvas "+ overCanvas)
 	}
 }
 
