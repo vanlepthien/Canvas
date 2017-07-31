@@ -1,0 +1,25 @@
+h1. Button Generation
+
+Buttons are fixed elements that cause actions to be triggered - change content,
+switch web pages, initiate or cancel animations, etc.
+
+Buttons are not different from any other canvas elements (which can trigger actions of all sorts). What is different is that there is code to assist in the generation of buttons. 
+This allows the generation of sets of buttons with far less work than generation of 
+buttons individually as "fixed":./basics.html#fixed elements.
+
+h2. Configuration
+
+A configuration is defined for a set of buttons. It defines the following:
+- distance := The logical distance to the button. Lower-numbered elements appear 
+in front of higher numbered elements. =:
+
+- positionStart := The position of the zero-indexed button of a set. [x, y]
+
+- positionIncr := The position offset of element[n + 1] from element [n]
+
+- ix := The location index of the first element. The location of the first element
+is [positionStart[==0==] + positionsIncr[==0==] * ix, positionStart[==1==] + positionsIncr[==1==] * ix]
+
+h3. Button definition
+
+

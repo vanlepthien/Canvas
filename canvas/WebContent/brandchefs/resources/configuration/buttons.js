@@ -8,45 +8,45 @@ var leftMenuButtonConfig = {
 }
 
 var leftButtondefs = {
-	"button_about" : {
-		"files" : [ "button_about.svg" ],
-		"events" : {
-			"click" : function() {
+	button_about: {
+		files: [ "button_about.svg" ],
+		events: {
+			click: function() {
 				linkTo("../about/thebrandchefs.html")
 			}
 		}
 	},
-	"button_private" : {
-		"events" : {
-			"click" : function() {
+	button_private: {
+		events: {
+			click: function() {
 				linkTo("../privatelabel/privatelabelpackaging.html")
 			}
 		}
 	},
-	"button_design" : {
-		"events" : {
-			"click" : function() {
+	button_design: {
+		events: {
+			click: function() {
 				linkTo("../design/packagedesign.html")
 			}
 		}
 	},
-	"button_brand" : {
-		"events" : {
-			"click" : function() {
+	button_brand: {
+		events: {
+			click: function() {
 				linkTo("../branding/brandcreation.html")
 			}
 		}
 	},
-	"button_animation" : {
-		"events" : {
-			"click" : function() {
+	button_animation: {
+		events: {
+			click: function() {
 				linkTo("../animation/animation.html")
 			}
 		}
 	},
-	"button_contact" : {
-		"events" : {
-			"click" : function() {
+	button_contact: {
+		events: {
+			click: function() {
 				linkTo("../contact/contact.html")
 			}
 		}
@@ -63,9 +63,9 @@ var homeButtonConfig = {
 }
 
 var homeButtondefs = {
-	"button_home" : {
-		"events" : {
-			"click" : function() {
+	button_home: {
+		events: {
+			click: function() {
 				linkTo("http://www.thebrandchefs.com/")
 			}
 		}
@@ -82,45 +82,45 @@ var mediaButtonConfig = {
 }
 
 var mediaButtondefs = {
-	"button_email" : {
-		"events" : {
-			"click" : function() {
+	button_email: {
+		events: {
+			click: function() {
 				alert("mailto:info@mightyfudge.com")
 			}
 		}
 	},
-	"button_facebook" : {
-		"files" : [ "FB-f-Logo__blue_50.png" ],
-		"events" : {
-			"click" : function() {
+	button_facebook: {
+		files: [ "FB-f-Logo__blue_50.png" ],
+		events: {
+			click: function() {
 				linkTo("https://www.facebook.com/MightyFudgeStudios/")
 			},
 		},
-		"has_over" : false,
-		"show": true,
+		has_over: false,
+		show: true,
 	},
-	"button_twitter" : {
-		"files": ["Twitter_Logo_Blue.svg"],
-		"size": [60,60],
-		"events" : {
-			"click" : function() {
+	button_twitter: {
+		files: ["Twitter_Logo_Blue.svg"],
+		size: [60,60],
+		events: {
+			click: function() {
 				linkTo("https://twitter.com/thebrandchefs")
 			}
 		},
-		"has_over" : false,
-		"show": true,
+		has_over: false,
+		show: true,
 	},
 }
 
 createMenuButtons(mediaButtonConfig, mediaButtondefs)
 
 configuration["footerBar"] = {
-	"distance" : 8,
-	"operation" : {
-		"fixed" : {
-			"position" : [ 0, 720 ],
+	distance: 8,
+	operation: {
+		fixed: {
+			position: [ 0, 720 ],
 		},
 	},
-	"image" : "footerBar.svg",
-	"align" : [ "left", "bottom" ],
+	image: "footerBar.svg",
+	align: [ "left", "bottom" ],
 }

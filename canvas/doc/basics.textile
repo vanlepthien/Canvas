@@ -29,7 +29,7 @@ h3. Defined operations
 
 The following is a list of currently defined operations and their corresponding parameters
 
-- banner := displays rotating text 
+- banner := displays rotating text[99]
 
 * "display parameters":'#display_parameters'
 * align
@@ -42,14 +42,9 @@ The following is a list of currently defined operations and their corresponding 
 * top
 * bottom
 
-- button := create a clickable area over the image for another operation
-
-* shape
-* action
-
 - clear := clear the image
 
-- fixed := draw an element on the canvas at a fixed position
+- %(#fixed)fixed% := draw an element on the canvas at a fixed position
 
 - move := move the image on the canvas
 
@@ -59,21 +54,32 @@ The following is a list of currently defined operations and their corresponding 
 - pan := fills the background with the element image, and moves it as specified
 
 * speed
+* panin [99]
+* panout [99]
 
+- panin := slides a background image in, moving as specified [99]
+
+* speed
+
+- panout := slides a background image out [99]
+
+* speed
 
 h4. Parameter definitions
 
 - bottom := identifies the lower range of motion for operation *bounce*
 - top := identifies the upper range of motion for operation *bounce*
 
-- cycle := if true, the element reenters the display from the edge opposite the one it disappeared from. [1]
+- cycle := if true, the element reenters the display from the edge opposite the one it disappeared from. [1] =:
 
 - per_second := the number of rotations to make each second for operation *banner*
 - rotate := the number of characters to move each rotation for operation *banner*
 - text := the text to be displayed for operation *banner*
 
-- speed := the nominal velocity in pixels per (second / 60) that an element moves on the
-screen. This is normalized 
+- panin := When true, specifies that the *pan* image will slide in at the beginning of
+each duration or when the *pan* element is triggered by an event =:
+- panout := When true, specifies that the *pan* image will slide out at the end of
+each duration or when an event terminates the *pan* duration normally =:
 
 h5(display_parameters). Display parameters
 
@@ -90,6 +96,35 @@ fn1. "true" is the current behavior.
 
 fn2. Currently implemented for operation *fixed*.
 
+h2. Events, Signals, and Triggers [99]
+
+Events serve as notification that something of interest has happened. Triggers are 
+the mechanism by which events are recognized and processed and subsequent actions are 
+initiated.
+
+h3. Events
+
+Events allow interaction between the user and the animation, as well as among elements themselves.
+
+h4. Mouse events
+
+Mouse events are raised when a mouse operation occurs over the visual manifestation of an element. Mouse events are _only_ triggered for the element visible at the point of the mouse operation, i.e., if the RGB color is not #000000 and the opacity is not zero. Mouse events are defined on elements: the actions they trigger may also be defined there.
+
+h4. Timer events
+
+Timer events may be set to trigger element activation or termination. This is useful when fixed durations do not meet the animation needs. Timer events may be set to occur at fixed times, or at a time relative to the time they are created.
+
+h4. Element events
+
+Element events are raised when an element goes through a defined state transition. This could be element initialization, termination, or even position, e.g., _do x when the image hits the edge of the screen._ 
+
+h3. Triggers
+
+Events are happenings of interest. Triggers initiate the actions that are to be done
+when those events occur.
+
+
+
 h1. TODO
 
 * consolidate fixed and move - Issue #1
@@ -99,3 +134,6 @@ h1. TODO
 * make bounce work in a box, not just up and down - Issue #3
 * add event mechanism - Issue 4
 * fix button processing - Issue 5
+
+
+fn99. Not yet implemented
