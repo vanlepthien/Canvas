@@ -485,6 +485,17 @@ function generateImageInfo(callback){
 	}
 }
 
+function loadLocalSvg(xml, img, imageSize, onload){
+	var xml = rt_element.svg
+	img = new Image();
+	xml = insertImageSize(xml,imageSize)
+	var DOMURL = window.URL || window.webkitURL || window;
+	var svg = new Blob([xml], {type: 'image/svg+xml'})
+	var url = DOMURL.createObjectURL(svg)
+	onload()
+	img.src = url
+}
+
 var svg_regex = /([\s\S]*[<]svg[\s\S]*)(viewBox=)(\"|\')\s*(\S+)\s*(\S+)\s*(\S+)\s*(\S*)\s*\3([\s\S]*)/
 var svg_replace2 = "$1 width='$6' height='$7' $2$3$4 $5 $6 $7$3$8"
 
@@ -1257,16 +1268,16 @@ function fixed(rt_element, rt_operation){
 	if(!rt_operation.initialized){
 		newFixedState(rt_element, rt_operation)
 		rt_operation.initialized = true;
-	}
 	var meta = rt_operation.meta
 	var context = rt_operation.context
 	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
 	context.drawImage(
 			rt_element.imageinfo.image, meta.x, meta.y)
-	if(rt_element.configuration.image.startsWith("button_home")){
+	}
+// if(rt_element.configuration.image.startsWith("button_home")){
 // console.log("drawing "+rt_element.configuration.image)
 // console.log("overCanvas "+ overCanvas)
-	}
+// }
 }
 
 function newFixedState(rt_element, rt_operation){
@@ -1329,6 +1340,48 @@ function newFixedState(rt_element, rt_operation){
 	rt_operation.meta  = meta
 }
 
+function marquee(rt_element, rt_operation){
+	if(!rt_operation.initialized){
+		newMarqueeState(rt_element, rt_operation)
+		rt_operation.initialized = true;
+	var meta = rt_operation.meta
+	var context = rt_operation.context
+	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
+	context.drawImage(
+			rt_element.imageinfo.image, meta.x, meta.y)
+	}
+}
+
+function newMarqueeState(rt_element, rt_operation){
+	var dx = .1
+	var dy = 0
+	
+	if(rt_operation.speed){
+		dx = rt_operation.speed[0]
+		dy = rt_operation.speed[1]
+	}
+	
+	var fill = "#000000"
+		if(rt_operation.fill){
+			fill = rt_operation.fill
+		}
+	
+	var stroke = "#000000"
+		if(rt_operation.stroke){
+			stroke = rt_operation.stroke
+		}
+	marquee =
+		'<svg>'+
+			'<text text-anchor="start" x="0%" y="50%" '+
+				'dy="'+dy+'" dx="'+dx+'" '
+				'class="text" font-family="sans-serif"'+
+				' stroke="'+stroke+'" fill="'+fill+'">'+
+				rt_operation.text+
+			'</text>'+
+    	'</svg>'
+
+	
+}
 
 function pan(rt_element, rt_operation){
 	if(rt_operation.initialized){
@@ -1428,6 +1481,9 @@ function fill(rt_element, rt_operation){
 function show(rt_element, rt_operation){
 	var operation = rt_operation.configuration
 	rt_element.show = operation.canvas.indexOf(overCanvas) >= 0
+	if(!rt_element.show){
+		rt_operation.initialized = false
+	}
 }
 
 function show_overlay(rt_element, rt_operation){
@@ -1437,6 +1493,9 @@ function show_overlay(rt_element, rt_operation){
 		for(var ix in canvas){
 			var oName = canvas[ix]
 			var rt_overlay = runtime[oName]
+			if(!rt_overlay.show){
+				rt_overlay.operation.fixed.initialized = false
+			}
 			rt_overlay.show = true
 		}
 	}
@@ -1541,4 +1600,8 @@ function getPosition(rt_element, rt_operation){
 		}
 	} 
 	return [x, y]
+}
+
+var contact = function (address){
+	window.location.href = address
 }
