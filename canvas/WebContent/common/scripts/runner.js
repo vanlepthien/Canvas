@@ -1603,5 +1603,6 @@ function getPosition(rt_element, rt_operation){
 }
 
 var contact = function (address){
-	window.location.href = address
+	linkTo(address)
+	return true
 }
