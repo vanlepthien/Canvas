@@ -126,36 +126,6 @@ function nextBounceState(rt_element, rt_operation){
 	
 }
 
-function valueToPosition(field,range,direction=1){
-	var value = toNumber(field)
-	var result = value.value
-	if(value.isPercent){
-		result = value.value * range
-	}
-	if(direction < 0){
-		return range - result
-	}
-	return result
-}
-
-function getAlignedPosition(num, dimension, alignment, alignmentDef){
-	var align
-	
-	if(!alignment){
-		alignment = "center"
-	}
-	if(alignment in alignmentDef){
-		align = alignmentDef[alignment]
-	} else {
-		align = alignmentDef.center
-	}
-		
-	var pos = num + align * dimension
-	
-	return pos
-
-}
-
 function move(rt_element, rt_operation){
 	if(rt_operation.initialized){
 		nextMoveState(rt_element, rt_operation)
@@ -582,5 +552,70 @@ function switchAudio(rt_element, rt_operation){
 		nextSoundState(rt_element, rt_operation)
 	} else {
 		console.log("Sound loop")
+	}
+}
+
+function video(rt_element, rt_operation){
+	var state 
+	if(rt_operation.initialized){
+		nextVideoState(rt_element, rt_operation)
+	} else {
+		newVideoState(rt_element, rt_operation)
+		rt_operation.initialized = true
+	}
+}
+
+function newVideoState(rt_element, rt_operation){
+	var operation = rt_operation.configuration
+	rt_operation["state"] = {}
+	rt_operation.state["video_iteration"] = 0
+	rt_operation.state["current_video"] =  rt_operation.videos[rt_operation.state.video_iteration]
+	rt_operation.state["switch_video"] =  rt_operation.switch_video
+	rt_operation.state.current_video.play()
+	console.log("Playing "+rt_operation.state.current_video.getAttribute("src"))
+}
+
+function nextVideoState(rt_element, rt_operation){
+	if(rt_operation.state.switch_video){
+		rt_operation.state.current_video.pause()
+		rt_operation.state.switch_video = false
+		if(rt_operation.state.video_iteration < 0){
+			rt_operation.state.video_iteration = 0
+		} else {
+			rt_operation.state.video_iteration ++
+		}
+		if(rt_operation.state.video_iteration < rt_operation.videos.length){
+			rt_operation.state.current_video = operation.videos[rt_operation.state.video_iteration]
+			rt_operation.state.current_video.play()
+			console.log("Playing "+rt_operation.state.current_video.getAttribute("src")+"("+rt_operation.state.video_iteration+")")
+		} 
+		if(operation.loop){
+			rt_operation.state.video_iteration = 0
+			rt_operation.state.current_video = rt_operation.videos[rt_operation.state.video_iteration]
+			rt_operation.state.current_video.play()
+			console.log("Replaying "+rt_operation.state.current_video.getAttribute("src"))
+		}
+	}
+}
+
+function video_inactivation(rt_element, rt_operation){
+	if(rt_operation.state.current_video.ended ){
+		
+	} else {
+		rt_operation.state.current_video.pause()
+		rt_operation.state.current_video.current_time = 0
+	}
+	rt_operation.state.video_iteration = -1
+}
+
+function switchVideo(rt_element, rt_operation){
+	var operation = rt_operation.configuration
+	if(!operation.loop){
+		console.log("Video Switch")
+		rt_operation.state["switch_video"] = true
+		// Don't wait for next interval
+		nextVideoState(rt_element, rt_operation)
+	} else {
+		console.log("Video loop")
 	}
 }
