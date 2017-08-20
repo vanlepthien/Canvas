@@ -135,20 +135,20 @@ function move(rt_element, rt_operation){
 	}
 	var operation = rt_operation.configuration
 	var state = rt_operation.state
+	var meta = rt_operation.meta
 	var context = rt_operation.context
 	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
-// console.log("image: ("+state.x+", "+state.y+",
-// "+rt_element.imageinfo.image.width+",
-// "+rt_element.imageinfo.image.height+")")
+	
+	var image_ix = nextImageIx(state, meta.interval, rt_element.imageinfo.length)
+	var image = getElementImage(rt_element, rt_operation, image_ix)
 	if(operation.cycle){
 		for(var x_ix in state.x_vector){
 			for(var y_ix in state.y_vector){
-				context.drawImage(
-						rt_element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
+				context.drawImage(image, state.x_vector[x_ix], state.y_vector[y_ix])
 			}
 		}
 	} else {
-		context.drawImage(rt_element.imageinfo.image, state.x, state.y)
+		context.drawImage(image, state.x, state.y)
 	}
 }
 
@@ -160,8 +160,12 @@ function newMoveState(rt_element, rt_operation){
 	var meta = {}
 	meta["width"] =  rt_element.canvas.width
 	meta["height"] =  rt_element.canvas.height
-	meta["imagewidth"] =  rt_element.imageinfo.width
-	meta["imageheight"] =  rt_element.imageinfo.height
+	meta["imagewidth"] =  rt_element.imageinfo[0].width
+	meta["imageheight"] =  rt_element.imageinfo[0].height
+	meta["interval"] = 10
+	if(element.interval){
+		meta["interval"] = element.interval
+	} 
 	rt_operation["meta"] = meta
 	var x = Number.MAX_VALUE
 	var y = Number.MAX_VALUE
@@ -169,9 +173,9 @@ function newMoveState(rt_element, rt_operation){
 		if(Array.isArray(operation.position)){
 			if(operation.position.length > 0){
 				x = valueToPosition(operation.position[0], rt_element.canvas.width)
-				if(operation.position.length > 1){
-					y = valueToPosition(operation.position[1], rt_element.canvas.height)
-				}
+			}
+			if(operation.position.length > 1){
+				y = valueToPosition(operation.position[1], rt_element.canvas.height)
 			}
 		}
 	} 
@@ -203,9 +207,11 @@ function newMoveState(rt_element, rt_operation){
 		y_align = y_alignment.center
 	}
 	
-	var meta ={}
-	state["x"] = x += rt_element.imageinfo.width * x_align
-	state["y"] = y += rt_element.imageinfo.height * y_align
+//	var meta ={}
+	state["x"] = x += rt_element.imageinfo[0].width * x_align
+	state["y"] = y += rt_element.imageinfo[0].height * y_align
+	
+	state["tick"] = tick
 
 	updateMoveState(rt_element, rt_operation)
 
@@ -254,19 +260,43 @@ function clear(context,element, operation){
 }
 
 function fixed(rt_element, rt_operation){
-	if(!rt_operation.initialized){
+	if(rt_operation.initialized){ 
+		nextFixedState(rt_element,rt_operation)
+	}else {
 		newFixedState(rt_element, rt_operation)
 		rt_operation.initialized = true;
+	}
 	var meta = rt_operation.meta
+	var state = rt_operation.state
 	var context = rt_operation.context
 	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
-	context.drawImage(
-			rt_element.imageinfo.image, meta.x, meta.y)
-	}
+	var image_ix = nextImageIx(state, meta.interval, rt_element.imageinfo.length)
+	var image = getElementImage(rt_element, rt_operation, image_ix)
+	context.drawImage(image, meta.x, meta.y)
+	
 // if(rt_element.configuration.image.startsWith("button_home")){
 // console.log("drawing "+rt_element.configuration.image)
 // console.log("overCanvas "+ overCanvas)
 // }
+}
+	
+function nextFixedState(rt_element, rt_operation){
+	var meta = rt_operation.meta
+	var state = rt_operation.state
+	var element = rt_element.configuration
+		
+}
+
+function nextImageIx(state, interval, count){
+	if(count <= 1){
+		return 0
+	}
+	var elapsed = tick - state.tick
+	if(count * interval < elapsed){
+			state.tick = tick
+	}
+	return Math.floor((elapsed / interval)) % count
+
 }
 
 function newFixedState(rt_element, rt_operation){
@@ -323,10 +353,23 @@ function newFixedState(rt_element, rt_operation){
 	}
 	
 	var meta ={}
-	meta["x"] = x += rt_element.imageinfo.width * x_align
-	meta["y"] = y += rt_element.imageinfo.height * y_align
+	meta["x"] = x += rt_element.imageinfo[0].width * x_align
+	meta["y"] = y += rt_element.imageinfo[0].height * y_align
+	
+	if(element.interval){
+		meta.interval = element.interval
+	} else {
+		meta["interval"] = 100
+	}
 	
 	rt_operation.meta  = meta
+	
+	var state = {}
+	state["image_ix"] = 0
+	state["tick"] = tick
+		
+	rt_operation["state"] = state
+
 }
 
 function marquee(rt_element, rt_operation){
@@ -618,4 +661,129 @@ function switchVideo(rt_element, rt_operation){
 	} else {
 		console.log("Video loop")
 	}
+}
+
+/**
+ * vimeo
+ * @param rt_element
+ * @param rt_operation
+ * @returns
+ * 
+ * Unlike most other operations, this just dynamically loads the video and 
+ * runs when the 
+ * 
+ * Process:
+ * 0. If video initialized, return
+ * 1. If Vimeo player not loaded, create &lt;script&gt; element to load it
+ * 2. Create &lt;iframe&gt; element for the video at the proper location
+ * 3. Create a new player
+ * 3.1 Add handlers (pause, ended, error)
+ * 
+ */
+function vimeo(rt_element,rt_operation){
+	var state 
+	if(rt_operation.initialized){
+		return
+	} 
+	newVimeoState(rt_element, rt_operation)
+	rt_operation.initialized = true	
+}
+
+function newVimeoState(rt_element, rt_operation){
+	var element = rt_element.configuration
+	var operation = rt_operation.configuration
+	
+	if($("#iframes").length == 0){
+		var text = "<div id='iframes'></div>"
+		$("body").append(text)
+	}
+	var iframes = $("#iframes")
+	
+	var iframe_id = "vimeo_iframe_"+rt_element.name
+	
+	$(iframes).append("<iframe id='"+iframe_id+"' ></iframe>")
+	
+	var iframe = $("#"+iframe_id)[0]
+	
+	var src = operation.video
+	
+	var options = []
+	
+	if(operation.autoplay){
+		options.push("autoplay=1")
+	}
+	
+	if(operation.autopause){
+		options.push("autopause=1")
+	} else {
+		options.push("autopause=0")
+	}
+	
+	if(options.length > 0){
+		src += "?" + options.join()
+	}
+	
+	var xy = getPosition(rt_element, rt_operation)
+	var left = xy[0]
+	left = getAlignedPosition(left, operation.width, element.align[0], x_alignment)
+	var top = xy[1]
+	top = getAlignedPosition(top, operation.height, element.align[1], y_alignment)
+	
+	var width = operation.width || 640
+	var height = operation.height || 360
+	var top = top || 8
+	var left = left || 8
+	var frameborder = operation.frameborder || 0
+	
+	
+	$(iframe).attr("rt_element",rt_element.name)
+	$(iframe).attr("src",src)
+	$(iframe).attr("width",width)
+	$(iframe).attr("height",height)
+	$(iframe).attr("frameborder",frameborder)
+	$(iframe).attr("webkitallowfullscreen","webkitallowfullscreen")
+	$(iframe).attr("webkitallowfullscreen","webkitallowfullscreen")
+	$(iframe).attr("mozallowfullscreen","mozallowfullscreen")
+	$(iframe).attr("allowfullscreen","allowfullscreen")
+	$(iframe).css("position","absolute")
+	$(iframe).css("top",top)
+	$(iframe).css("left",left)
+	$(iframe).css("z-index",1000)
+	
+	var meta = {}
+	meta.iframe = iframe
+
+	try{
+		var player = new Vimeo.Player(iframe)
+		meta.player = player
+			
+		if(operation.erase){
+			player.on("ended",function(status){
+				console.log("vimeo ended")
+				console.log(status)
+				var iframe = this.element
+				var name = $(iframe).attr("rt_element")
+				$(iframe).remove()
+				rt_element = runtime[name]
+				rt_operation = rt_element.operations.vimeo
+				rt_operation.initialized = false
+			})
+		}
+		
+		player.play();
+	} catch(e){
+		$(iframe).remove()
+		console.log(e)
+	}
+
+}
+
+function vimeo_inactivation(rt_element, rt_operation){
+	if(rt_operation.state.current_video.ended ){
+		
+	} else {
+		rt_operation.state.current_video.pause()
+		rt_operation.state.current_video.current_time = 0
+	}
+	rt_operation.state.video_iteration = -1
 }

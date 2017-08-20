@@ -1,0 +1,84 @@
+h1. Speed
+
+Speed is defined for operations where images are moved across the page.
+
+If an element is defined with a _distance_ parameter, as well as _speed_, the
+rate at which the element will move across the screen is scaled by the 
+_distance_ value.
+
+There are two ways to specify _speed_.
+
+h2. Speed as an array
+
+Speed may be specified as a two value array, the first item being speed in the
+_x_ direction and the second the _y_ direction. The units are pixels per screen 
+refresh, so a value of 1 makes things move pretty fast.
+
+bc.. // configuration.js
+configuration["item1"] = { ...
+    operations:{
+        move: {
+            speed: [.3, 0], ...
+            }
+        }
+    }
+    
+p. If a number of elements are moving at the same logical speed, the speed may be 
+specified in a variable.
+
+bc.. // configuration.js
+var drift = [.3, 0] ...
+configuration["item1"] = { ...
+    operations:{
+        move: {
+            speed: drift, ...
+            }
+        }
+    }
+configuration["item2"] = { ...
+    operations:{
+        move: {
+            speed: drift, ...
+            }
+        }
+    }
+p. This ensures multiple elements are moving at the same rate.
+
+h2. Speed as a function
+
+Speed may need to be defined as a calculated value. This can be accomplished 
+be defining a speed function. The function may be defined inline or at another 
+location 
+
+bc.. // configuration.js
+...
+configuration ["element"] = {
+    distance : 2,
+    duration : [ 0, "*" ],
+    interval : 10,
+    operation : {
+        "move" : {
+            speed : {
+                start: [.3, .2],
+                speed : deltaV
+            },
+            position : [ "20%", "60%" ],
+            cycle : true
+        },
+    },
+// calc.js
+...
+function deltaV(rt_element, rt_operation) {
+    var operation = rt_operation.configuration
+    var dx = rt_operation.state.dx || rt_operation.configuration.speed.start[0]
+    var dy = rt_operation.state.dy || rt_operation.configuration.speed.start[1]
+    ...
+    rt_operation.state.dx = dx
+    rt_operation.state.dy = dy
+    return [ dx, dy ]
+}
+p. The function is defined in the 
+operation as rt_operation.speed.speed. Parameters are the runtime element and the runtime operation. 
+The function returns a two dimensional array. 
+
+Initial values and constants may also be defined within rt_operation.speed.

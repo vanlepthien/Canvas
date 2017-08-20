@@ -11,8 +11,8 @@ var nominal_tick = 0
 
 var max_distance = 0
 
-var x_alignment = {"left": 0, "center": -.5 , "right": -1}
-var y_alignment = {"top": 0, "center": -.5 , "bottom": -1}
+const x_alignment = {"left": 0, "center": -.5 , "right": -1}
+const y_alignment = {"top": 0, "center": -.5 , "bottom": -1}
 
 var playable_audios = []
 
@@ -21,7 +21,8 @@ function preload(){
 	// TODO: dynamically create start button here?
 
 	createRuntime()
-	generateCanvasses(defaults.canvascontainer, defaults.canvasmodel)
+	getGlobalDimensions(defaults.canvasmodel)
+	generateCanvasses(defaults.canvascontainer)
 	loadSvgImages( // function to trigger the next initialization (dependent on
 					// this)
 			function (){
@@ -111,9 +112,9 @@ function createRuntime(){
 		
 		var durations = []
 		// durations is of the form [[start1,end1],[start2,end2],...]
-		// where 
-		//	startn and endn are either numeric or "*"
-		//	endn >= startn 
+		// where
+		// startn and endn are either numeric or "*"
+		// endn >= startn
 		
 		if(element.duration){
 			if(Array.isArray(element.duration)){
@@ -185,18 +186,28 @@ function addCanvas(canvas) {
 	canvasIx ++
 }
 
+var global_width
+var global_height
+var global_left
+var global_top
 
-function generateCanvasses(id,cm_id){
+function getGlobalDimensions(cm_id){
+	var model = $("#"+cm_id).get(0)
+	var bnd = getBoundaries(model)
+	global_width = bnd.width
+	global_height= bnd.height
+	global_top = bnd.top
+	global_left = bnd.left
+}
+function generateCanvasses(id){
 	var distances = []
 	var distanceMap = {}
 	var div = $("#"+id).get(0)
-	var model = $("#"+cm_id).get(0)
 	var s = 0
-	var bnd = getBoundaries(model)
-	var width = bnd.width
-	var height= bnd.height
-	var top = bnd.top
-	var left = bnd.left
+	var width = global_width
+	var height= global_height
+	var top = global_top
+	var left = global_left
 	for (var key in configuration){
 		var element = configuration[key]
 		if("distance" in element){
@@ -321,7 +332,7 @@ function mousemoveOnCanvas(event){
 }
 
 function transparent(color) {
-	var t = (color[0] + color[1] + color[2]) * color[3]
+	var t =  color[3]
 	return t == 0
 }
 
@@ -410,18 +421,25 @@ function loadSvgImages(callback){
 	svgImages = {}
 	for(var key in configuration){
 		var element = configuration[key]
-		if("image" in element){
-			if(element.image != null){
-				if(isSvg(element.image)){
+		if(element.image){
+			var images = []
+			if(Array.isArray(element.image)){
+				images = element.image
+			} else {
+				images.push(element.image)
+			}
+			for(var ix in images){
+				var image = images[ix]
+				if(isSvg(image)){
 					var svgList = []
-					if(element.image in svgImages){
-						svgList = svgImages[element.image].list
+					if(image in svgImages){
+						svgList = svgImages[image].list
 					} else {
-						svgImages[element.image] = {}
-						svgImages[element.image]["list"] = svgList
+						svgImages[image] = {}
+						svgImages[image]["list"] = svgList
 					}
 					if(svgList.indexOf(key) < 0){
-						svgList.push(key)
+						svgList.push([key,ix])
 					}
 				}
 			}
@@ -439,23 +457,36 @@ function loadSvgImages(callback){
 		req.overrideMimeType("image/svg+xml");
 		req.onload = function(){
 			if (this.status === 200) {
-				var basesvg = this.response;
+				var svg_element = this.responseXML.documentElement
+				var svg = document.importNode(svg_element,true)
+				var svg_div = $("#svgDiv")
+				if(svg_div.length == 0){
+					$("body").append("<div id=\"svgDiv\"></div>")
+					svg_div = $("#svgDiv")
+					$(svg_div).css("visibility","hidden")
+				}
+				$(svg_div).append(svg)
 				var url = this.responseURL
 				var pieces = url.split("/")
 				var fName = pieces[pieces.length - 1]
+				$(svg).attr("id",fName)
+				var svg_children = $(svg).children()
+				if(svg_children.length > 1){
+					var g = $(svg).append("g")
+					$(g).append(svg_children)
+				}
 				for(var ix in svgImages[fName].list){
-					var key = svgImages[fName].list[ix]
+					var key = svgImages[fName].list[ix][0]
+					var image_ix = svgImages[fName].list[ix][1]
 					var rt_element = runtime[key]
-// var element = rt_element.configuration
-					var svg = basesvg
-					rt_element["svg"] = svg
-// if("size" in element){
-// svg.width = element.size[0]
-// svg.height = element.size[1]
-// } else { // use viewBox
-// svg.width = svg.viewBox.baseVal.width
-// svg.height = svg.viewBox.baseVal.height
-// }
+					var svgs
+					if(rt_element.svg){
+						svgs = rt_element.svg
+					} else {
+						svgs = {}
+						rt_element["svg"] =  svgs
+					}
+					svgs[image_ix] = svg
 				}
 			} else {
 				console.error(this.statusText);
@@ -470,13 +501,21 @@ function loadSvgImages(callback){
 	}
 }
 
+function getSvgDoc(svg){
+	
+}
+
 var imageCnt = 0
 
 function generateImageInfo(callback){
 	for(var key in configuration){
 		var element = configuration[key]
-		if("image" in element){
-			if(element.image != null){
+		if(element.image){
+			if(Array.isArray(element.image)){
+				for(var ix in element.image){
+					imageCnt ++
+				}
+			}else {
 				imageCnt ++
 			}
 		}
@@ -488,40 +527,35 @@ function generateImageInfo(callback){
 	for(var key in runtime){
 		var rt_element = runtime[key]
 		var element = rt_element.configuration
-		var imageinfo = {}
-		rt_element["imageinfo"] = imageinfo	
-		if("image" in element){
-			if(element.image == null){
-				imageinfo["image"] = null
+		var images = []
+		rt_element["imageinfo"] = images
+		
+		if(element.image){
+			var image_array
+			if(Array.isArray(element.image)){
+				image_array = element.image
 			} else {
+				image_array = [element.image]
+			}
+			for(var image_entry in image_array){
+				var imageinfo = {}
 				var img
 				var imageSize = null
 				if("size" in element){
 					imageSize = element.size
-				} else if("sizetype" in element){
-					imageSize = sizes[element.sizetype]
-				}
-				if(rt_element.svg){
-					var xml = rt_element.svg
-					img = new Image();
-					imageinfo["image"] = img	
+				} 
+				if(rt_element.svg && rt_element.svg[image_entry]){
+					imageCnt --
+					imageinfo.svg = rt_element.svg[image_entry]
 					if(!imageSize){
-						imageSize = getImageSize(xml)
+						imageSize = getSvgImageSize(imageinfo.svg)						
 					}
-					xml = insertImageSize(xml,imageSize)
-					rt_element.imageinfo.width = imageSize[0]
-					rt_element.imageinfo.height = imageSize[1]
-					var DOMURL = window.URL || window.webkitURL || window;
-					var svg = new Blob([xml], {type: 'image/svg+xml'})
-					var url = DOMURL.createObjectURL(svg)
-					img.onload = function(){
-						DOMURL.revokeObjectURL(url)
-						imageCnt --
-						if(imageCnt == 0){
-							callback()
-						}
+					imageinfo.width = imageSize[0]
+					imageinfo.height = imageSize[1]
+
+					if(imageCnt == 0){
+						callback()
 					}
-					img.src = url
 				} else {
 					if(imageSize){
 						img = new Image(imageSize[0], imageSize[1])
@@ -529,6 +563,7 @@ function generateImageInfo(callback){
 						img = new Image();
 					}
 					imageinfo["image"] = img
+					imageinfo["file"] = image_array[image_entry]
 					img["imageinfo"] = imageinfo
 					img.onload = function(){
 						imageCnt --
@@ -538,8 +573,9 @@ function generateImageInfo(callback){
 							callback()
 						}
 					}
-					img.src = defaults.imageLoc+element.image
+					img.src = defaults.imageLoc+imageinfo.file
 				}
+				images.push(imageinfo)
 			}
 		}
 	}
@@ -576,127 +612,6 @@ var shapeCnt = 0
 
 var loadedShapes = {}
 
-// var svgRequest = function(rt_operation,callback){
-// var operation = rt_operation.configuration
-// if(operation.shape in loadedShapes){
-// createSvgRef(rt_operation, loadedShapes[operation.shape])
-// shapeCnt --
-// if(shapeCnt == 0){
-// callback()
-// }
-// } else {
-// var req = new XMLHttpRequest()
-//	
-// req.open("GET", defaults.imageLoc + operation.shape, true)
-// req.overrideMimeType("image/svg+xml");
-// req.onload = function(){
-// if (req.status === 200) {
-// var svgDefs = getSvgDefs()
-// var svg = req.responseXML.documentElement;
-// var svgDef = addSvgDef(svgDefs,svg)
-// svgDef.setAttribute('id',operation.id)
-// addTriggers(svgDef,operation)
-// loadedShapes[operation.shape] = svgDef
-// createSvgRef(rt_operation, svgDef)
-// } else {
-// console.error(req.statusText);
-// }
-// shapeCnt --
-// if(shapeCnt == 0){
-// callback()
-// }
-// }
-// req.send()
-// }
-// }
-//
-// function addTriggers(svg, operation){
-//	
-// var svgElements = svg.getElementsByTagName("*")
-// for (var ix = 0; ix < svgElements.length; ix++){
-// var e = svgElements.item(ix)
-// if(e.tagName.toLowerCase() != "g"){
-// if(operation.callback){
-// $(e).on("click",operation, function(operation){operation.onclick()})
-// } else {
-// $(e).on("click", function(){alert(operation.name)})
-// }
-// }
-// }
-// }
-//
-// function addSvgDef(svgDefs, svgDocument){
-// var fragment = createDefFromDocument( svgDocument)
-// svgDefs.appendChild(fragment)
-// return fragment
-// }
-//
-// function createDefFromDocument(svgDocument){
-// var svg
-// if(svgDocument.tagName == "svg"){
-// svg = svgDocument
-// } else {
-// svg = svgDocument.getElementsByTagName("svg")[0]
-// }
-// var g = document.createElement("g")
-// var children = svg.childNodes
-// for(var ix =0; ix < children.length; ix++){
-// var child = svg.childNodes[ix]
-// var clone = child.cloneNode(true)
-// g.appendChild(clone)
-// }
-// return g
-// }
-//
-// function createSvgRef(rt_operation,svgDef){
-// var ref_element
-// var ref_operation = null
-// var operation = rt_operation.configuration
-// var refElementName = operation.action.reference.element
-// if(refElementName in configuration){
-// ref_element = configuration[refElementName]
-// var refOperationName = operation.action.reference.operation
-// if (refOperationName in ref_element.operation){
-// ref_operation = ref_element.operation[refOperationName]
-// rt_operation["ref_operation"] = ref_operation
-// }
-// }
-// if(ref_operation == undefined){
-// return
-// }
-// var svgDivFetch = getElement("svgDiv", "div")
-// var svgDiv = svgDivFetch.element
-// if(svgDivFetch.generated){
-// svgDiv.innerHTML = "<p>Generated References to SVG definitions</p>"
-// }
-// var svgRef = document.createElementNS("http://www.w3.org/2000/svg","svg")
-// svgDiv.appendChild(svgRef)
-// // TODO add real height & width
-// svgRef.setAttribute("id","ref_"+rt_operation.id)
-// svgRef.setAttribute("width",rt_operation.element.imageinfo.width )
-// svgRef.setAttribute("height",rt_operation.element.imageinfo.height )
-// svgRef.setAttribute("viewBox","0 0 "+rt_operation.element.imageinfo.width +"
-// "+ rt_operation.element.imageinfo.height )
-// svgRef.setAttribute("preserveAspectRatio","xMinYMin meet" )
-// svgRef.style.position = "absolute"
-// svgRef.style.top = "0px"
-// svgRef.style.left = "0px"
-// svgRef.style.zIndex = 20;
-// svgRef.style.opacity= 0
-// rt_operation["svg_ref"] = svgRef
-// var svgUse = document.createElementNS("http://www.w3.org/2000/svg","use")
-// svgRef.appendChild(svgUse)
-// svgUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href',
-// "#"+rt_operation.id);
-// svgUse.setAttribute("x", 0);
-// svgUse.setAttribute("y", 0);
-// svgRef.setAttribute("onclick","alert('"+operation.action.reference.element+":
-// "+operation.action.reference.operation+" "+operation.name+"')")
-// svgUse.setAttribute("onclick","alert('"+operation.action.reference.element+":
-// "+operation.action.reference.operation+" "+operation.name+"')")
-//	
-// // svgUse.setAttribute("hidden","hidden")
-// }
 
 function getElement(id, tag, ns){
 	
@@ -715,41 +630,6 @@ function getElement(id, tag, ns){
 	return {"element":element, "generated":true}
 }
 
-function generateImageMasks(callback){
-	for(var key in configuration){
-		var element = configuration[key]
-		if("operation" in element){
-			if("button" in element.operation){
-				if("shape" in element.operation.button){
-					shapeCnt ++
-				}
-			}
-		}
-	}
-	if(shapeCnt == 0){
-		callback()
-		return
-	}
-	for(var key in runtime){
-		var rt_element = runtime[key]
-		var element = rt_element.configuration
-		if("operation" in rt_element){
-			if("button" in rt_element.operation){
-				var rt_operation = rt_element.operation.button
-				var operation = rt_operation.configuration
-				if("shape" in operation){
-					rt_operation["id"] = generateId(operation.shape)
-					if(typeof SVGPathElement === "undefined"){
-						
-					} else {
-						svgRequest(rt_operation, callback)
-					}
-				}
-			}
-		}
-	}
-}
-
 function generateId(inString){
 	return btoa(inString).slice(0,-2)
 }
@@ -765,21 +645,6 @@ function getSvgDefs(){
 	}
 	return svgDefs
 }
-
-// function generateOperations(){
-// for(var key in configuration){
-// var element = configuration[key]
-// var element = rt_element[key]
-// if("operation" in element){
-// var operations = element.operation
-// for(var op_name in operations){
-// var operation = operations[op_name]
-// console.log("Creating "+ element.name+"::"+op_name)
-// operation["name"] = op_name
-// }
-// }
-// }
-// }
 
 function setImageAttributes(){
 	
@@ -1069,8 +934,13 @@ function getSpeed(rt_element, rt_operation){
 	
 	var speed
 	var operation = rt_operation.configuration
-	if("speed" in operation){
-		speed = operation.speed
+	if(operation.speed){
+		if(Array.isArray(operation.speed)){
+			speed = operation.speed
+		} else {
+			var op = operation.speed.speed
+			speed = op(rt_element,rt_operation)
+		}
 	} else {
 		speed = [0, 0]
 	}
@@ -1145,4 +1015,112 @@ function getPosition(rt_element, rt_operation){
 var contact = function (address){
 	linkTo(address)
 	return true
+}
+
+function include(loc){
+	if($('script[src="'+loc+'"]').length == 0){
+		document.write('<script src="'+loc+'"><\/script>')
+	}
+}
+
+function getElementImage(rt_element, rt_operation, ix){
+	if(rt_element.imageinfo[ix].svg){
+// console.log("loading svg for "+rt_element.name)
+		var svgImage = getSvgImage(rt_element,rt_operation, ix)
+// while(1){
+// if(rt_operation.loaded){
+// return svgImage
+// }
+// setTimeout(function(){"waiting for svg load"},10)
+// }
+		return svgImage
+	}
+	return rt_element.imageinfo[ix].image
+}
+
+function getSvgImage(rt_element,rt_operation, ix){
+	var element = rt_element.configuration
+	if(rt_operation.meta.imagesize){
+		 setSvgImageSize(rt_element.svg[ix], rt_operation.meta.imagesize)
+	} else if(element.size){
+		setSvgImageSize(rt_element.svg[ix], element.size)
+	}else{
+		 var imageSize = getSvgImageSize(rt_element.svg[ix])
+		 setSvgImageSize(rt_element.svg[ix], imageSize)
+	}
+ 	var img = new Image()
+ 	rt_operation.loaded = false
+ 	img.rt_operation = rt_operation
+ 	img.onload = function(){ 
+ 			img.rt_operation.loaded = true 
+ 		}
+ 	var svg_encoded = new XMLSerializer().serializeToString(rt_element.svg[ix])
+ 	img.src = "data:image/svg+xml," + svg_encoded
+ 	return img
+}
+
+function getSvgImageSize(svg){
+	var imageSize = []
+	var width = $(svg).attr("width")
+	width = normalizeSize(width)
+	if(!width){
+		width = getWidthFromViewbox(svg)
+	}
+	var height = $(svg).attr("height")
+	height = normalizeSize(height)
+	if(!height){
+		height =  getHeightFromViewbox(svg)
+	}
+	return [width, height]
+}
+
+var lengthTypeMap={
+		"": 1,
+		px: 1,
+		pt: 72 / 96,
+		em: 16,
+		in: 96,
+		cm: 96 / 2.54
+}
+
+function normalizeSize(size){
+	if(!size){
+		return null
+	}
+	if(isNaN(size)){
+		var re = /^((?:\+|-)?(?:\d+(?:\.\d*)?))([a-zA-z]*)$/
+		var re = /^((?:\+|-)?(?:\.\d+))([a-zA-z]*)$/
+		var re = /^((?:\+|-)?(?:\d|\.+))([a-zA-z]*)$/
+		var re = /^((?:\+|-)?(?:\d+(?:\.\d*)?)|(?:\.\d+))([a-zA-z]*)$/
+		var matched = re.exec(size)
+		if(matched){
+			var num = matched[1]
+			var type = matched[2]
+			if(lengthTypeMap[type]){
+				return matched[1] * lengthTypeMap[type]
+			}
+			return matched[1]
+		}
+		return 1
+	}
+	return size
+}
+
+function setSvgImageSize(svg, imageSize){
+	$(svg).attr("width",imageSize[0])
+	$(svg).attr("height",imageSize[1])
+}
+
+function getViewbox(svg){
+	var viewbox = svg.attributes.getNamedItem("viewBox").value
+	var items = viewbox.split(/(?:\s*,s*)|\s+/)
+	return items
+}
+
+function getWidthFromViewbox(svg){
+	return getViewbox(svg)[2]
+}
+
+function getHeightFromViewbox(svg){
+	return getViewbox(svg)[3]
 }
