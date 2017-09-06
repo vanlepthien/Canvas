@@ -74,7 +74,7 @@ ParmDef.position = {
 }
 
 ParmDef.duration = {
-	note : "initial times at which an element is scheduled to appear and disappear.",
+	note : "initial times at which an element is scheduled to appear and disappear. Initial value of '*' does not start the element display",
 	defaultIndex : 0,
 	parms : [
 			[ {
@@ -84,7 +84,7 @@ ParmDef.duration = {
 				defaultValue : [ 0, "*" ]
 			} ], [ {
 				type : [[Number,"*"],[Number,"*"]],
-				bounds: [1,-1],
+				bounds: [1,-1], 
 				note : "Array of interval arrays, e.g., [[1,5],[20,25]]"
 			} ] ]
 }

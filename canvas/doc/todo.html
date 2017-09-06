@@ -1,0 +1,209 @@
+<?xml version='1.0' encoding='utf-8' ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	</head>
+	<body>
+		<h1 id="ToDo">To Do</h1>
+		<h2 id="Restructureruntime">Restructure runtime</h2>
+		<p>In order to support configuration reuse, configuration and operation information need to be replicated to the rt_element and rt_operation. One of the concerns is whether the rt_element and rt_operation should be merged.</p>
+		<p>Of course, this probably implies that the configuration definition ought also be redone. It may be desirable to break out images to image sets and move the image display configuration parameters to the operations. Conversely, it might do to allow default parms to be defined with the image sets, but allow them to be overridden by the operations.</p>
+		<h3 id="Proposal">Proposal:</h3>
+		<p>Convert current 
+			<em>configuration</em> to 
+			<em>imagesets</em> and 
+			<em>operations</em>.
+		</p>
+		<h5 id="Imageset">Imageset</h5>
+		<pre><code>var imageset = {}
+
+imageset.bugs = {
+    image : [ "bug.gif", "bug30.gif", "bug60.gif", "bug90.gif", "bug120.gif",
+        "bug150.gif", "bug180.gif", "bug225.gif", "bug270.gif",
+        "bug315.gif", "bug.png", "bug.svg" ],
+    configuration: {
+        distance : 5,
+        interval : 10,
+        align : [ "left", "top" ],
+        loop : true
+    }
+}
+
+</code></pre>
+		<p>An alternative imageset defintion would have the ability to define individual image attributes</p>
+		<pre><code>imageset.bugs = {
+    image : {
+        0: { 
+            name: "bug.gif",
+            width: 54,
+            height:56,
+        },
+        ...
+        11: {
+            name: "bug.svg",
+        },
+    },
+    configuration: {
+        distance : 5,
+        interval : 10,
+        align : [ "left", "top" ],
+        loop : true
+    }
+}
+
+</code></pre>
+		<h5 id="Operations">Operations</h5>
+		<p>Operation definitions can override imagesets and may specify function-based behavior.</p>
+		<pre><code>var operations = {}
+
+operation.bugs1 = {
+    imageset: imageset.bugs,
+    operation: "fixed",
+    duration: [0,"*"],
+    position : [ 0, 0 ],
+    events: {
+        click: function(){...}
+}
+
+operation.bugs2 = {
+    imageset: imageset.bugs,
+    duration: [0,"*"],
+    distance: 4,
+    events: {
+        click: function(){...},
+    speed : {
+        dx : .02,
+        dy : .02,
+        constant : 2,
+        speed : deltaV_edge // function
+    },
+    position : [ "20%", "60%" ],
+    cycle : false
+
+}
+
+</code></pre>
+		<h5 id="Images">Images</h5>
+		<p>The 
+			<em>images</em> definitions are generated from the 
+			<em>imageset</em> definitions and image file attributes and content. While the current plan is to limit files to those found in the 
+			<em>imagesets</em>, there is no practical reason why images can&#8217;t be added dynamically.
+		</p>
+		<h6 id="NonSVGfileformats">Non-SVG file formats</h6>
+		<p>GIF, PNG, and other non-SVG files have fairly basic information, derived from the image or explicitly defined by the imageset definition.</p>
+		<pre><code>var images = {}
+image["bug.gif"] = {
+    type: "gif",
+    location: {
+        type: "url",
+        url: "../images/bug.gif",
+    }
+    imageinfo: {
+        width: 54.0,
+        height: 56.0,
+    },
+}
+
+</code></pre>
+		<h6 id="SVGfileformats">SVG file formats</h6>
+		<p>SVG files are expanded if there is need to access their content. Element IDs are generated if the element does not have an ID. In most cases, if there is a need to programmatically alter lower-level content, the containing elements should have IDs defined.</p>
+		<p>If a top-level &lt;svg&gt; element has more than one sub-element, an intermediary &lt;g&gt; element is generated so attributes, such as &#8220;rotate&#8221;, can be applied to all images as a unit.</p>
+		<p>Breakout of SVG parameter subfields is currently theoretical. </p>
+		<p>It would also be possible, and possibly desirable, to allow completely in-line SVG definitions. </p>
+		<pre><code>image["bug.svg"] = {
+    type: "svg",
+    location: {
+        type: "url",
+        url: "../images/bug.svg",
+    },
+    content: {
+        tag: "svg",
+        attributes: {
+            id: "bug_svg", 
+            width: 54.0,
+            height: 56.0,
+            viewbox: {
+                text: "0 0 54.0 56.0"
+                x: 0,
+                y: 0,
+                width: 54.0,
+                height: 56.0,
+            },
+        elements: {
+            0: {
+                tag: "g"
+                id: "bug_svg_g0",
+                attributes: {
+                    rotate: 0
+                },
+                elements: {
+                    0: {
+                        tag: "metadata",
+                        nodes: ["Created by potrace 1.14, written by Peter Selinger 2001-2017",],
+                        attributes: {
+                            id: "bug_svg_g0_metadata0",
+                        },
+                    },
+                    1: {tag: "g",
+                        attributes: {
+                            id: "bug_svg_g0_go",
+                            transform: {
+                                text: "translate(0.000000,56.000000) scale(0.100000,-0.100000)",
+                                translate: {
+                                    text: "0.000000,56.000000",
+                                    x: 0.000000,
+                                    y: 56.000000
+                                },
+                                scale: {
+                                    text: "0.100000,-.1000000",
+                                    xScale: 0.100000,
+                                    yScale: -0.100000
+                                }
+                            },
+                            fill: "#00ff00",
+                            stroke: "none"
+                        },
+                        expanded: false,
+                    },
+                },
+            },
+        },                
+    },
+}
+
+</code></pre>
+		<h5 id="Runtime">Runtime</h5>
+		<p>Runtime entries are initially generated from the operations and imagesets. Entries may be created, updated, or removed as events are triggered.</p>
+		<pre><code>var runtime = {}
+runtime.bugs1 = {
+    operation: "fixed",
+    distance : 5,
+    interval : 10,
+    align : [ "left", "top" ],
+    loop : true,
+    images:{
+        0: {
+            ref: images["bug.gif"],
+            width: 54.0,
+            height: 56.0,
+            image = img,
+        },
+        ...
+        11:{
+            ref: images["bug.svg"],
+            width: 54.0,
+            height: 56.0,
+            image = img,
+        },
+    meta: {
+        imageindexes: [0,1,2,3,4,5,6,7,8,9,10,11]
+    },
+    state: {
+        x: 0,
+        y: 0,
+        imageIx: 0,
+    },
+}
+</code></pre>
+	</body>
+</html>

@@ -15,6 +15,7 @@
 			<br/>transformations will be applied to a &lt;g&gt; element that contains all of the 
 			<br/>graphics in the &lt;svg&gt; element.
 		</p>
+		<h2 id="SinglesubelementSVG">Single sub-element SVG</h2>
 		<p>For instance, if the following SVG file were to be displayed as 108px x 112px 
 			<br/>and rotated 20 degrees about its center
 		</p>
@@ -36,6 +37,7 @@
     &lt;/g&gt;
 &lt;/svg&gt;
 </code></pre>
+		<h2 id="MultiplesubelementSVG">Multiple sub-element SVG</h2>
 		<p>If there are multiple elements directly below the &lt;svg&gt; element, they are
 			<br/>enclosed in a new &lt;g&gt; element.
 		</p>
@@ -65,7 +67,8 @@
 &lt;/svg&gt;
 
 </code></pre>
-		<p>The changed and added attributes are:</p>
+		<h2 id="Addedattributes">Added attributes</h2>
+		<p>The added attributes are:</p>
 		<dl>
 			<dt>&lt;svg&gt; width and height</dt>
 			<dd>Set tospecified values.
@@ -76,6 +79,7 @@
 			<dt>&lt;g&gt; transform</dt>
 			<dd>The rotation transformation.</dd>
 		</dl>
-		<p>If the size and rotation are to vary, the &lt;svg&gt; DOM is altered programmatically.</p>
+		<h2 id="Dynamictransformations">Dynamic transformations</h2>
+		<p>If the size and rotation are to vary, the &lt;svg&gt; content is altered programmatically.</p>
 	</body>
 </html>

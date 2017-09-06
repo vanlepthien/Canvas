@@ -4,6 +4,8 @@ h1. Canvas Documentation
 
 "Buttons":./buttons.html
 
+"Features":./features.html
+
 "SVG Objects":./svg.html
 
-"Features":./features.html
+"TODO":./todo.html

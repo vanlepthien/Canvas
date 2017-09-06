@@ -1,0 +1,41 @@
+<project default="generate-html">
+	<property name="source" location="../" />
+	<property name="source.doc" location="${source}/doc" />
+	<property name="source.styles" location="${source}/styles" />
+	<property name="destination" location="../gendoc" />
+	<property name="destination.html" location="${destination}/html" />
+	<property name="destination.style" location="${destination}/styles" />
+
+	
+	<property name="wikitext.standalone" location="../jars" />
+
+	<path id="wikitext.classpath">
+		<fileset dir="${wikitext.standalone}">
+			<include name="org.eclipse.mylyn.wikitext.core*.**.jar" />
+		</fileset>
+	</path>
+
+	<echoproperties prefix="wikitext" />
+	
+	<pathconvert property="classpathProp" refid="wikitext.classpath"/>
+
+	<echo>Classpath is ${classpathProp}</echo>
+	
+	<taskdef classpathref="wikitext.classpath" resource="org/eclipse/mylyn/wikitext/core/ant/tasks.properties" />
+
+	<target name="init">
+		<mkdir dir="${destination.html}" />
+		<mkdir dir="${destination.style}" />
+		<copy todir="${destination.style}">
+			<fileset dir="${source.styles}" />
+		</copy>
+	</target>
+	<target name="generate-html" depends="init" description="Generate HTML from textile source">
+		<wikitext-to-html markupLanguage="Textile" >
+			<fileset>
+				<include name="${source}/doc/*.textile" />
+			</fileset>
+			<stylesheet url="../styles/main.css" />
+		</wikitext-to-html>
+	</target>
+</project>

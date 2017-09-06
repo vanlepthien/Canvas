@@ -680,15 +680,15 @@ function draw(){
 		var elapsed = (now - prev) / 1000
 		if(elapsed > 1){
 			// adjust at one second increments
-// var nominal_second = (tick - prev_second_ticks)/(60 * interval_adjustment)
-// console.log("Time:" +(now - start)/1000+" tick: " + tick +" Tick seconds " +
-// tick / (60 * interval_adjustment))
-// console.log(" Nominal second: " + nominal_second+ " Elapsed Ticks: " + (tick
-// - prev_second_ticks))
-// console.log(" Elapsed: " + elapsed+ " Nominal/Elapsed: "+ (nominal_second /
-// elapsed))
-// console.log(" Old Interval Adjustment: "+interval_adjustment)
-// interval_adjustment = ((nominal_second / elapsed) + interval_adjustment)/2
+			var nominal_second = (tick - prev_second_ticks)/(60 )
+			console.log("Time:" +(now - start)/1000+" tick: " + tick +" Tick seconds " +
+					tick / (60 * interval_adjustment))
+			console.log(" Nominal second: " + nominal_second+ " Elapsed Ticks: " + (tick
+					- prev_second_ticks))
+			console.log(" Elapsed: " + elapsed+ " Nominal/Elapsed: "+ (nominal_second /
+					elapsed))
+			console.log(" Old Interval Adjustment: "+interval_adjustment)
+			interval_adjustment = ((nominal_second / elapsed) + interval_adjustment)/2
 			console.log("   New Interval Adjustment: "+interval_adjustment)
 			prev_second_ticks = tick
 			prev = now
@@ -1074,7 +1074,7 @@ function getSvgImageSize(svg){
 	return [width, height]
 }
 
-var lengthTypeMap={
+const lengthTypeMap = {
 		"": 1,
 		px: 1,
 		pt: 72 / 96,
@@ -1085,12 +1085,10 @@ var lengthTypeMap={
 
 function normalizeSize(size){
 	if(!size){
-		return null
+		console.log("warning: normalizeSize("+size+"). 100 arbitrarily returned")
+		return 100
 	}
 	if(isNaN(size)){
-		var re = /^((?:\+|-)?(?:\d+(?:\.\d*)?))([a-zA-z]*)$/
-		var re = /^((?:\+|-)?(?:\.\d+))([a-zA-z]*)$/
-		var re = /^((?:\+|-)?(?:\d|\.+))([a-zA-z]*)$/
 		var re = /^((?:\+|-)?(?:\d+(?:\.\d*)?)|(?:\.\d+))([a-zA-z]*)$/
 		var matched = re.exec(size)
 		if(matched){
@@ -1101,26 +1099,13 @@ function normalizeSize(size){
 			}
 			return matched[1]
 		}
-		return 1
+		var n = parseFloat(size)
+		if(isNaN(n)){
+			console.log("normalizeSize("+size+"). Size cannot be parsed. 100 arbitrarily returned")
+			n = 100
+		}
+		return n
 	}
 	return size
 }
 
-function setSvgImageSize(svg, imageSize){
-	$(svg).attr("width",imageSize[0])
-	$(svg).attr("height",imageSize[1])
-}
-
-function getViewbox(svg){
-	var viewbox = svg.attributes.getNamedItem("viewBox").value
-	var items = viewbox.split(/(?:\s*,s*)|\s+/)
-	return items
-}
-
-function getWidthFromViewbox(svg){
-	return getViewbox(svg)[2]
-}
-
-function getHeightFromViewbox(svg){
-	return getViewbox(svg)[3]
-}

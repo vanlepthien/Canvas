@@ -1,0 +1,213 @@
+h1. To Do
+
+h2. Restructure runtime
+
+In order to support configuration reuse, configuration and operation information need to be replicated to the rt_element and rt_operation. One of the concerns is whether the rt_element and rt_operation should be merged.
+
+Of course, this probably implies that the configuration definition ought also be redone. It may be desirable to break out images to image sets and move the image display configuration parameters to the operations. Conversely, it might do to allow default parms to be defined with the image sets, but allow them to be overridden by the operations.
+
+h3. Proposal:
+
+Convert current _configuration_ to _imagesets_ and _operations_.
+
+h5. Imageset
+
+bc.. 
+var imageset = {}
+
+imageset.bugs = {
+    image : [ "bug.gif", "bug30.gif", "bug60.gif", "bug90.gif", "bug120.gif",
+        "bug150.gif", "bug180.gif", "bug225.gif", "bug270.gif",
+        "bug315.gif", "bug.png", "bug.svg" ],
+    configuration: {
+        distance : 5,
+        interval : 10,
+        align : [ "left", "top" ],
+        loop : true
+    }
+}
+
+p. An alternative imageset defintion would have the ability to define individual image attributes
+
+bc.. imageset.bugs = {
+    image : {
+        0: { 
+            name: "bug.gif",
+            width: 54,
+            height:56,
+        },
+        ...
+        11: {
+            name: "bug.svg",
+        },
+    },
+    configuration: {
+        distance : 5,
+        interval : 10,
+        align : [ "left", "top" ],
+        loop : true
+    }
+}
+
+h5. Operations
+
+p. Operation definitions can override imagesets and may specify function-based behavior.
+
+bc.. 
+var operations = {}
+
+operation.bugs1 = {
+    imageset: imageset.bugs,
+    operation: "fixed",
+    duration: [0,"*"],
+    position : [ 0, 0 ],
+    events: {
+        click: function(){...}
+}
+
+operation.bugs2 = {
+    imageset: imageset.bugs,
+    duration: [0,"*"],
+    distance: 4,
+    events: {
+        click: function(){...},
+    speed : {
+        dx : .02,
+        dy : .02,
+        constant : 2,
+        speed : deltaV_edge // function
+    },
+    position : [ "20%", "60%" ],
+    cycle : false
+
+}
+
+h5. Images
+
+The _images_ definitions are generated from the _imageset_ definitions and image file attributes and content. While the current plan is to limit files to those found in the _imagesets_, there is no practical reason why images can't be added dynamically.
+
+h6. Non-SVG file formats
+
+p. GIF, PNG, and other non-SVG files have fairly basic information, derived from the image or explicitly defined by the imageset definition.
+
+bc.. 
+var images = {}
+image["bug.gif"] = {
+    type: "gif",
+    location: {
+        type: "url",
+        url: "../images/bug.gif",
+    }
+    imageinfo: {
+        width: 54.0,
+        height: 56.0,
+    },
+}
+
+h6. SVG file formats
+
+p. SVG files are expanded if there is need to access their content. Element IDs are generated if the element does not have an ID. In most cases, if there is a need to programmatically alter lower-level content, the containing elements should have IDs defined.
+
+If a top-level &lt;svg&gt; element has more than one sub-element, an intermediary &lt;g&gt; element is generated so attributes, such as "rotate", can be applied to all images as a unit.
+
+Breakout of SVG parameter subfields is currently theoretical. 
+
+It would also be possible, and possibly desirable, to allow completely in-line SVG definitions. 
+
+bc.. 
+image["bug.svg"] = {
+    type: "svg",
+    location: {
+        type: "url",
+        url: "../images/bug.svg",
+    },
+    content: {
+        tag: "svg",
+        attributes: {
+            id: "bug_svg", 
+            width: 54.0,
+            height: 56.0,
+            viewbox: {
+                text: "0 0 54.0 56.0"
+                x: 0,
+                y: 0,
+                width: 54.0,
+                height: 56.0,
+            },
+        elements: {
+            0: {
+                tag: "g"
+                id: "bug_svg_g0",
+                attributes: {
+                    rotate: 0
+                },
+                elements: {
+                    0: {
+                        tag: "metadata",
+                        nodes: ["Created by potrace 1.14, written by Peter Selinger 2001-2017",],
+                        attributes: {
+                            id: "bug_svg_g0_metadata0",
+                        },
+                    },
+                    1: {tag: "g",
+                        attributes: {
+                            id: "bug_svg_g0_go",
+                            transform: {
+                                text: "translate(0.000000,56.000000) scale(0.100000,-0.100000)",
+                                translate: {
+                                    text: "0.000000,56.000000",
+                                    x: 0.000000,
+                                    y: 56.000000
+                                },
+                                scale: {
+                                    text: "0.100000,-.1000000",
+                                    xScale: 0.100000,
+                                    yScale: -0.100000
+                                }
+                            },
+                            fill: "#00ff00",
+                            stroke: "none"
+                        },
+                        expanded: false,
+                    },
+                },
+            },
+        },                
+    },
+}
+
+h5. Runtime
+
+p. Runtime entries are initially generated from the operations and imagesets. Entries may be created, updated, or removed as events are triggered.
+
+bc.. 
+var runtime = {}
+runtime.bugs1 = {
+    operation: "fixed",
+    distance : 5,
+    interval : 10,
+    align : [ "left", "top" ],
+    loop : true,
+    images:{
+        0: {
+            ref: images["bug.gif"],
+            width: 54.0,
+            height: 56.0,
+            image = img,
+        },
+        ...
+        11:{
+            ref: images["bug.svg"],
+            width: 54.0,
+            height: 56.0,
+            image = img,
+        },
+    meta: {
+        imageindexes: [0,1,2,3,4,5,6,7,8,9,10,11]
+    },
+    state: {
+        x: 0,
+        y: 0,
+        imageIx: 0,
+    },
+}

@@ -66,7 +66,7 @@ bc.. <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
 h2. Added attributes
 
 p. The added attributes are:
-- &lt;svg&gt; width and height := Set tospecified values. 
+- &lt;svg&gt; width and height := Set to specified values. 
     If width and height are not specified, they are derived from the viewbox values. =:
     
 - &lt;g&gt; transform := The rotation transformation.
@@ -74,3 +74,5 @@ p. The added attributes are:
 h2. Dynamic transformations
 
 If the size and rotation are to vary, the &lt;svg&gt; content is altered programmatically.
+
+*Note* This will be superseded by the SVG discussion in "Todo":./todo.html
