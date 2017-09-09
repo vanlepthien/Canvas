@@ -472,7 +472,9 @@ function loadSvgImages(callback){
 				$(svg).attr("id",fName)
 				var svg_children = $(svg).children()
 				if(svg_children.length > 1){
-					var g = $(svg).append("g")
+					var g_id = "g_"+fName.replace(/[.]/ ,"_")
+					$(svg).prepend("<g id=\""+g_id+"\"></g>")
+					var g = $("#"+g_id)
 					$(g).append(svg_children)
 				}
 				for(var ix in svgImages[fName].list){
@@ -1054,8 +1056,8 @@ function getSvgImage(rt_element,rt_operation, ix){
  	img.onload = function(){ 
  			img.rt_operation.loaded = true 
  		}
- 	var svg_encoded = new XMLSerializer().serializeToString(rt_element.svg[ix])
- 	img.src = "data:image/svg+xml," + svg_encoded
+ 	var svg_encoded = btoa( unescape( encodeURIComponent( rt_element.svg[ix].outerHTML ) ) ) 
+ 	img.src = "data:image/svg+xml;base64," + svg_encoded
  	return img
 }
 
@@ -1085,8 +1087,7 @@ const lengthTypeMap = {
 
 function normalizeSize(size){
 	if(!size){
-		console.log("warning: normalizeSize("+size+"). 100 arbitrarily returned")
-		return 100
+		return undefined
 	}
 	if(isNaN(size)){
 		var re = /^((?:\+|-)?(?:\d+(?:\.\d*)?)|(?:\.\d+))([a-zA-z]*)$/

@@ -13,16 +13,16 @@ function bounce(rt_element, rt_operation){
 	var state = rt_operation.state
 	var context = rt_operation.context
 	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
-	context.drawImage(rt_element.imageinfo.image, state.x, state.y)
+	context.drawImage(rt_element.imageinfo[0].image, state.x, state.y)
 }
 
 function newBounceState(rt_element, rt_operation){
 	
 	// [x,y] are the coordinates of the top left corner
 	// x_left = x
-	// x_right = x + imageinfo.width
+	// x_right = x + imageinfo[0].width
 	// y_top = y
-	// y_bottom = y + imageinfo.height
+	// y_bottom = y + imageinfo[0].height
 	var top, bottom
 	var operation = rt_operation.configuration
 	var element = rt_element.configuration
@@ -60,11 +60,11 @@ function newBounceState(rt_element, rt_operation){
 		var xy = getPosition(rt_element, rt_operation)
 		if(x == null) {
 			x = xy[0]
-			x = getAlignedPosition(x, rt_element.imageinfo.width, align[0], x_alignment)
+			x = getAlignedPosition(x, rt_element.imageinfo[0].width, align[0], x_alignment)
 		}
 		if(y == null){
 			y = xy[1]
-			y = getAlignedPosition(y, rt_element.imageinfo.height, align[1], y_alignment)
+			y = getAlignedPosition(y, rt_element.imageinfo[0].height, align[1], y_alignment)
 		}
 		
 	}
@@ -79,9 +79,9 @@ function newBounceState(rt_element, rt_operation){
 	
 	
 	var x_left = x 
-	var x_right = x + rt_element.imageinfo.width
+	var x_right = x + rt_element.imageinfo[0].width
 	var y_top = y
-	var y_bottom = y + rt_element.imageinfo.height
+	var y_bottom = y + rt_element.imageinfo[0].height
 	
 	var state = {}
 
@@ -107,9 +107,9 @@ function nextBounceState(rt_element, rt_operation){
 	var y = state.y + (state.direction * speed.vspeed)
 	
 	var x_left = x 
-	var x_right = x + rt_element.imageinfo.width
+	var x_right = x + rt_element.imageinfo[0].width
 	var y_top = y
-	var y_bottom = y + rt_element.imageinfo.height
+	var y_bottom = y + rt_element.imageinfo[0].height
 
 	
 	if(state.direction < 0){
@@ -141,6 +141,7 @@ function move(rt_element, rt_operation){
 	
 	var image_ix = nextImageIx(state, meta.interval, rt_element.imageinfo.length)
 	var image = getElementImage(rt_element, rt_operation, image_ix)
+	image.crossOrigin = 'Anonymous';
 	if(operation.cycle){
 		for(var x_ix in state.x_vector){
 			for(var y_ix in state.y_vector){
@@ -380,7 +381,7 @@ function marquee(rt_element, rt_operation){
 	var context = rt_operation.context
 	context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
 	context.drawImage(
-			rt_element.imageinfo.image, meta.x, meta.y)
+			rt_element.imageinfo[0].image, meta.x, meta.y)
 	}
 }
 
@@ -427,7 +428,7 @@ function pan(rt_element, rt_operation){
 	for(var x_ix in state.x_vector){
 		for(var y_ix in state.y_vector){
 			context.drawImage(
-					rt_element.imageinfo.image, state.x_vector[x_ix], state.y_vector[y_ix])
+					rt_element.imageinfo[0].image, state.x_vector[x_ix], state.y_vector[y_ix])
 		}
 	}
 }
@@ -438,8 +439,8 @@ function newPanState(rt_element, rt_operation){
 	state["y"] = 0
 	rt_operation["state"] = state
 	var meta = {}
-	meta["width"] =  rt_element.imageinfo.width
-	meta["height"] =  rt_element.imageinfo.height
+	meta["width"] =  rt_element.imageinfo[0].width
+	meta["height"] =  rt_element.imageinfo[0].height
 	rt_operation["meta"] = meta
 	updatePanState(rt_element, rt_operation)
 }

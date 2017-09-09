@@ -18,6 +18,17 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
+	<!-- 
+	<pluginRepositories>
+		<pluginRepository>
+			<id>eclipse.org-mylyn</id>
+			<url>https://repo.eclipse.org/content/repositories/mylyn-snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+	-->
 	<build>
 		<plugins>
 			<plugin>
@@ -35,6 +46,31 @@
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.mylyn.docs</groupId>
+				<artifactId>org.eclipse.mylyn.wikitext.maven</artifactId>
+				<version>3.0.18</version>
+				<configuration>
+					<sourceFolder>doc</sourceFolder>
+					<copyrightNotice>${help.copyrightNotice}</copyrightNotice>
+					<title>${help.documentTitle}</title>
+					<multipleOutputFiles>true</multipleOutputFiles>
+					<navigationImages>true</navigationImages>
+					<formatOutput>true</formatOutput>
+					<stylesheetUrls>
+						<param>styles/main.css</param>
+					</stylesheetUrls>
+				</configuration>
+				<!-- 
+				<executions>
+					<execution>
+						<goals>
+							<goal>eclipse-help</goal>
+						</goals>
+					</execution>
+				</executions>
+				-->
 			</plugin>
 		</plugins>
 	</build>
