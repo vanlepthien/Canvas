@@ -15,20 +15,20 @@
  *  mass_2: Mass of the stationary boundary: default=1
  * 
  * @param {RuntimeElement}
- *            rt_element
+ *            rt_operation
  * @param {RuntimeOperation}
- *            rt_element
+ *            rt_operation
  */
 
-function deltaV_edge(rt_element, rt_operation) {
-	var c_width = rt_element.canvas.width
-	var c_height = rt_element.canvas.height
+function deltaV_edge(rt_operation) {
+	var c_width = rt_operation.canvas.width
+	var c_height = rt_operation.canvas.height
 	var x = rt_operation.state.x
 	var y = rt_operation.state.y
 	var x_left = x
-	var x_right = x + rt_element.imageinfo[0].width
+	var x_right = x + rt_operation.imageinfo[0].width
 	var y_top = y
-	var y_bottom = y + rt_element.imageinfo[0].height
+	var y_bottom = y + rt_operation.imageinfo[0].height
 
 	var dx = rt_operation.state.dx || rt_operation.configuration.speed.dx
 	var dy = rt_operation.state.dy || rt_operation.configuration.speed.dy
@@ -64,7 +64,7 @@ function deltaV_edge(rt_element, rt_operation) {
 	return [ dx, dy ]
 }
 
-function getValueIndex(rt_element,rt_operation, ix){
+function getValueIndex(rt_operation, ix){
 	var operation = rt_operation.configuration
 	var interval = operation.template[ix].color.interval
 	var size = operation.template[ix].color.values.size
@@ -105,12 +105,12 @@ function createMetaImageInfo(rt_operation, ix, field, values){
 	}
 }
 
-function getSVGField(rt_element, rt_operation, ix, field, initialization, returnValue) {
+function getSVGField(rt_operation, ix, field, initialization, returnValue) {
 	createOperationMetaImageinfo(rt_operation, ix,field, initialization)
 	return returnValue
 }
 
-function generateColorIndex(rt_element,rt_operation, ix){
+function generateColorIndex(rt_operation, ix){
 	var operation = rt_operation.configuration
 	var interval = operation.template[ix].color.interval
 	var size = operation.template[ix].color.values.size
@@ -119,7 +119,7 @@ function generateColorIndex(rt_element,rt_operation, ix){
 
 function generateRotationIndex(re_element, rt_operation, ix){
 	return getSVGField(
-		rt_element,
+		rt_operation,
 		rt_operation,
 		ix,
 		"rotate",

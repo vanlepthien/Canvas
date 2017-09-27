@@ -18,17 +18,6 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	<!-- 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>eclipse.org-mylyn</id>
-			<url>https://repo.eclipse.org/content/repositories/mylyn-snapshots/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
-	-->
 	<build>
 		<plugins>
 			<plugin>
@@ -48,11 +37,20 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.3</version>
+			</plugin>
+			<plugin>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>2.9</version>
+			</plugin>
+
+			<plugin>
 				<groupId>org.eclipse.mylyn.docs</groupId>
 				<artifactId>org.eclipse.mylyn.wikitext.maven</artifactId>
 				<version>3.0.18</version>
 				<configuration>
-					<sourceFolder>doc</sourceFolder>
+					<sourceFolder>src</sourceFolder>
 					<copyrightNotice>${help.copyrightNotice}</copyrightNotice>
 					<title>${help.documentTitle}</title>
 					<multipleOutputFiles>true</multipleOutputFiles>
@@ -62,16 +60,32 @@
 						<param>styles/main.css</param>
 					</stylesheetUrls>
 				</configuration>
-				<!-- 
 				<executions>
 					<execution>
+						<phase>site</phase>
 						<goals>
 							<goal>eclipse-help</goal>
 						</goals>
 					</execution>
 				</executions>
-				-->
 			</plugin>
 		</plugins>
 	</build>
+	<!-- 
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>com.phasebash.jsdoc</groupId>
+				<artifactId>jsdoc3-maven-plugin</artifactId>
+				<version>1.2.0</version>
+				<configuration>
+					<recursive>true</recursive>
+					<directoryRoots>
+						<directoryRoot>${basedir}/src/main/webapp</directoryRoot>
+					</directoryRoots>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+	-->
 </project>

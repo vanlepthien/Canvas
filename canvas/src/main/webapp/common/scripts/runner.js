@@ -84,24 +84,24 @@ var events = []
 function createRuntime(){
 	for(var key in configuration){
 		var element  = configuration[key]
-		var rt_element = {}
-		runtime[key] = rt_element
-		rt_element["name"] = key
-		rt_element["configuration"] = element
+		var rt_operation = {}
+		runtime[key] = rt_operation
+		rt_operation["name"] = key
+		rt_operation["configuration"] = element
 		
 		// default to show element without duration
 		
 		if("show" in configuration[key]){
-			rt_element.show = element.show
+			rt_operation.show = element.show
 		} else {
-			rt_element.show = true
+			rt_operation.show = true
 		}
 
 		if("operation" in element){
-			rt_element["operation"] = {}
+			rt_operation["operation"] = {}
 			for(var op_id in element.operation){
 				var rt_operation = {}
-				rt_element.operation[op_id] = rt_operation
+				rt_operation.operation[op_id] = rt_operation
 				rt_operation["name"] = op_id
 				rt_operation["configuration"] = configuration[key].operation[op_id]
 				rt_operation["initialized"] = false
@@ -147,10 +147,10 @@ function createRuntime(){
 
 				switch(Number(iix)){
 				case 0:
-					createEvent("Start",nTime,rt_element)
+					createEvent("Start",nTime,rt_operation)
 					break
 				case 1:
-					createEvent("End",nTime,rt_element)
+					createEvent("End",nTime,rt_operation)
 					break
 				default:
 					console.log("in configuration '"+key+"', duration contains more than two values: '"+duration+"'.")					
@@ -160,11 +160,11 @@ function createRuntime(){
 	}
 }
 
-function createEvent(func,time,rt_element){
+function createEvent(func,time,rt_operation){
 	var event = {
 			type: func,
 			time: time,
-			element: rt_element
+			element: rt_operation
 	}
 	events.push(event)
 }
@@ -229,10 +229,10 @@ function generateCanvasses(id){
 	}
 	for (var key in configuration){
 		var element = configuration[key]
-		var rt_element = runtime[key]
+		var rt_operation = runtime[key]
 		if("usecanvas" in element){
 			var base_element = runtime[element.usecanvas]
-			rt_element["canvas"] = base_element.canvas
+			rt_operation["canvas"] = base_element.canvas
 		} else if("distance" in element){
 			var c  = document.createElement("canvas")
 			div.appendChild(c)
@@ -245,7 +245,7 @@ function generateCanvasses(id){
 			c.style.position = "absolute"
 			c.style.left = left + "px"
 			c.style.top = top + "px"
-			rt_element["canvas"] = c
+			rt_operation["canvas"] = c
 			addCanvas(c)
 		}
 	}
@@ -340,10 +340,10 @@ function generateAudio(){
 	var audios =getElement("audios","div").element
 	for (var key in configuration){
 		var element =  configuration[key]
-		var rt_element =  runtime[key]
+		var rt_operation =  runtime[key]
 		if("operation" in element){
 			var operations = element.operation
-			var rt_operations = rt_element.operation
+			var rt_operations = rt_operation.operation
 			for(var op_name in operations){
 				if("sound" == op_name){
 					var operation = operations.sound
@@ -389,7 +389,7 @@ function generateAudio(){
 						source.setAttribute("type", audioType)
 						rt_operation["switch_audio"] = false
 						audio.onended=function(){
-							switchAudio(rt_element, rt_operation)
+							switchAudio(rt_operation)
 						}
 						audio.oncanplay= function(){
 							playable_audios.push(this)
@@ -480,13 +480,13 @@ function loadSvgImages(callback){
 				for(var ix in svgImages[fName].list){
 					var key = svgImages[fName].list[ix][0]
 					var image_ix = svgImages[fName].list[ix][1]
-					var rt_element = runtime[key]
+					var rt_operation = runtime[key]
 					var svgs
-					if(rt_element.svg){
-						svgs = rt_element.svg
+					if(rt_operation.svg){
+						svgs = rt_operation.svg
 					} else {
 						svgs = {}
-						rt_element["svg"] =  svgs
+						rt_operation["svg"] =  svgs
 					}
 					svgs[image_ix] = svg
 				}
@@ -527,10 +527,10 @@ function generateImageInfo(callback){
 		return
 	}
 	for(var key in runtime){
-		var rt_element = runtime[key]
-		var element = rt_element.configuration
+		var rt_operation = runtime[key]
+		var element = rt_operation.configuration
 		var images = []
-		rt_element["imageinfo"] = images
+		rt_operation["imageinfo"] = images
 		
 		if(element.image){
 			var image_array
@@ -546,9 +546,9 @@ function generateImageInfo(callback){
 				if("size" in element){
 					imageSize = element.size
 				} 
-				if(rt_element.svg && rt_element.svg[image_entry]){
+				if(rt_operation.svg && rt_operation.svg[image_entry]){
 					imageCnt --
-					imageinfo.svg = rt_element.svg[image_entry]
+					imageinfo.svg = rt_operation.svg[image_entry]
 					if(!imageSize){
 						imageSize = getSvgImageSize(imageinfo.svg)						
 					}
@@ -584,7 +584,7 @@ function generateImageInfo(callback){
 }
 
 function loadLocalSvg(xml, img, imageSize, onload){
-	var xml = rt_element.svg
+	var xml = rt_operation.svg
 	img = new Image();
 	xml = insertImageSize(xml,imageSize)
 	var DOMURL = window.URL || window.webkitURL || window;
@@ -652,18 +652,18 @@ function setImageAttributes(){
 	
 	for(var key in runtime){
 		
-		var rt_element = runtime[key]
-		var element = rt_element.configuration
-		if("imageinfo" in rt_element){
-			var imageinfo = rt_element.imageinfo
+		var rt_operation = runtime[key]
+		var element = rt_operation.configuration
+		if("imageinfo" in rt_operation){
+			var imageinfo = rt_operation.imageinfo
 			var image = imageinfo.image
 			if(image == null){
 				imageinfo["width"] = 0
 				imageinfo["height"] = 0
 				
 			} else {
-				rt_element.imageinfo["width"] = image.width
-				rt_element.imageinfo["height"] = image.height
+				rt_operation.imageinfo["width"] = image.width
+				rt_operation.imageinfo["height"] = image.height
 			}
 		}
 	}
@@ -697,25 +697,25 @@ function draw(){
 		}
 	}
 	for (var key in runtime){
-		var rt_element = runtime[key]
-		if (inInterval(rt_element)){
-			rt_element["active"] = true
-			run(rt_element)
+		var rt_operation = runtime[key]
+		if (inInterval(rt_operation)){
+			rt_operation["active"] = true
+			run(rt_operation)
 		} else {
-			if("active" in rt_element){
-				if(rt_element.active){
-					inactivate(rt_element)
+			if("active" in rt_operation){
+				if(rt_operation.active){
+					inactivate(rt_operation)
 				}
 			}
-			rt_element["active"] = false
+			rt_operation["active"] = false
 		}
 	}
 	tick ++;
 	requestAnimFrame(function(){draw()})
 }
 
-function inInterval(rt_element){
-	var element = rt_element.configuration
+function inInterval(rt_operation){
+	var element = rt_operation.configuration
 	if("duration" in element){
 		var duration = element.duration
 		if(Array.isArray(duration)){
@@ -734,7 +734,7 @@ function inInterval(rt_element){
 		}
 		return false
 	}
-	if(rt_element.show){
+	if(rt_operation.show){
 		return true
 	}
 	return false
@@ -801,30 +801,30 @@ function getBoundaries(htmlElement) {
 	}
 
 
-function run(rt_element){
-	if("operation" in rt_element){
-		var rt_operations = rt_element["operation"]
+function run(rt_operation){
+	if("operation" in rt_operation){
+		var rt_operations = rt_operation["operation"]
 		for (var op_key in rt_operations){
 			var rt_operation = rt_operations[op_key]
-			if("canvas" in rt_element){
+			if("canvas" in rt_operation){
 				if(!("context" in rt_operation)){
-					var context = rt_element.canvas.getContext("2d")
+					var context = rt_operation.canvas.getContext("2d")
 					rt_operation["context"] = context
 				}
 			}
-// console.log("Invoking "+rt_element.name+"::"+op_key)
+// console.log("Invoking "+rt_operation.name+"::"+op_key)
 			try{
-				window[op_key](rt_element, rt_operation)
+				window[op_key](rt_operation)
 			} catch (e){
 			}
 		}
 	}
 }
 
-function inactivate(rt_element){
-	var element = rt_element.configuration
-	if("operation" in rt_element){
-		var rt_operations = rt_element["operation"]
+function inactivate(rt_operation){
+	var element = rt_operation.configuration
+	if("operation" in rt_operation){
+		var rt_operations = rt_operation["operation"]
 		for (var op_key in rt_operations){
 			var rt_operation = rt_operations[op_key]
 			if("canvas" in element){
@@ -836,10 +836,10 @@ function inactivate(rt_element){
 			var inactivate = op_key+"_inactivate"
 // console.log("Invoking "+element.name+"::"+inactivate)
 			try{
-				window[inactivate](rt_element,rt_operation)
+				window[inactivate](rt_operation)
 			} catch (e){
 				if("context" in rt_operation){
-					rt_operation.context.clearRect(0,0,rt_element.canvas.width,rt_element.canvas.height)
+					rt_operation.context.clearRect(0,0,rt_operation.canvas.width,rt_operation.canvas.height)
 				}
 			}
 		}
@@ -848,7 +848,7 @@ function inactivate(rt_element){
 
 
 
-function newAudioState(rt_element, rt_operation){
+function newAudioState(rt_operation){
 	var operation = rt_operation.configuration
 	rt_operation["state"] = {}
 	rt_operation.state["sound_iteration"] = 0
@@ -858,7 +858,7 @@ function newAudioState(rt_element, rt_operation){
 	console.log("Playing "+rt_operation.state.current_audio.getAttribute("src"))
 }
 
-function nextAudioState(rt_element, rt_operation){
+function nextAudioState(rt_operation){
 	if(rt_operation.state.switch_audio){
 		rt_operation.state.current_audio.pause()
 		rt_operation.state.switch_audio = false
@@ -881,7 +881,7 @@ function nextAudioState(rt_element, rt_operation){
 	}
 }
 
-function sound_inactivation(rt_element, rt_operation){
+function sound_inactivation(rt_operation){
 	if(rt_operation.state.current_audio.ended ){
 		
 	} else {
@@ -923,8 +923,8 @@ function getAlignedPosition(num, dimension, alignment, alignmentDef){
 }
 
 
-function getSpeed(rt_element, rt_operation){
-	var element = rt_element.configuration
+function getSpeed(rt_operation){
+	var element = rt_operation.configuration
 	var d
 	if("distance" in element){
 		d = element.distance
@@ -941,7 +941,7 @@ function getSpeed(rt_element, rt_operation){
 			speed = operation.speed
 		} else {
 			var op = operation.speed.speed
-			speed = op(rt_element,rt_operation)
+			speed = op(rt_operation)
 		}
 	} else {
 		speed = [0, 0]
@@ -983,9 +983,9 @@ function getReference(rt_operation,group,field){
 		var element_name = operation.reference.element
 		var operation_name = operation.reference.operation
 		if(element_name in runtime){
-			var rt_element = runtime[element_name]
-			if(operation_name in rt_element.operation){
-				var ref_operation = rt_element.operation[operation_name]
+			var rt_operation = runtime[element_name]
+			if(operation_name in rt_operation.operation){
+				var ref_operation = rt_operation.operation[operation_name]
 				if(group in ref_operation){
 					if(field in ref_operation[group]){
 						return ref_operation[group][field]
@@ -997,16 +997,16 @@ function getReference(rt_operation,group,field){
 	return null
 }
 
-function getPosition(rt_element, rt_operation){
+function getPosition(rt_operation){
 	var x = null
 	var y = null
 	var operation = rt_operation.configuration
 	if("position" in operation){
 		if(Array.isArray(operation.position)){
 			if(operation.position.length > 0){
-				x = valueToPosition(operation.position[0], rt_element.canvas.width)
+				x = valueToPosition(operation.position[0], rt_operation.canvas.width)
 				if(operation.position.length > 1){
-					y = valueToPosition(operation.position[1], rt_element.canvas.height)
+					y = valueToPosition(operation.position[1], rt_operation.canvas.height)
 				}
 			}
 		}
@@ -1025,10 +1025,10 @@ function include(loc){
 	}
 }
 
-function getElementImage(rt_element, rt_operation, ix){
-	if(rt_element.imageinfo[ix].svg){
-// console.log("loading svg for "+rt_element.name)
-		var svgImage = getSvgImage(rt_element,rt_operation, ix)
+function getElementImage(rt_operation, ix){
+	if(rt_operation.imageinfo[ix].svg){
+// console.log("loading svg for "+rt_operation.name)
+		var svgImage = getSvgImage(rt_operation, ix)
 // while(1){
 // if(rt_operation.loaded){
 // return svgImage
@@ -1037,18 +1037,18 @@ function getElementImage(rt_element, rt_operation, ix){
 // }
 		return svgImage
 	}
-	return rt_element.imageinfo[ix].image
+	return rt_operation.imageinfo[ix].image
 }
 
-function getSvgImage(rt_element,rt_operation, ix){
-	var element = rt_element.configuration
+function getSvgImage(rt_operation, ix){
+	var element = rt_operation.configuration
 	if(rt_operation.meta.imagesize){
-		 setSvgImageSize(rt_element.svg[ix], rt_operation.meta.imagesize)
+		 setSvgImageSize(rt_operation.svg[ix], rt_operation.meta.imagesize)
 	} else if(element.size){
-		setSvgImageSize(rt_element.svg[ix], element.size)
+		setSvgImageSize(rt_operation.svg[ix], element.size)
 	}else{
-		 var imageSize = getSvgImageSize(rt_element.svg[ix])
-		 setSvgImageSize(rt_element.svg[ix], imageSize)
+		 var imageSize = getSvgImageSize(rt_operation.svg[ix])
+		 setSvgImageSize(rt_operation.svg[ix], imageSize)
 	}
  	var img = new Image()
  	rt_operation.loaded = false
@@ -1056,7 +1056,7 @@ function getSvgImage(rt_element,rt_operation, ix){
  	img.onload = function(){ 
  			img.rt_operation.loaded = true 
  		}
- 	var svg_encoded = btoa( unescape( encodeURIComponent( rt_element.svg[ix].outerHTML ) ) ) 
+ 	var svg_encoded = btoa( unescape( encodeURIComponent( rt_operation.svg[ix].outerHTML ) ) ) 
  	img.src = "data:image/svg+xml;base64," + svg_encoded
  	return img
 }
@@ -1081,7 +1081,7 @@ const lengthTypeMap = {
 		px: 1,
 		pt: 72 / 96,
 		em: 16,
-		in: 96,
+		"in": 96,
 		cm: 96 / 2.54
 }
 
