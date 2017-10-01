@@ -27,6 +27,14 @@ util.intToColor = function(r,g,b){
 	return "#"+srgb
 }
 
+util.intToRGBA = function(r,g,b,a){
+	r = Math.floor(Math.abs(r))%256
+	g = Math.floor(Math.abs(g))%256
+	b = Math.floor(Math.abs(b))%256
+	var rgba = "rgba("+r+","+g+","+b+","+a+")"
+	return rgba
+}
+
 util.getIntervalIx = function(state, interval, count) {
 	if (count <= 1) {
 		return 0
@@ -178,24 +186,23 @@ util.getElement = function(id, tag, ns) {
 }
 
 util.getElementImage = function(rt_operation, ix) {
-	var url = rt_operation.image.images[ix].url
-	var images = Images()
-	var image_entry = images[url]
-	if (image_entry.imageinfo.svg) {
+	var image_entry = rt_operation.image.images[ix].image
+	if (image_entry.svg) {
 		// console.log("loading svg for "+rt_operation.name)
-		var svgImage = this.getSvgImage(rt_operation, image_entry.imageinfo.svg)
+		var svgImage = this.getSvgImage(rt_operation, image_entry.svg)
 		return svgImage
 	}
-	return image_entry.imageinfo.image
+	return image_entry.image
 }
 
 util.getSvgImage = function (rt_operation, svg) {
-	if (rt_operation.meta.imagesize) {
-		this.setSvgImageSize(svg, rt_operation.meta.imagesize)
-	} else if (rt_operation.size) {
-		this.setSvgImageSize(svg, rt_operation.size)
+	var local
+	if (rt_operation.state.width && rt_operation.state.height) {
+		this.setSvgImageSize(svg, [rt_operation.state.width,rt_operation.state.height])
 	} else {
 		var imageSize = this.getSvgImageSize(svg)
+		rt_operation.state.width = imagesize[0]
+		rt_operation.state.height = imagesize[1]
 		this.setSvgImageSize(svg, imageSize)
 	}
 	var img = new Image()
@@ -332,7 +339,7 @@ util.setImageState = function(rt_operation){
 			sit.ix = this.getIntervalIx(sit,mit.interval,mit.size)
 		}
 		if(template.method){
-			util[template.method](sit, mit, template)
+			util[template.method](sit, mit, template,imagedef.image)
 		}
 	}
 }
@@ -341,18 +348,14 @@ util.generateArrayIndex = function(image_state,image_meta){
 	return this.getIntervalIx(image_state,image_meta.interval, image_meta.size)
 }
 
-util.setSvgFieldValue = function(image_state,image_meta,template){
-	var images = Images()
-	var image = images[image_meta.url]
-	var svg = image.imageinfo.svg
+util.setSvgFieldValue = function(image_state,image_meta,template, imageinfo){
+	var svg = imageinfo.svg
 	var element = $(svg).find(image_meta.element)
 	$(element).attr(image_meta.attribute, image_meta.values[image_state.ix] )
 }
 
-util.setSvgFieldTemplate = function(image_state,image_meta,template){
-	var images = Images()
-	var image = images[image_meta.url]
-	var svg = image.imageinfo.svg
+util.setSvgFieldTemplate = function(image_state,image_meta,template, imageinfo){
+	var svg = imageinfo.svg
 	var element = $(svg).find(image_meta.element) 
 	var pattern = image_meta.pattern
 	var attribute = image_meta.attribute
@@ -366,3 +369,110 @@ util.replaceField = function(string,field,value){
 		var keystring = "${"+field+"}"
 		return string.split(keystring).join(value)
 }
+
+util.getInitialPosition = function(rt_operation){
+	var x = Number.MAX_VALUE
+	var y = Number.MAX_VALUE
+	if ("position" in rt_operation) {
+		if (Array.isArray(rt_operation.position)) {
+			if (rt_operation.position.length > 0) {
+				x = util.valueToPosition(rt_operation.position[0], rt_operation.canvas.width)
+			}
+			if (rt_operation.position.length > 1) {
+				y = util.valueToPosition(rt_operation.position[1], rt_operation.canvas.height)
+			}
+		}
+	}
+	if (x == Number.MAX_VALUE) {
+		x = rt_operation.canvas.width / 2
+	}
+	if (y == Number.MAX_VALUE) {
+		y = rt_operation.canvas.height / 2
+	}
+
+	var align
+	if ("align" in rt_operation) {
+		align = rt_operation.align
+	} else {
+		align = [ "center", "center" ]
+	}
+
+	var x_align,
+		y_align
+
+	if (align[0] in x_alignment) {
+		x_align = x_alignment[align[0]]
+	} else {
+		x_align = x_alignment.center
+	}
+
+	if (align[1] in y_alignment) {
+		y_align = y_alignment[align[1]]
+	} else {
+		y_align = y_alignment.center
+	}
+
+	x = x += rt_operation.image.images[0].width * x_align
+	y = y += rt_operation.image.images[0].height * y_align
+	return [x,y]
+}
+
+util.offCanvas = function(rt_operation){
+	var x = rt_operation.state.x
+	if(x > rt_operation.canvas.width){
+		return true
+	}
+	var y = rt_operation.state.y
+	if(y > rt_operation.canvas.height){
+		return true
+	}
+	var x_right = x + rt_operation.state.width
+	if (x_right < 0){
+		return true
+	}
+	var y_bottom = y + rt_operation.state.height
+	if (y_bottom < 0){
+		return 0
+	}
+}
+
+util.offCanvasActions = function(rt_operation){
+	if(this.offCanvas(rt_operation)){
+		if(rt_operation.events.off_canvas){
+			rt_operation.events.off_canvas()
+		} else {
+			event_rt.createEvent("Stop","*",rt_operation)
+		}
+		return true
+	}
+	return false
+}
+
+// util.nextSoundState = function(rt_operation){
+// if(rt_operation.state.switch_audio){
+// rt_operation.state.current_audio.pause()
+// rt_operation.state.switch_audio = false
+// if(rt_operation.state.sound_iteration < 0){
+// rt_operation.state.sound_iteration = 0
+// } else {
+// rt_operation.state.sound_iteration ++
+// }
+// if(rt_operation.state.sound_iteration < rt_operation.audios.length()){
+// rt_operation.state.current_audio =
+// operation.audios[rt_operation.state.sound_iteration]
+// rt_operation.state.current_audio.play()
+// console.log("Playing
+// "+rt_operation.state.current_audio.getAttribute("src")+"("+rt_operation.state.sound_iteration+")")
+// }
+// if(operation.loop){
+// rt_operation.state.sound_iteration = 0
+// rt_operation.state.current_audio =
+// rt_operation.audios[rt_operation.state.sound_iteration]
+// rt_operation.state.current_audio.play()
+// console.log("Replaying
+// "+rt_operation.state.current_audio.getAttribute("src"))
+// } else {
+// rt_operation.initialized = false
+// }
+// }
+// }

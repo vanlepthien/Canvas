@@ -10,3 +10,4 @@ var defaults = {
 defaults.resources = defaults.app_base + "resources/"
 defaults.imageLoc = defaults.resources + "images/"
 defaults.audioLoc = defaults.resources + "audio/"
+defaults.videoLoc = defaults.resources + "video/"

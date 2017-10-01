@@ -1,23 +1,35 @@
 media_rt.createRuntimeAudio = function() {
-	function generateAudio() {
-		var audios = util.getElement("audios", "div").element
-		var audiosets = AudioSet()
-		var audios = Audios()
-		for (var key in audiosets) {
-			var audioset = audiosets[key]
-			var audioList = []
-			var url_ix
-			for (url_ix in audioset.audio) {
-				var url = audioset.audio[url_ix]
+	var audio_elements = util.getElement("audios", "div").element
+	var audiosets = AudioSet()
+	var audios = Audios()
+	var rt_audios = RuntimeAudio()
+	for ( var key in audiosets) {
+		var audioset = audiosets[key]
+		var rt_audio
+		if (rt_audios[key]) {
+			rt_audio = rt_audios[key]
+		} else {
+			rt_audio = {}
+			rt_audios[key] = rt_audio
+			rt_audio.audios = []
+		}
+		for ( var url_ix in audioset.audio) {
+			var url = audioset.audio[url_ix]
+			var audio
+			if (audios[url]) {
+				audio = audios[url].audio
+			} else {
+				audios[url] = {}
 				var audio = document.createElement("audio")
-				if (operation.loop) {
+				audios[url].audio = audio
+				var configuration = audioset.configuration || {}
+				if (configuration.loop) {
 					audio.loop = true
 				}
 				audio.controls = false
-				audios.appendChild(audio)
+				audio_elements.appendChild(audio)
 				var audio_element_name = "audio_" + key + "_" + url_ix
 				audio.setAttribute("id", audio_element_name)
-				audioList.push(audio)
 
 				var source = document.createElement("source")
 				audio.appendChild(source)
@@ -31,7 +43,6 @@ media_rt.createRuntimeAudio = function() {
 				case ".mp3":
 					audioType = "audio/mpeg"
 					break
-
 				case ".ogg":
 					audioType = "audio/ogg"
 					break
@@ -39,22 +50,21 @@ media_rt.createRuntimeAudio = function() {
 					audeoType = "audio/wav"
 				}
 				source.setAttribute("type", audioType)
-				rt_operation["switch_audio"] = false
-				audio.rt_operation = rt_operation
+				audio.audioset = audioset
 				audio.onended = function() {
-					media_rt.switchAudio(audio.rt_operation)
+					media_rt.switchAudio(this.operation)
 				}
 				audio.oncanplay = function() {
 					// is this irrelevant?
 					// playable_audios.push(this)
 				}
 			}
-			rt_operation["audios"] = audioList
+			rt_audio.audios.push(audio)
 		}
 	}
 }
 
-media_rt.loadAudio = function () {
+media_rt.loadAudio = function() {
 	$("#audios").children("audio").each(function() {
 		this.load()
 		this.play()
@@ -62,9 +72,9 @@ media_rt.loadAudio = function () {
 	})
 }
 
-media_rt.sound_inactivation = function(rt_operation){
-	if(rt_operation.state.current_audio.ended ){
-		
+media_rt.sound_inactivation = function(rt_operation) {
+	if (rt_operation.state.current_audio.ended) {
+
 	} else {
 		rt_operation.state.current_audio.pause()
 		rt_operation.state.current_audio.current_time = 0
@@ -72,16 +82,17 @@ media_rt.sound_inactivation = function(rt_operation){
 	rt_operation.state.sound_iteration = -1
 }
 
-media_rt.switchAudio = function(rt_operation){
-	if(!rt_operation.loop){
+media_rt.switchAudio = function(rt_operation) {
+	
+	if (!rt_operation.loop) {
 		console.log("Sound Switch")
 		rt_operation.state["switch_audio"] = true
 		// Don't wait for next interval
-		ops.sound[nextSoundState](rt_operation)
+		ops.sound.nextState(rt_operation)
 	} else {
 		console.log("Sound loop")
 	}
 }
 
-
-media_rt.createRuntimeVideo = function() {}
+media_rt.createRuntimeVideo = function() {
+}

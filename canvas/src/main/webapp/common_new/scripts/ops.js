@@ -6,15 +6,17 @@
 ops.bounce = {
 	run : function(rt_operation) {
 		if (rt_operation.initialized) {
-			this.nextBounceState(rt_operation)
+			this.nextState(rt_operation)
 		} else {
-			this.newBounceState(rt_operation)
+			this.newState(rt_operation)
 			rt_operation.initialized = true
 		}
 		var state = rt_operation.state
 		var context = rt_operation.context
 		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-		context.drawImage(rt_operation.image.images[0].image, state.x, state.y)
+		if(!util.offCanvasActions(rt_operation)){
+			context.drawImage(rt_operation.image.images[0].image, state.x, state.y)
+		}
 	},
 
 	newState : function(rt_operation) {
@@ -44,56 +46,35 @@ ops.bounce = {
 			x = getReference(rt_operation, "state", "x")
 			y = getReference(rt_operation, "state", "y")
 			direction = getReference(rt_operation, "state", "direction")
+			rt_operation.position = [x,y]
 		}
 		if (!direction) {
 			direction = 1
 		}
 
-		var align
-		if ("align" in rt_operation) {
-			align = rt_operation.align
-		} else {
-			align = [ "canter", "center" ]
-		}
-
-		if (x == null || y == null) {
-			var xy = util.getPosition(rt_operation)
-			if (x == null) {
-				x = xy[0]
-				x = getAlignedPosition(x, rt_operation.image.images[0].width, align[0], x_alignment)
-			}
-			if (y == null) {
-				y = xy[1]
-				y = getAlignedPosition(y, rt_operation.image.images[0].height, align[1], y_alignment)
-			}
-
-		}
-
-		if (x == null) {
-			x = rt_operation.canvas.width / 2
-		}
-		if (y == null) {
-			y = (top + bottom) / 2
-		}
-
-
-
-		var x_left = x
-		var x_right = x + rt_operation.image.images[0].width
-		var y_top = y
-		var y_bottom = y + rt_operation.image.images[0].height
+		var xy = util.getInitialPosition(rt_operation)
+		
+		x = xy[0]
+		y = xy[1]
 
 		var state = {}
+		
+		state.width =rt_operation.width || rt_operation.image.images[0].width
+		state.height =rt_operation.height || rt_operation.image.images[0].height
+		
+		var x_left = x
+		var x_right = x + state.width
+		var y_top = y
+		var y_bottom = y + state.height
 
-
-		state["x"] = x
-		state["y"] = y
-		state["direction"] = direction
+		state.x = x
+		state.y = y
+		state.direction = direction
 		rt_operation.state = state
 
 		var meta = {}
-		meta["top"] = top
-		meta["bottom"] = bottom
+		meta.top = top
+		meta.bottom = bottom
 		rt_operation.meta = meta
 	},
 
@@ -107,9 +88,9 @@ ops.bounce = {
 		var y = state.y + (state.direction * speed.vspeed)
 
 		var x_left = x
-		var x_right = x + rt_operation.image.images[0].width
+		var x_right = x + state.width
 		var y_top = y
-		var y_bottom = y + rt_operation.image.images[0].height
+		var y_bottom = y + state.height
 
 
 		if (state.direction < 0) {
@@ -143,6 +124,7 @@ ops.move = {
 		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
 		var image = util.getElementImage(rt_operation, state.image_ix)
 		image.crossOrigin = 'Anonymous';
+		context.globalAlpha = 1.0
 		if (rt_operation.cycle) {
 			for (var x_ix in state.x_vector) {
 				for (var y_ix in state.y_vector) {
@@ -156,62 +138,21 @@ ops.move = {
 
 	newState : function(rt_operation) {
 		var state = {}
-		rt_operation["state"] = state
+		state.width =rt_operation.width || rt_operation.image.images[0].width
+		state.height =rt_operation.height || rt_operation.image.images[0].height
+		rt_operation.state = state
 		var meta = {}
-		meta["width"] = rt_operation.canvas.width
-		meta["height"] = rt_operation.canvas.height
-		meta["imagewidth"] = rt_operation.image.images[0].width
-		meta["imageheight"] = rt_operation.image.images[0].height
-		meta["interval"] = 10
+		meta.interval = 10
 		if (rt_operation.interval) {
-			meta["interval"] = rt_operation.interval
+			meta.interval = rt_operation.interval
 		}
-		rt_operation["meta"] = meta
-		var x = Number.MAX_VALUE
-		var y = Number.MAX_VALUE
-		if ("position" in rt_operation) {
-			if (Array.isArray(rt_operation.position)) {
-				if (rt_operation.position.length > 0) {
-					x = util.valueToPosition(rt_operation.position[0], rt_operation.canvas.width)
-				}
-				if (rt_operation.position.length > 1) {
-					y = util.valueToPosition(rt_operation.position[1], rt_operation.canvas.height)
-				}
-			}
-		}
-		if (x == Number.MAX_VALUE) {
-			x = rt_operation.canvas.width / 2
-		}
-		if (y == Number.MAX_VALUE) {
-			y = rt_operation.canvas.height / 2
-		}
-
-		var align
-		if ("align" in rt_operation) {
-			align = rt_operation.align
-		} else {
-			align = [ "center", "center" ]
-		}
-
-		var x_align,
-			y_align
-
-		if (align[0] in x_alignment) {
-			x_align = x_alignment[align[0]]
-		} else {
-			x_align = x_alignment.center
-		}
-
-		if (align[1] in y_alignment) {
-			y_align = y_alignment[align[1]]
-		} else {
-			y_align = y_alignment.center
-		}
-
-		state["x"] = x += rt_operation.image.images[0].width * x_align
-		state["y"] = y += rt_operation.image.images[0].height * y_align
-
-		state["tick"] = tick
+		rt_operation.meta = meta
+		
+		var xy = util.getInitialPosition(rt_operation)
+		state.x = xy[0]
+		state.y = xy[1]
+		
+		state.tick = tick
 		
 		state.image_ix = 0;
 	},
@@ -220,8 +161,8 @@ ops.move = {
 		var state = rt_operation.state
 		var meta = rt_operation.meta
 		var speed = util.getSpeed(rt_operation)
-		state.x = (state.x + speed.hspeed) % meta.width
-		state.y = (state.y + speed.vspeed) % meta.height
+		state.x = (state.x + speed.hspeed) % rt_operation.canvas.width
+		state.y = (state.y + speed.vspeed) % rt_operation.canvas.height
 		var image_cnt = Object.keys(rt_operation.image.images).length
 		state.image_ix = util.nextImageIx(state, meta.interval, image_cnt)
 	},
@@ -229,17 +170,17 @@ ops.move = {
 	updateState : function(rt_operation) {
 		var state = rt_operation.state
 		var meta = rt_operation.meta
-		state["x_pos"] = state.x
+		state.x_pos = state.x
 		if (state.x_pos > 0) {
-			state.x_pos -= meta.width
+			state.x_pos -= rt_operation.canvas.width
 		}
-		state["y_pos"] = state.y
+		state.y_pos = state.y
 		if (state.y_pos > 0) {
-			state.y_pos -= meta.width
+			state.y_pos -= rt_operation.canvas.width
 		}
 
-		state["x_vector"] = this.getVector(state.x_pos, meta.width, rt_operation.canvas.width)
-		state["y_vector"] = this.getVector(state.y_pos, meta.height, rt_operation.canvas.height)
+		state.x_vector = this.getVector(state.x_pos, meta.width, rt_operation.canvas.width)
+		state.y_vector = this.getVector(state.y_pos, meta.height, rt_operation.canvas.height)
 	},
 
 	getVector : function(pos, image_size, canvas_size) {
@@ -294,74 +235,75 @@ ops.fixed = {
 		} else {
 			position = [ "50%", "50%" ]
 		}
-		var x = Number.MAX_VALUE
-		var y = Number.MAX_VALUE
-		if (Array.isArray(rt_operation.position)) {
-			if (rt_operation.position.length > 0) {
-				x = util.valueToPosition(rt_operation.position[0], rt_operation.canvas.width)
-				if (rt_operation.position.length > 1) {
-					y = util.valueToPosition(rt_operation.position[1], rt_operation.canvas.height)
-				} else {
-					y = util.valueToPosition("50%", rt_operation.canvas.height)
-				}
-			} else {
-				x = util.valueToPosition("50%", rt_operation.canvas.width)
-				y = util.valueToPosition("50%", rt_operation.canvas.height)
-			}
-		}
-
-		if (x == Number.MAX_VALUE) {
-			x = rt_operation.canvas.width / 2
-		}
-		if (y == Number.MAX_VALUE) {
-			y = rt_operation.canvas.height / 2
-		}
-
-		if ("align" in rt_operation) {
-			align = rt_operation.align
-		} else {
-			align = [ "center", "center" ]
-		}
-
-		var x_align,
-			y_align
-
-		if (align[0] in x_alignment) {
-			x_align = x_alignment[align[0]]
-		} else {
-			x_align = x_alignment.center
-		}
-
-		if (align[1] in y_alignment) {
-			y_align = y_alignment[align[1]]
-		} else {
-			y_align = y_alignment.center
-		}
-
+// var x = Number.MAX_VALUE
+// var y = Number.MAX_VALUE
+// if (Array.isArray(rt_operation.position)) {
+// if (rt_operation.position.length > 0) {
+// x = util.valueToPosition(rt_operation.position[0], rt_operation.canvas.width)
+// if (rt_operation.position.length > 1) {
+// y = util.valueToPosition(rt_operation.position[1],
+// rt_operation.canvas.height)
+// } else {
+// y = util.valueToPosition("50%", rt_operation.canvas.height)
+// }
+// } else {
+// x = util.valueToPosition("50%", rt_operation.canvas.width)
+// y = util.valueToPosition("50%", rt_operation.canvas.height)
+// }
+// }
+//
+// if (x == Number.MAX_VALUE) {
+// x = rt_operation.canvas.width / 2
+// }
+// if (y == Number.MAX_VALUE) {
+// y = rt_operation.canvas.height / 2
+// }
+//
+// if ("align" in rt_operation) {
+// align = rt_operation.align
+// } else {
+// align = [ "center", "center" ]
+// }
+//
+// var x_align,
+// y_align
+//
+// if (align[0] in x_alignment) {
+// x_align = x_alignment[align[0]]
+// } else {
+// x_align = x_alignment.center
+// }
+//
+// if (align[1] in y_alignment) {
+// y_align = y_alignment[align[1]]
+// } else {
+// y_align = y_alignment.center
+// }
+		
 		var meta = {}
-		meta["x"] = x += rt_operation.image.images[0].width * x_align
-		meta["y"] = y += rt_operation.image.images[0].height * y_align
+		
+		[meta.x, meta.y] = util.getInitialPosition(rt_operation)
 
 		if (rt_operation.interval) {
 			meta.interval = rt_operation.interval
 		} else {
-			meta["interval"] = 100
+			meta.interval = 100
 		}
 
 		rt_operation.meta = meta
 
 		var state = {}
-		state["tick"] = tick
+		state.tick = tick
 		state.image_ix = 0
 
-		rt_operation["state"] = state
+		rt_operation.state = state
 	}
 }
 
 ops.marquee = {
 	run : function(rt_operation) {
 		if (!rt_operation.initialized) {
-			newMarqueeState(rt_operation)
+			newState(rt_operation)
 			rt_operation.initialized = true;
 			var meta = rt_operation.meta
 			var context = rt_operation.context
@@ -421,37 +363,37 @@ ops.pan = {
 
 	newState : function(rt_operation) {
 		var state = {}
-		state["x"] = 0
-		state["y"] = 0
-		rt_operation["state"] = state
+		state.x = 0
+		state.y = 0
+		rt_operation.state = state
 		var meta = {}
-		meta["width"] = rt_operation.image.images[0].width
-		meta["height"] = rt_operation.image.images[0].height
-		rt_operation["meta"] = meta
+		meta.width = rt_operation.width || rt_operation.image.images[0].width|| rt_operation.image.images[0].image.width
+		meta.height = rt_operation.height || rt_operation.image.images[0].height|| rt_operation.image.images[0].image.height
+		rt_operation.meta = meta
 	},
 
 	nextState : function(rt_operation) {
 		var state = rt_operation.state
 		var meta = rt_operation.meta
 		var speed = util.getSpeed(rt_operation)
-		state["x"] = (state.x + speed.hspeed) % meta.width
-		state["y"] = (state.y + speed.vspeed) % meta.height
+		state.x = (state.x + speed.hspeed) % meta.width
+		state.y = (state.y + speed.vspeed) % meta.height
 	},
 
 	updateState : function(rt_operation) {
 		var state = rt_operation.state
 		var meta = rt_operation.meta
-		state["x_pos"] = state.x
+		state.x_pos = state.x
 		if (state.x_pos > 0) {
 			state.x_pos -= meta.width
 		}
-		state["y_pos"] = state.y
+		state.y_pos = state.y
 		if (state.y_pos > 0) {
 			state.y_pos -= meta.width
 		}
 
-		state["x_vector"] = util.util.getPositionVector(state.x_pos, meta.width, rt_operation.canvas.width)
-		state["y_vector"] = util.util.getPositionVector(state.y_pos, meta.height, rt_operation.canvas.height)
+		state.x_vector = util.getPositionVector(state.x_pos, meta.width, rt_operation.canvas.width)
+		state.y_vector = util.getPositionVector(state.y_pos, meta.height, rt_operation.canvas.height)
 	}
 }
 
@@ -465,7 +407,7 @@ ops.fill = {
 		}
 		if (rt_operation.shape) {
 			var shape = rt_operation.shape
-			var func = shape["function"]
+			var func = shape.function
 			var callParms = []
 			if (shape.parms) {
 				callParms = shape.parms.slice(0)
@@ -508,10 +450,13 @@ ops.sound = {
 		},
 
 		newState : function(rt_operation) {
-			rt_operation["state"] = {}
-			rt_operation.state["sound_iteration"] = 0
-			rt_operation.state["current_audio"] = rt_operation.audios[rt_operation.state.sound_iteration]
-			rt_operation.state["switch_audio"] = rt_operation.switch_audio
+			var rt_audios = RuntimeAudio()
+			var rt_audioset = rt_audios[rt_operation.audioset]
+			rt_operation.state = {}
+			rt_operation.state.sound_iteration = 0
+			rt_operation.state.current_audio = rt_audioset.audios[rt_operation.state.sound_iteration]
+			rt_operation.state.switch_audio = false
+			rt_operation.state.current_audio.operation = rt_operation
 			rt_operation.state.current_audio.play()
 			console.log("Playing " + rt_operation.state.current_audio.getAttribute("src"))
 		},
@@ -525,21 +470,27 @@ ops.sound = {
 				} else {
 					rt_operation.state.sound_iteration++
 				}
-				if (rt_operation.state.sound_iteration < rt_operation.audios.length) {
-					rt_operation.state.current_audio = operation.audios[rt_operation.state.sound_iteration]
+				var audiosets = AudioSet()
+				var audioset = audiosets[rt_operation.audioset]
+				if (rt_operation.state.sound_iteration < audioset.audio.length) {
+					rt_operation.state.current_audio = audioset.audio[rt_operation.state.sound_iteration]
 					rt_operation.state.current_audio.play()
 					console.log("Playing " + rt_operation.state.current_audio.getAttribute("src") + "(" + rt_operation.state.sound_iteration + ")")
 				}
 				if (operation.loop) {
 					rt_operation.state.sound_iteration = 0
-					rt_operation.state.current_audio = rt_operation.audios[rt_operation.state.sound_iteration]
+					rt_operation.state.current_audio = audioset.audio[rt_operation.state.sound_iteration]
+					rt_operation.state.current_audio.operation = rt_operation
 					rt_operation.state.current_audio.play()
 					console.log("Replaying " + rt_operation.state.current_audio.getAttribute("src"))
+				} else {
+					event_rt.createEvent("Stop","*",rt_operation.name)
+					rt_operation.initialized = false
 				}
 			}
 		},
 
-		inactivation : function(rt_operation) {
+		inactivate : function(rt_operation) {
 			if (rt_operation.state.current_audio.ended) {
 
 			} else {
@@ -547,14 +498,16 @@ ops.sound = {
 				rt_operation.state.current_audio.current_time = 0
 			}
 			rt_operation.state.sound_iteration = -1
+			rt_operation.initialized = false
+			rt_operation.active = false
 		},
 
 		switchPlay : function(rt_operation) {
 			if (!rt_operation.loop) {
 				console.log("Sound Switch")
-				rt_operation.state["switch_audio"] = true
+				rt_operation.state.switch_audio = true
 				// Don't wait for next interval
-				nextSoundState(rt_operation)
+				util.nextState(rt_operation)
 			} else {
 				console.log("Sound loop")
 			}
@@ -573,10 +526,10 @@ ops.sound = {
 		},
 
 		newState : function(rt_operation) {
-			rt_operation["state"] = {}
-			rt_operation.state["video_iteration"] = 0
-			rt_operation.state["current_video"] = rt_operation.videos[rt_operation.state.video_iteration]
-			rt_operation.state["switch_video"] = rt_operation.switch_video
+			rt_operation.state = {}
+			rt_operation.state.video_iteration = 0
+			rt_operation.state.current_video = rt_operation.videos[rt_operation.state.video_iteration]
+			rt_operation.state.switch_video = rt_operation.switch_video
 			rt_operation.state.current_video.play()
 			console.log("Playing " + rt_operation.state.current_video.getAttribute("src"))
 		},
@@ -604,7 +557,7 @@ ops.sound = {
 			}
 		},
 
-		inactivation : function(rt_operation) {
+		inactivate : function(rt_operation) {
 			if (rt_operation.state.current_video.ended) {
 
 			} else {
@@ -612,14 +565,16 @@ ops.sound = {
 				rt_operation.state.current_video.current_time = 0
 			}
 			rt_operation.state.video_iteration = -1
+			rt_operation.initialized = false
+			rt_operation.active = false
 		},
 
 		switchPlay : function(rt_operation) {
 			if (!rt_operation.loop) {
 				console.log("Video Switch")
-				rt_operation.state["switch_video"] = true
+				rt_operation.state.switch_video = true
 				// Don't wait for next interval
-				nextVideoState(rt_operation)
+				nextState(rt_operation)
 			} else {
 				console.log("Video loop")
 			}
@@ -739,7 +694,7 @@ ops.sound = {
 
 		},
 
-		inactivation : function(rt_operation) {
+		inactivate : function(rt_operation) {
 			if (rt_operation.state.current_video.ended) {
 
 			} else {
@@ -747,5 +702,7 @@ ops.sound = {
 				rt_operation.state.current_video.current_time = 0
 			}
 			rt_operation.state.video_iteration = -1
+			rt_operation.initialized = false
+			rt_operation.active = false
 		}
 	}

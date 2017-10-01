@@ -22,9 +22,9 @@ var deltaV_edge = function(rt_operation) {
 	var x = rt_operation.state.x
 	var y = rt_operation.state.y
 	var x_left = x
-	var x_right = x + rt_operation.image.images[0].width
+	var x_right = x + rt_operation.state.width
 	var y_top = y
-	var y_bottom = y + rt_operation.image.images[0].height
+	var y_bottom = y + rt_operation.state.height
 
 	var dx = rt_operation.state.dx || rt_operation.speed.dx
 	var dy = rt_operation.state.dy || rt_operation.speed.dy

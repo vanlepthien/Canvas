@@ -9,7 +9,7 @@ var tick = 0
 
 var nominal_tick = 0
 
-//var playable_audios = []
+// var playable_audios = []
 
 function preload() {
 	// start button should be hidden, but make sure
@@ -25,6 +25,7 @@ function preload() {
 
 function init() {
 	// This must be run by a button click to activate audios on mobile devices
+	image_rt.setRuntimeImages()
 	media_rt.loadAudio()
 	runapp()
 }
@@ -157,20 +158,20 @@ function draw() {
 		}
 	}
 	event_rt.run()
-//	for (var key in runtime) {
-//		var rt_operation = runtime[key]
-//		if (inInterval(rt_operation)) {
-//			rt_operation["active"] = true
-//			run(rt_operation)
-//		} else {
-//			if ("active" in rt_operation) {
-//				if (rt_operation.active) {
-//					inactivate(rt_operation)
-//				}
-//			}
-//			rt_operation["active"] = false
-//		}
-//	}
+// for (var key in runtime) {
+// var rt_operation = runtime[key]
+// if (inInterval(rt_operation)) {
+// rt_operation["active"] = true
+// run(rt_operation)
+// } else {
+// if ("active" in rt_operation) {
+// if (rt_operation.active) {
+// inactivate(rt_operation)
+// }
+// }
+// rt_operation["active"] = false
+// }
+// }
 	tick++;
 	requestAnimFrame(function() {
 		draw()
@@ -255,7 +256,7 @@ function secondsToTick(seconds){
 }
 
 function tickToSeconds(tick_value){
-	return tick / (60*interval_adjustment)
+	return tick_value / (60*interval_adjustment)
 }
 
 function getBoundaries(htmlElement) {
@@ -272,42 +273,36 @@ function getBoundaries(htmlElement) {
 
 
 function run(rt_operation) {
-	if ("operation" in rt_operation) {
-		var op_name = rt_operation["operation"]
+	if (rt_operation.operation) {
 		if ("canvas" in rt_operation) {
 			if (!("context" in rt_operation)) {
 				var context = rt_operation.canvas.getContext("2d")
-				rt_operation["context"] = context
+				rt_operation.context = context
 			}
 		}
 		// console.log("Invoking "+rt_operation.name+"::"+op_name)
 		try {
-			ops[op_name].run(rt_operation)
-		} catch (e) {}
+			ops[rt_operation.operation].run(rt_operation)
+		} catch (e) {
+			console.log(rt_operation.name+"["+rt_operation.operation+"] failed. Exception: "+e)
+		}
 	}
 }
 
 function inactivate(rt_operation) {
-	var element = rt_operation.configuration
-	if ("operation" in rt_operation) {
-		var rt_operations = rt_operation["operation"]
-		for (var op_key in rt_operations) {
-			var rt_operation = rt_operations[op_key]
-			if ("canvas" in element) {
-				if (!("context" in rt_operation)) {
-					var context = element.canvas.getContext("2d")
-					rt_operation["context"] = context
-				}
-			}
-			var inactivate = op_key + "_inactivate"
-			// console.log("Invoking "+element.name+"::"+inactivate)
-			try {
-				window[inactivate](rt_operation)
-			} catch (e) {
-				if ("context" in rt_operation) {
-					rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-				}
-			}
+	var rt_name = rt_operation.name
+	var rt_op = rt_operation.operation
+	if(rt_operation.canvas){
+		if (!rt_operation.context){
+			rt_operation.context = rt_operation.canvas.getContext("2d")
+		}
+	}
+		// console.log("Invoking ops["+rt_op+"].inactivate")
+	try {
+		ops[rt_op].inactivate(rt_operation)
+	} catch (e) {
+		if ("context" in rt_operation) {
+			rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
 		}
 	}
 }

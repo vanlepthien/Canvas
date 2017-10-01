@@ -20,6 +20,10 @@ canvas_base.runtime_videos = {}
 
 canvas_base.images = {}
 
+canvas_base.audios = {}
+
+canvas_base.videos = {}
+
 canvas_base.operation = {}
 
 canvas_base.running = {}
@@ -69,6 +73,8 @@ var RuntimeImage = function(){return canvas_base.runtime_images}
 var RuntimeAudio = function(){return canvas_base.runtime_audios}
 var RuntimeVideo = function(){return canvas_base.runtime_videos}
 var Images = function(){return canvas_base.images}
+var Audios = function(){return canvas_base.audios}
+var Videos = function(){return canvas_base.videos}
 var Operation = function(){return canvas_base.operation}
 var CanvasMap = function(){return canvas_base.canvas_map}
 var ImageToRuntime = function(){return canvas_base.image_runtime_map}

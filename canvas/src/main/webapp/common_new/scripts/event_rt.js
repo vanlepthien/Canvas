@@ -15,7 +15,6 @@
 event_rt.run = function() {
 	var events = Events()
 	var running = Running()
-	var termination_queue = []
 	var current_time = tickToSeconds(tick)
 	while (1) {
 		var event_time
@@ -56,14 +55,16 @@ event_rt.run = function() {
 	}
 	// if "show" is true, run the operation regardless
 	var runtime = Runtime()
-	for(var key in runtime){
+	for ( var key in runtime) {
 		var rt_operation = runtime[key]
-		if(rt_operation.show){
+		if (rt_operation.show) {
 			running[key] = rt_operation
 		}
 	}
 	for ( var key in running) {
-		run(running[key])
+		if (running[key]) {
+			run(running[key])
+		}
 	}
 }
 
@@ -79,23 +80,34 @@ event_rt.run = function() {
  */
 event_rt.createEvent = function(func, time, rt_operation) {
 	var operation
-	if(typeof rt_operation === 'string'){
+	if (typeof rt_operation === 'string') {
 		operation = Runtime()[rt_operation]
 	} else {
 		operation = rt_operation
 	}
-	if (!time || time == "*") {
+
+	if (!time) {
 		time = tickToSeconds(tick)
-	} else if (Number.isNaN(time)) {
-		if (time.substr(0, 1) == "+") {
-			time = time.substr(1)
-			time = Number(time)
-			time = time + tickToSeconds(tick)
-		} else {
-			console.log("Invalid time: " + time + " Event not created.")
-			return
+	}
+
+	if (typeof time != 'number') {
+		if (time == "*") {
+			time = tickToSeconds(tick)
+		} else if (typeof time == 'string') {
+			if (time.startsWith("*+")) {
+				time = time.substr(2)
+				time = Number(time)
+				time = time + tickToSeconds(tick)
+			} else if (Number.isNumber(time)) {
+				time = Number(time)
+			} else {
+				console.log("Invalid time: " + time + " Event not created.")
+				return
+
+			}
 		}
 	}
+
 	var events = Events()
 	var event = {
 		type : func,
@@ -107,6 +119,5 @@ event_rt.createEvent = function(func, time, rt_operation) {
 		eventList = events.get(time)
 	}
 	eventList.push(event)
-
 	events.set(time, eventList)
 }

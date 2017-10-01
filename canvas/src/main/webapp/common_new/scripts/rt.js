@@ -26,16 +26,17 @@ rt.createRuntime = function() {
 }
 
 rt.resolve = function(rt_operation, attr, attribute) {
-	var imagemap = RuntimeImage()
 	if (this.attr_backmap[attr]) {
-		this.attr_backmap[attribute] = rt_operation.name
+		var map = this.attr_backmap[attr]
+		map[attribute] = rt_operation.name
 	}
 	switch (attr) {
 	case "imageset": {
+		var imagemap = RuntimeImage()
 		rt_operation.image = {}
 		if (imagemap[attribute]) {
 			for ( var iAttr in imagemap[attribute]) {
-				rt_operation.image[iAttr] = imagemap[attribute][iAttr]
+				rt_operation.image[iAttr] = $.extend(true,{},imagemap[attribute][iAttr])
 			}
 		}
 		break

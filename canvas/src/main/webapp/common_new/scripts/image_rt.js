@@ -50,7 +50,7 @@ image_rt.createRuntimeImages = function() {
 			}
 		}
 		imagemap[key] = {}
-		imagemap[key].images = images
+		imagemap[key].images = $.extend(true, {}, images)
 		imagemap[key].configuration = configuration
 	}
 }
@@ -145,6 +145,34 @@ image_rt.buildImageEntry = function(name, configuration) {
 
 image_rt.imageCnt = 0
 
+image_rt.setRuntimeImages = function() {
+	var runtime = Runtime();
+	var imageMap = RuntimeImage()
+	var images = Images();
+	for ( var key in runtime) {
+		var rt_operation = runtime[key]
+		if (rt_operation.image) {
+			for ( var ix in rt_operation.image.images) {
+				var url = rt_operation.image.images[ix].url
+				var image = $.extend(true, {}, images[url].imageinfo)
+				if (image.svg) {
+					var svg = image.svg
+					var clone = $(svg).clone()[0]
+					$(clone).attr(
+							'id',
+							rt_operation.name + "_" + ix + "_"
+									+ $(svg).attr('id'))
+					$(svg).parent().append(clone)
+					rt_operation.image.images[ix].image = {}
+					rt_operation.image.images[ix].image.svg = clone
+				} else {
+					rt_operation.image.images[ix].image = image.image
+				}
+			}
+		}
+	}
+}
+
 image_rt.loadImages = function(callback) {
 	var img_cnt = {}
 	var image_store = Images()
@@ -181,14 +209,12 @@ image_rt.loadImages = function(callback) {
 					$(svg_element).attr("id", fName)
 					var svg_children = $(svg_element).children()
 					if (svg_children.length > 1) {
-						var g_id = "g_" + fName.replace(/[.]/, "_")
-						$(svg_element).prepend("<g id=\"" + g_id + "\"></g>")
+						$(svg_element).prepend("<g></g>")
 						var g = $(svg_element).children()[0]
-//						var g = $("#" + g_id)
 						$(g).append(svg_children)
 					}
-					this.image_entry.imageinfo.svgelement = svg_element
-					
+					// this.image_entry.imageinfo.svgelement = svg_element
+
 					// The following code placed the svg in the current document
 					// #svgDiv element instead, we will now keep the original
 					// SVG in the imageinfo.svgelement.
@@ -204,7 +230,7 @@ image_rt.loadImages = function(callback) {
 					$(svg_div).append(svg)
 					this.image_entry.imageinfo.svg = svg
 					// end of old code
-					
+
 				} else {
 					console.error(this.statusText);
 				}
@@ -221,7 +247,7 @@ image_rt.loadImages = function(callback) {
 				img = new Image();
 			}
 			imageinfo.image = img
-			imageinfo.image_entry = image_entry
+			// imageinfo.image_entry = image_entry
 			img.imageinfo = imageinfo
 			img.img_cnt = img_cnt
 			img.onload = function() {
