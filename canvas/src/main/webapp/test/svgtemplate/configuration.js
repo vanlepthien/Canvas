@@ -139,7 +139,7 @@ test.template3 = {
 imageset.bugsvg = {
 	image : {
 		0 : {
-			name : "bug.svg",
+			name : "bug2.svg",
 			width : 54,
 			height : 56,
 		}
@@ -159,19 +159,21 @@ imageset.head = {
 imageset.desert = {
 	image : {
 		0 : {
-			name : "desert.png",
+			name : "desert.svg",
+			width: 1200,
+			height: 600,
 		}
 	}
 }
 
 
-// operation.background = {
-// operation : "fill",
-// distance : 100,
-// color : "blueviolet",
-// show : true,
-// }
-//
+ operation.sky = {
+ operation : "fill",
+ distance : 100,
+ color : "orange",
+ show : true,
+ }
+
 operation.svgrotate = {
 	imageset : "bugsvg",
 	operation: "move",
@@ -275,12 +277,12 @@ operation.beep = {
 }
 
 operation.background = {
-	distance: 10,
+	imageset: "desert",
+	operation: "pan",
+	distance: 50,
 	duration: [ 0, "*" ],
 	size: [ 1200, 600 ],
-	operation: "pan",
 	speed: drift,
-	imageset: "desert",
 }
 
 

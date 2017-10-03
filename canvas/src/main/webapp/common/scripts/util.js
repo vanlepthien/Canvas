@@ -201,8 +201,8 @@ util.getSvgImage = function (rt_operation, svg) {
 		this.setSvgImageSize(svg, [rt_operation.state.width,rt_operation.state.height])
 	} else {
 		var imageSize = this.getSvgImageSize(svg)
-		rt_operation.state.width = imagesize[0]
-		rt_operation.state.height = imagesize[1]
+		rt_operation.state.width = imageSize[0]
+		rt_operation.state.height = imageSize[1]
 		this.setSvgImageSize(svg, imageSize)
 	}
 	var img = new Image()

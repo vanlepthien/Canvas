@@ -353,10 +353,12 @@ ops.pan = {
 		this.updateState(rt_operation)
 		var state = rt_operation.state
 		var context = rt_operation.context
+		var image = util.getElementImage(rt_operation, 0)
+		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
 		for (var x_ix in state.x_vector) {
 			for (var y_ix in state.y_vector) {
 				context.drawImage(
-					rt_operation.image.images[0].image, state.x_vector[x_ix], state.y_vector[y_ix])
+					image, state.x_vector[x_ix], state.y_vector[y_ix])
 			}
 		}
 	},
