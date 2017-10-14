@@ -5,18 +5,28 @@
 
 ops.bounce = {
 	run : function(rt_operation) {
+		if(rt_operation.terminate){
+			this.inactivate(rt_operation)
+			return
+		}
+
 		if (rt_operation.initialized) {
 			this.nextState(rt_operation)
 		} else {
 			this.newState(rt_operation)
 			rt_operation.initialized = true
 		}
-		var state = rt_operation.state
-		var context = rt_operation.context
-		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-		if(!util.offCanvasActions(rt_operation)){
-			context.drawImage(rt_operation.image.images[0].image, state.x, state.y)
+		if (util.redraw(rt_operation)) {
+			var state = rt_operation.state
+			var context = rt_operation.context
+			context.clearRect(0, 0, rt_operation.canvas.width,
+					rt_operation.canvas.height)
+			if (!util.offCanvasActions(rt_operation)) {
+				context.drawImage(rt_operation.image.images[0].image, state.x,
+						state.y)
+			}
 		}
+		util.setPrevious(rt_operation)
 	},
 
 	newState : function(rt_operation) {
@@ -26,15 +36,16 @@ ops.bounce = {
 		// x_right = x + images[0].width
 		// y_top = y
 		// y_bottom = y + images[0].height
-		var top,
-			bottom
+		var top, bottom
 		if ("top" in rt_operation) {
-			top = util.valueToPosition(rt_operation.top, rt_operation.canvas.height)
+			top = util.valueToPosition(rt_operation.top,
+					rt_operation.canvas.height)
 		} else {
 			top = util.valueToPosition("20%", rt_operation.canvas.height)
 		}
 		if ("bottom" in rt_operation) {
-			bottom = util.valueToPosition(rt_operation.bottom, rt_operation.canvas.height)
+			bottom = util.valueToPosition(rt_operation.bottom,
+					rt_operation.canvas.height)
 		} else {
 			bottom = util.valueToPosition("80%", rt_operation.canvas.height)
 		}
@@ -46,22 +57,23 @@ ops.bounce = {
 			x = getReference(rt_operation, "state", "x")
 			y = getReference(rt_operation, "state", "y")
 			direction = getReference(rt_operation, "state", "direction")
-			rt_operation.position = [x,y]
+			rt_operation.position = [ x, y ]
 		}
 		if (!direction) {
 			direction = 1
 		}
 
 		var xy = util.getInitialPosition(rt_operation)
-		
+
 		x = xy[0]
 		y = xy[1]
 
 		var state = {}
-		
-		state.width =rt_operation.width || rt_operation.image.images[0].width
-		state.height =rt_operation.height || rt_operation.image.images[0].height
-		
+
+		state.width = rt_operation.width || rt_operation.image.images[0].width
+		state.height = rt_operation.height
+				|| rt_operation.image.images[0].height
+
 		var x_left = x
 		var x_right = x + state.width
 		var y_top = y
@@ -92,7 +104,6 @@ ops.bounce = {
 		var y_top = y
 		var y_bottom = y + state.height
 
-
 		if (state.direction < 0) {
 			if (y_top <= meta.top) {
 				state.direction = 1
@@ -105,343 +116,578 @@ ops.bounce = {
 		state.x = x
 		state.y = y
 
-	}
+	},
+	
+	inactivate : function(rt_operation) {
+		rt_operation.initialized = false
+		rt_operation.active = false
+		rt_operation.terminate = false
+		delete rt_operation.previous
+		if(rt_operation.context){
+			rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+		}
+	},
+
 }
 
 ops.move = {
-	run : function(rt_operation) {
-		if (rt_operation.initialized) {
-			this.nextState(rt_operation)
-		} else {
-			this.newState(rt_operation)
-			rt_operation.initialized = true
-		}
-		util.setImageState(rt_operation)
-		this.updateState(rt_operation)
-		var state = rt_operation.state
-		var meta = rt_operation.meta
-		var context = rt_operation.context
-		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-		var image = util.getElementImage(rt_operation, state.image_ix)
-		image.crossOrigin = 'Anonymous';
-		context.globalAlpha = 1.0
-		if (rt_operation.cycle) {
-			for (var x_ix in state.x_vector) {
-				for (var y_ix in state.y_vector) {
-					context.drawImage(image, state.x_vector[x_ix], state.y_vector[y_ix])
+		default_fields:  ["image_ix","width","height","x","y"],
+		
+		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+
+			if (rt_operation.initialized) {
+				this.nextState(rt_operation)
+			} else {
+				this.newState(rt_operation)
+				rt_operation.initialized = true
+			}
+			util.setImageState(rt_operation)
+			this.updateState(rt_operation)
+			var state = rt_operation.state
+			var fields = this.default_fields
+			if(state.fields){
+				fields = splice(fields,0,state.fields)
+			}
+			if(util.redraw(rt_operation, fields)){
+				util.getElementImage(rt_operation, state.image_ix,
+					function(img){
+						var rt_operation = img.rt_operation
+						var context = rt_operation.context
+						context.globalAlpha = 1.0
+						
+						var state = rt_operation.state
+			
+						if (state.prev) {
+							context.clearRect(state.prev.x - 5, state.prev.y - 5,
+									state.prev.width + 10, state.prev.height + 10)
+						}
+			
+						if (rt_operation.cycle) {
+							for ( var x_ix in state.x_vector) {
+								for ( var y_ix in state.y_vector) {
+									context.drawImage(img, state.x_vector[x_ix],
+											state.y_vector[y_ix])
+								}
+							}
+						} else {
+							context.drawImage(img, state.x, state.y)
+						}
+					}
+				)
+			}
+		},
+
+		newState : function(rt_operation) {
+			var state = {}
+			state.width = rt_operation.width || rt_operation.image.images[0].width
+			state.height = rt_operation.height
+					|| rt_operation.image.images[0].height
+			rt_operation.state = state
+			var meta = {}
+			meta.interval = 10
+			if (rt_operation.interval) {
+				meta.interval = rt_operation.interval
+			}
+			rt_operation.meta = meta
+
+			var xy = util.getInitialPosition(rt_operation)
+			state.x = xy[0]
+			state.y = xy[1]
+
+			state.tick = tick
+
+			state.image_ix = 0;
+		},
+
+		nextState : function(rt_operation) {
+			var state = rt_operation.state
+			var meta = rt_operation.meta
+			state.prev = state
+			var speed = util.getSpeed(rt_operation)
+			state.x = (state.x + speed.hspeed) % rt_operation.canvas.width
+			state.y = (state.y + speed.vspeed) % rt_operation.canvas.height
+			var image_cnt = Object.keys(rt_operation.image.images).length
+			state.image_ix = util.nextImageIx(state, meta.interval, image_cnt)
+		},
+
+		updateState : function(rt_operation) {
+			var state = rt_operation.state
+			var meta = rt_operation.meta
+			state.x_pos = state.x
+			if (state.x_pos > 0) {
+				state.x_pos -= rt_operation.canvas.width
+			}
+			state.y_pos = state.y
+			if (state.y_pos > 0) {
+				state.y_pos -= rt_operation.canvas.width
+			}
+
+			state.x_vector = this.getVector(state.x_pos, meta.width,
+					rt_operation.canvas.width)
+			state.y_vector = this.getVector(state.y_pos, meta.height,
+					rt_operation.canvas.height)
+		},
+
+		getVector : function(pos, image_size, canvas_size) {
+			var vector = []
+			var p = pos
+			while (p < canvas_size) {
+				if (p + image_size > 0) {
+					vector.push(p)
 				}
+				p += canvas_size
 			}
-		} else {
-			context.drawImage(image, state.x, state.y)
-		}
-	},
-
-	newState : function(rt_operation) {
-		var state = {}
-		state.width =rt_operation.width || rt_operation.image.images[0].width
-		state.height =rt_operation.height || rt_operation.image.images[0].height
-		rt_operation.state = state
-		var meta = {}
-		meta.interval = 10
-		if (rt_operation.interval) {
-			meta.interval = rt_operation.interval
-		}
-		rt_operation.meta = meta
+			return vector
+		},
 		
-		var xy = util.getInitialPosition(rt_operation)
-		state.x = xy[0]
-		state.y = xy[1]
-		
-		state.tick = tick
-		
-		state.image_ix = 0;
-	},
-
-	nextState : function(rt_operation) {
-		var state = rt_operation.state
-		var meta = rt_operation.meta
-		var speed = util.getSpeed(rt_operation)
-		state.x = (state.x + speed.hspeed) % rt_operation.canvas.width
-		state.y = (state.y + speed.vspeed) % rt_operation.canvas.height
-		var image_cnt = Object.keys(rt_operation.image.images).length
-		state.image_ix = util.nextImageIx(state, meta.interval, image_cnt)
-	},
-
-	updateState : function(rt_operation) {
-		var state = rt_operation.state
-		var meta = rt_operation.meta
-		state.x_pos = state.x
-		if (state.x_pos > 0) {
-			state.x_pos -= rt_operation.canvas.width
-		}
-		state.y_pos = state.y
-		if (state.y_pos > 0) {
-			state.y_pos -= rt_operation.canvas.width
-		}
-
-		state.x_vector = this.getVector(state.x_pos, meta.width, rt_operation.canvas.width)
-		state.y_vector = this.getVector(state.y_pos, meta.height, rt_operation.canvas.height)
-	},
-
-	getVector : function(pos, image_size, canvas_size) {
-		var vector = []
-		var p = pos
-		while (p < canvas_size) {
-			if (p + image_size > 0) {
-				vector.push(p)
+		inactivate : function(rt_operation) {
+			rt_operation.initialized = false
+			rt_operation.active = false
+			rt_operation.terminate = false
+			delete rt_operation.previous
+			if(rt_operation.context){
+				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
 			}
-			p += canvas_size
-		}
-		return vector
+		},
+
 	}
-}
 
 ops.clear = {
-	run : function(rt_operation) {
-		var context = rt_operation.context
-		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+		run : function(rt_operation) {
+			var context = rt_operation.context
+			context.clearRect(0, 0, rt_operation.canvas.width,
+					rt_operation.canvas.height)
+		}
 	}
+
+ops.run = {
+		run: function(rt_operation){
+			if(rt_operation.disabled){
+				return
+			}
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+			if(rt_operation.initialized){
+				this.nextState(rt_operation)
+			} else {
+				this.newState(rt_operation)
+				rt_operation.initialized = true
+			}
+			if(rt_operation.run && typeof rt_operation.run == "function"){
+				rt_operation.run(rt_operation)
+			}
+		},
+		
+		nextState: function(rt_operation){
+			if(rt_operation.next){
+				rt_operation.next(rt_operation)
+			}
+		},
+		
+		newState: function(rt_operation){
+			rt_operation.state = {}
+			for(var key in rt_operation){
+				if(!(typeof rt_operation[key] == "function")){
+					rt_operation.state[key] = rt_operation[key]
+				}
+			}
+			if(rt_operation.init && typeof rt_operation.init == "function"){
+				rt_operation.init(rt_operation)
+			}
+		},
+		
+		inactivate: function(rt_operation){
+			rt_operation.initialized = false
+			rt_operation.active = false
+			rt_operation.terminate = false
+		}
+	
 }
 
 ops.fixed = {
-	run : function(rt_operation) {
-		if (rt_operation.initialized) {
-			this.nextState(rt_operation)
-		} else {
-			this.newState(rt_operation)
-			rt_operation.initialized = true;
-		}
-		var meta = rt_operation.meta
-		var state = rt_operation.state
-		var context = rt_operation.context
-		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-		var image = util.getElementImage(rt_operation, state.image_ix)
-		context.drawImage(image, meta.x, meta.y)
-	},
+		default_fields:  ["image_ix","width","height","x","y"],
 
-	nextState : function(rt_operation) {
-		var meta = rt_operation.meta
-		var state = rt_operation.state
-		var image_cnt = Object.keys(rt_operation.image.images).length
-		state.image_ix = util.nextImageIx(state, meta.interval, image_cnt)
-	},
+		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+			if (rt_operation.initialized) {
+				this.nextState(rt_operation)
+			} else {
+				this.newState(rt_operation)
+				rt_operation.initialized = true;
+			}
+			
+			util.setImageState(rt_operation)
+			var state = rt_operation.state
+			var fields = this.default_fields
+			if(state.fields){
+				fields = splice(fields,0,state.fields)
+			}
+			if(util.redraw(rt_operation,fields)){
+				util.getElementImage(rt_operation, state.image_ix, 
+					function(img){
+						var rt_operation = img.rt_operation
+						var context = rt_operation.context
+						context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+						var state = rt_operation.state
+						context.drawImage(img, state.x, state.y)
+					}
+				)
+			}
+		},
 
-	newState : function(rt_operation) {
-		var canvas = rt_operation.canvas
-		var position,
-			align
-		if ("position" in rt_operation) {
-			position = rt_operation.position
-		} else {
-			position = [ "50%", "50%" ]
-		}
-// var x = Number.MAX_VALUE
-// var y = Number.MAX_VALUE
-// if (Array.isArray(rt_operation.position)) {
-// if (rt_operation.position.length > 0) {
-// x = util.valueToPosition(rt_operation.position[0], rt_operation.canvas.width)
-// if (rt_operation.position.length > 1) {
-// y = util.valueToPosition(rt_operation.position[1],
-// rt_operation.canvas.height)
-// } else {
-// y = util.valueToPosition("50%", rt_operation.canvas.height)
-// }
-// } else {
-// x = util.valueToPosition("50%", rt_operation.canvas.width)
-// y = util.valueToPosition("50%", rt_operation.canvas.height)
-// }
-// }
-//
-// if (x == Number.MAX_VALUE) {
-// x = rt_operation.canvas.width / 2
-// }
-// if (y == Number.MAX_VALUE) {
-// y = rt_operation.canvas.height / 2
-// }
-//
-// if ("align" in rt_operation) {
-// align = rt_operation.align
-// } else {
-// align = [ "center", "center" ]
-// }
-//
-// var x_align,
-// y_align
-//
-// if (align[0] in x_alignment) {
-// x_align = x_alignment[align[0]]
-// } else {
-// x_align = x_alignment.center
-// }
-//
-// if (align[1] in y_alignment) {
-// y_align = y_alignment[align[1]]
-// } else {
-// y_align = y_alignment.center
-// }
+		nextState : function(rt_operation) {
+			var meta = rt_operation.meta
+			var state = rt_operation.state
+			var image_cnt = Object.keys(rt_operation.image.images).length
+			state.image_ix = util.nextImageIx(state, meta.interval, image_cnt)
+		},
+
+		newState : function(rt_operation) {
+
+			var state = {}
+			state.tick = tick
+			state.image_ix = 0
+			state.width = rt_operation.width || rt_operation.image.images[0].width
+			state.height = rt_operation.height
+					|| rt_operation.image.images[0].height
+
+			rt_operation.state = state
+
+			var canvas = rt_operation.canvas
+			var position, align
+			if ("position" in rt_operation) {
+				position = rt_operation.position
+			} else {
+				position = [ "50%", "50%" ]
+				rt_operation.position = position
+			}
+
+			var meta = {}
+
+			var xy = util.getInitialPosition(rt_operation)
+			state.x = meta.x = xy[0]
+			state.y = meta.y = xy[1]
+
+			if (rt_operation.interval) {
+				meta.interval = rt_operation.interval
+			} else {
+				meta.interval = 100
+			}
+
+			rt_operation.meta = meta
+		},
 		
-		var meta = {}
-		
-		[meta.x, meta.y] = util.getInitialPosition(rt_operation)
+		inactivate : function(rt_operation) {
+			rt_operation.initialized = false
+			rt_operation.active = false
+			rt_operation.terminate = false
+			delete rt_operation.previous
+			if(rt_operation.context){
+				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+			}
+		},
 
-		if (rt_operation.interval) {
-			meta.interval = rt_operation.interval
-		} else {
-			meta.interval = 100
-		}
-
-		rt_operation.meta = meta
-
-		var state = {}
-		state.tick = tick
-		state.image_ix = 0
-
-		rt_operation.state = state
 	}
-}
+
+ops.text = {
+		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+			if (!rt_operation.initialized) {
+				this.newState(rt_operation)
+				rt_operation.initialized = true;
+				var meta = rt_operation.meta
+				var context = rt_operation.context
+				context.clearRect(0, 0, rt_operation.canvas.width,
+						rt_operation.canvas.height)
+				context.drawImage(rt_operation.image.images[0].image, meta.x,
+						meta.y)
+			}
+		},
+
+		newState : function(rt_operation) {
+			
+			var state = {}
+			
+			for(var key in rt_operation){
+				var type = typeof rt_operation[key]
+				switch(type){
+				case 'function':
+					break
+				case 'object':
+					state[key] = $.extend(true,{},rt_operation[key])
+					break
+				default:
+					state[key] = rt_operation[key]
+				}
+			}
+			
+			var xy = util.getInitialPosition(rt_operation)
+			state.x = xy[0]
+			state.y = xy[1]
+		
+			rt_operation.state = state
+			
+			
+			var fill = state.fill || "#000000"
+			var stroke = state.stroke || "#000000"
+			
+			var text = state.text || rt_operation.text(rt_operation)
+			
+			var font_family = ""
+			if(state.font_family){
+				font_family = ' font-family="'+state.font_family+'" '
+			}
+			
+			var font_size = ""
+			if(state.font_size){
+				font_size = ' font-size="'+state.font_size+'" '
+			}
+			
+			if(state.style){
+				style = ' style="'+state.style+'" '
+			}
+
+			state.svg = '<svg width="'+state.width+'"'+
+							' height="'+state.height+'"'+
+							' viewBox="0 0 '+state.width+' '+state.height+'" >' + 
+						'<g>'+
+						'<text text-anchor="start" '+
+						'x="'+state.x+'" '+
+						'y="'+state.y+'" '+ 
+						font_family+
+						font_size +
+						' stroke="' + stroke + '" '+
+						'fill="' + fill + '">' 
+						+ text + '</text>'+
+						'</g>'
+					+ '</svg>'
+			
+		},
+		
+		inactivate : function(rt_operation) {
+			rt_operation.initialized = false
+			rt_operation.active = false
+			rt_operation.terminate = false
+			delete rt_operation.previous
+			if(rt_operation.context){
+				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+			}
+		},
+
+	}
 
 ops.marquee = {
-	run : function(rt_operation) {
-		if (!rt_operation.initialized) {
-			newState(rt_operation)
-			rt_operation.initialized = true;
-			var meta = rt_operation.meta
-			var context = rt_operation.context
-			context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-			context.drawImage(
-				rt_operation.image.images[0].image, meta.x, meta.y)
-		}
-	},
+		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+			if (!rt_operation.initialized) {
+				this.newState(rt_operation)
+				rt_operation.initialized = true;
+				var meta = rt_operation.meta
+				var context = rt_operation.context
+				context.clearRect(0, 0, rt_operation.canvas.width,
+						rt_operation.canvas.height)
+				context.drawImage(rt_operation.image.images[0].image, meta.x,
+						meta.y)
+			}
+		},
 
-	newState : function(rt_operation) {
-		var dx = .1
-		var dy = 0
+		newState : function(rt_operation) {
+			var dx = .1
+			var dy = 0
 
-		if (rt_operation.speed) {
-			dx = rt_operation.speed[0]
-			dy = rt_operation.speed[1]
-		}
+			if (rt_operation.speed) {
+				dx = rt_operation.speed[0]
+				dy = rt_operation.speed[1]
+			}
 
-		var fill = "#000000"
-		if (rt_operation.fill) {
-			fill = rt_operation.fill
-		}
+			var fill = "#000000"
+			if (rt_operation.fill) {
+				fill = rt_operation.fill
+			}
 
-		var stroke = "#000000"
-		if (rt_operation.stroke) {
-			stroke = rt_operation.stroke
-		}
-		marquee = '<svg>' +
-			'<text text-anchor="start" x="0%" y="50%" ' +
-			'dy="' + dy + '" dx="' + dx + '" '
-		'class="text" font-family="sans-serif"' +
-		' stroke="' + stroke + '" fill="' + fill + '">' +
-		rt_operation.text +
-		'</text>' +
-		'</svg>'
+			var stroke = "#000000"
+			if (rt_operation.stroke) {
+				stroke = rt_operation.stroke
+			}
+			marquee = '<svg>' + '<text text-anchor=event_rt.START x="0%" y="50%" '
+					+ 'dy="' + dy + '" dx="' + dx + '" '
+			'class="text" font-family="sans-serif"' + ' stroke="' + stroke
+					+ '" fill="' + fill + '">' + rt_operation.text + '</text>'
+					+ '</svg>'
+		},
+		
+		inactivate : function(rt_operation) {
+			rt_operation.initialized = false
+			rt_operation.active = false
+			rt_operation.terminate = false
+			delete rt_operation.previous
+			if(rt_operation.context){
+				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+			}
+		},
+
 	}
-}
 
 ops.pan = {
-	run : function(rt_operation) {
-		if (rt_operation.initialized) {
-			this.nextState(rt_operation)
-		} else {
-			this.newState(rt_operation)
-			rt_operation.initialized = true
-		}
-		this.updateState(rt_operation)
-		var state = rt_operation.state
-		var context = rt_operation.context
-		var image = util.getElementImage(rt_operation, 0)
-		context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-		for (var x_ix in state.x_vector) {
-			for (var y_ix in state.y_vector) {
-				context.drawImage(
-					image, state.x_vector[x_ix], state.y_vector[y_ix])
+		default_fields:  ["x","y"],
+
+		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
 			}
-		}
-	},
+			if (rt_operation.initialized) {
+				this.nextState(rt_operation)
+			} else {
+				this.newState(rt_operation)
+				rt_operation.initialized = true
+			}
+			this.updateState(rt_operation)
+			var state = rt_operation.state
+			var context = rt_operation.context
+			var fields = this.default_fields
+			if(state.fields){
+				fields = splice(fields,0,state.fields)
+			}
+			if(util.redraw(rt_operation,fields)){
+				util.getElementImage(rt_operation, 0, 
+					function(img){
+						var rt_operation = img.rt_operation
+						var state = rt_operation.state
+						var context = rt_operation.context
+						context.clearRect(0, 0, rt_operation.canvas.width,
+								rt_operation.canvas.height)
+						for ( var x_ix in state.x_vector) {
+							for ( var y_ix in state.y_vector) {
+								context.drawImage(img, state.x_vector[x_ix],
+										state.y_vector[y_ix])
+							}
+						}
+					}
+				)
+			}
+		},
 
-	newState : function(rt_operation) {
-		var state = {}
-		state.x = 0
-		state.y = 0
-		rt_operation.state = state
-		var meta = {}
-		meta.width = rt_operation.width || rt_operation.image.images[0].width|| rt_operation.image.images[0].image.width
-		meta.height = rt_operation.height || rt_operation.image.images[0].height|| rt_operation.image.images[0].image.height
-		rt_operation.meta = meta
-	},
+		newState : function(rt_operation) {
+			var state = {}
+			state.x = 0
+			state.y = 0
+			rt_operation.state = state
+			var meta = {}
+			meta.width = rt_operation.width || rt_operation.image.images[0].width
+					|| rt_operation.image.images[0].image.width
+			meta.height = rt_operation.height
+					|| rt_operation.image.images[0].height
+					|| rt_operation.image.images[0].image.height
+			rt_operation.meta = meta
+		},
 
-	nextState : function(rt_operation) {
-		var state = rt_operation.state
-		var meta = rt_operation.meta
-		var speed = util.getSpeed(rt_operation)
-		state.x = (state.x + speed.hspeed) % meta.width
-		state.y = (state.y + speed.vspeed) % meta.height
-	},
+		nextState : function(rt_operation) {
+			var state = rt_operation.state
+			var meta = rt_operation.meta
+			var speed = util.getSpeed(rt_operation)
+			state.x = (state.x + speed.hspeed) % meta.width
+			state.y = (state.y + speed.vspeed) % meta.height
+		},
 
-	updateState : function(rt_operation) {
-		var state = rt_operation.state
-		var meta = rt_operation.meta
-		state.x_pos = state.x
-		if (state.x_pos > 0) {
-			state.x_pos -= meta.width
-		}
-		state.y_pos = state.y
-		if (state.y_pos > 0) {
-			state.y_pos -= meta.width
-		}
+		updateState : function(rt_operation) {
+			var state = rt_operation.state
+			var meta = rt_operation.meta
+			state.x_pos = state.x
+			if (state.x_pos > 0) {
+				state.x_pos -= meta.width
+			}
+			state.y_pos = state.y
+			if (state.y_pos > 0) {
+				state.y_pos -= meta.width
+			}
 
-		state.x_vector = util.getPositionVector(state.x_pos, meta.width, rt_operation.canvas.width)
-		state.y_vector = util.getPositionVector(state.y_pos, meta.height, rt_operation.canvas.height)
+			state.x_vector = util.getPositionVector(state.x_pos, meta.width,
+					rt_operation.canvas.width)
+			state.y_vector = util.getPositionVector(state.y_pos, meta.height,
+					rt_operation.canvas.height)
+		},
+		
+		inactivate : function(rt_operation) {
+			rt_operation.initialized = false
+			rt_operation.active = false
+			rt_operation.terminate = false
+			delete rt_operation.previous
+			if(rt_operation.context){
+				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+			}
+		},
+
 	}
-}
 
 ops.fill = {
-	run : function(rt_operation) {
-		var context = rt_operation.context
-		if (rt_operation.color) {
-			context.fillStyle = rt_operation.color
-		} else {
-			context.fillStyle = 'purple'
-		}
-		if (rt_operation.shape) {
-			var shape = rt_operation.shape
-			var func = shape.function
-			var callParms = []
-			if (shape.parms) {
-				callParms = shape.parms.slice(0)
-			} else if (shape.borders) {
-				var borders = shape.borders
-				callParms.push(borders[0])
-				callParms.push(borders[1])
-				var width = context.canvas.width
-				var height = context.canvas.height
-				callParms.push(context.canvas.width - borders[2] - borders[0])
-				callParms.push(context.canvas.height - borders[3] - borders[1])
+		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
 			}
-			var f = context[func]
-			context[func].apply(context, callParms)
-		} else {
-			context.fillRect(0, 0, context.canvas.width, context.canvas.height)
-		}
-	}
-}
 
-/*
- * candidates for removal function show(rt_operation) { rt_operation.show =
- * rt_operation.canvas.indexOf(overCanvas) >= 0 if (!rt_operation.show) {
- * rt_operation.initialized = false } }
- * 
- * function show_overlay(rt_operation) { if (overCanvas == rt_operation.name) {
- * var canvas = rt_operation.canvas for (var ix in canvas) { var oName =
- * canvas[ix] var rt_overlay = runtime[oName] if (!rt_overlay.show) {
- * rt_overlay.operation.fixed.initialized = false } rt_overlay.show = true } } }
- */
+			var context = rt_operation.context
+			if (rt_operation.color) {
+				context.fillStyle = rt_operation.color
+			} else {
+				context.fillStyle = 'purple'
+			}
+			if (rt_operation.shape) {
+				var shape = rt_operation.shape
+				var func = shape["function"]
+				var callParms = []
+				if (shape.parms) {
+					callParms = shape.parms.slice(0)
+				} else if (shape.borders) {
+					var borders = shape.borders
+					callParms.push(borders[0])
+					callParms.push(borders[1])
+					var width = context.canvas.width
+					var height = context.canvas.height
+					callParms.push(context.canvas.width - borders[2] - borders[0])
+					callParms.push(context.canvas.height - borders[3] - borders[1])
+				}
+				var f = context[func]
+				context[func].apply(context, callParms)
+			} else {
+				context.fillRect(0, 0, context.canvas.width, context.canvas.height)
+			}
+		},
+		
+		inactivate : function(rt_operation) {
+			rt_operation.initialized = false
+			rt_operation.active = false
+			rt_operation.terminate = false
+			delete rt_operation.previous
+			if(rt_operation.context){
+				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+			}
+		},
+	}
+
 ops.sound = {
 		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+
 			var state
 			if (rt_operation.initialized) {
 				this.nextState(rt_operation)
@@ -460,7 +706,8 @@ ops.sound = {
 			rt_operation.state.switch_audio = false
 			rt_operation.state.current_audio.operation = rt_operation
 			rt_operation.state.current_audio.play()
-			console.log("Playing " + rt_operation.state.current_audio.getAttribute("src"))
+			console.log("Playing "
+					+ rt_operation.state.current_audio.getAttribute("src"))
 		},
 
 		nextState : function(rt_operation) {
@@ -477,16 +724,19 @@ ops.sound = {
 				if (rt_operation.state.sound_iteration < audioset.audio.length) {
 					rt_operation.state.current_audio = audioset.audio[rt_operation.state.sound_iteration]
 					rt_operation.state.current_audio.play()
-					console.log("Playing " + rt_operation.state.current_audio.getAttribute("src") + "(" + rt_operation.state.sound_iteration + ")")
+					console.log("Playing "
+							+ rt_operation.state.current_audio.getAttribute("src")
+							+ "(" + rt_operation.state.sound_iteration + ")")
 				}
 				if (operation.loop) {
 					rt_operation.state.sound_iteration = 0
 					rt_operation.state.current_audio = audioset.audio[rt_operation.state.sound_iteration]
 					rt_operation.state.current_audio.operation = rt_operation
 					rt_operation.state.current_audio.play()
-					console.log("Replaying " + rt_operation.state.current_audio.getAttribute("src"))
+					console.log("Replaying "
+							+ rt_operation.state.current_audio.getAttribute("src"))
 				} else {
-					event_rt.createEvent("Stop","*",rt_operation.name)
+					event_rt.createEvent("Stop", "*", rt_operation.name)
 					rt_operation.initialized = false
 				}
 			}
@@ -502,6 +752,7 @@ ops.sound = {
 			rt_operation.state.sound_iteration = -1
 			rt_operation.initialized = false
 			rt_operation.active = false
+			rt_operation.terminate = false
 		},
 
 		switchPlay : function(rt_operation) {
@@ -516,8 +767,13 @@ ops.sound = {
 		}
 	}
 
-	ops.video = {
+ops.video = {
 		run : function video(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+
 			var state
 			if (rt_operation.initialized) {
 				this.nextState(rt_operation)
@@ -533,7 +789,8 @@ ops.sound = {
 			rt_operation.state.current_video = rt_operation.videos[rt_operation.state.video_iteration]
 			rt_operation.state.switch_video = rt_operation.switch_video
 			rt_operation.state.current_video.play()
-			console.log("Playing " + rt_operation.state.current_video.getAttribute("src"))
+			console.log("Playing "
+					+ rt_operation.state.current_video.getAttribute("src"))
 		},
 
 		nextState : function(rt_operation) {
@@ -548,13 +805,16 @@ ops.sound = {
 				if (rt_operation.state.video_iteration < rt_operation.videos.length) {
 					rt_operation.state.current_video = operation.videos[rt_operation.state.video_iteration]
 					rt_operation.state.current_video.play()
-					console.log("Playing " + rt_operation.state.current_video.getAttribute("src") + "(" + rt_operation.state.video_iteration + ")")
+					console.log("Playing "
+							+ rt_operation.state.current_video.getAttribute("src")
+							+ "(" + rt_operation.state.video_iteration + ")")
 				}
 				if (operation.loop) {
 					rt_operation.state.video_iteration = 0
 					rt_operation.state.current_video = rt_operation.videos[rt_operation.state.video_iteration]
 					rt_operation.state.current_video.play()
-					console.log("Replaying " + rt_operation.state.current_video.getAttribute("src"))
+					console.log("Replaying "
+							+ rt_operation.state.current_video.getAttribute("src"))
 				}
 			}
 		},
@@ -569,6 +829,7 @@ ops.sound = {
 			rt_operation.state.video_iteration = -1
 			rt_operation.initialized = false
 			rt_operation.active = false
+			rt_operation.terminate = false
 		},
 
 		switchPlay : function(rt_operation) {
@@ -583,8 +844,7 @@ ops.sound = {
 		}
 	}
 
-
-	ops.vimeo = {
+ops.vimeo = {
 		/**
 		 * vimeo
 		 * 
@@ -603,9 +863,17 @@ ops.sound = {
 		 */
 
 		run : function(rt_operation) {
+			if(rt_operation.terminate){
+				this.inactivate(rt_operation)
+				return
+			}
+
 			var state
 			if (rt_operation.initialized) {
 				return
+
+				
+
 			}
 			this.newState(rt_operation)
 			rt_operation.initialized = true
@@ -643,16 +911,17 @@ ops.sound = {
 
 			var xy = util.getPosition(rt_operation)
 			var left = xy[0]
-			left = getAlignedPosition(left, rt_operation.width, rt_operation.align[0], x_alignment)
+			left = getAlignedPosition(left, rt_operation.width,
+					rt_operation.align[0], x_alignment)
 			var top = xy[1]
-			top = getAlignedPosition(top, rt_operation.height, rt_operation.align[1], y_alignment)
+			top = getAlignedPosition(top, rt_operation.height,
+					rt_operation.align[1], y_alignment)
 
 			var width = rt_operation.width || 640
 			var height = rt_operation.height || 360
 			var top = top || 8
 			var left = left || 8
 			var frameborder = operation.frameborder || 0
-
 
 			$(iframe).attr("rt_operation", rt_operation.name)
 			$(iframe).attr("src", src)
@@ -683,8 +952,7 @@ ops.sound = {
 						var name = $(iframe).attr("rt_operation")
 						$(iframe).remove()
 						var runtime = Runtime()
-						rt_operation = runtime[name]
-						rt_operation.initialized = false
+						runtime[name].initialized = false
 					})
 				}
 
@@ -706,5 +974,7 @@ ops.sound = {
 			rt_operation.state.video_iteration = -1
 			rt_operation.initialized = false
 			rt_operation.active = false
+			rt_operation.terminate = false
 		}
 	}
+

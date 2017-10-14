@@ -3,6 +3,9 @@
  */
 'use strict'
 
+event_rt.START = "Start"
+event_rt.STOP = "Stop"
+
 /**
  * Select ready events (event time <= current time) and remove from events queue
  * If operation is to be stopped remove operation from running queue if
@@ -15,6 +18,7 @@
 event_rt.run = function() {
 	var events = Events()
 	var running = Running()
+	var operations = Operation()
 	var current_time = tickToSeconds(tick)
 	while (1) {
 		var event_time
@@ -27,28 +31,24 @@ event_rt.run = function() {
 			// process stopped operations
 			for ( var ix in event_list) {
 				var event = event_list[ix]
-				if (event.type == "Stop") {
+				if (event.type == event_rt.STOP) {
 					var rt_operation = event.operation
-					// "active" should be replaced with termination logic
-					if (rt_operation.active) {
-						inactivate(rt_operation)
+					if (typeof rt_operation == 'string') {
+						rt_operation = operations[rt_operation]
 					}
-					rt_operation.active = false
-					// end of active logic
-					running[rt_operation.name] = undefined
-					if (rt_operation.handle_terminatation) {
-						rt_operation.terminate = true
-						run(rt_operation)
-						op.terminate = false
-					}
+					delete running[rt_operation.name]
+					rt_operation.terminate = true
+					run(rt_operation)
 				}
 			}
 			for ( var ix in event_list) {
 				var event = event_list[ix]
-				if (event.type == "Start") {
+				if (event.type == event_rt.START) {
 					var rt_operation = event.operation
-					rt_operation.active = true
-					running[rt_operation.name] = rt_operation
+					if (rt_operation) {
+						rt_operation.active = true
+						running[rt_operation.name] = rt_operation
+					}
 				}
 			}
 		}
@@ -72,7 +72,7 @@ event_rt.run = function() {
  * Create an event on the event queue
  * 
  * @param func -
- *            the type of event. "Start" or "Stop"
+ *            the type of event. event_rt.START or event_rt.STOP
  * @param time -
  *            seconds since the launch of the web page Format: 0, null, "*" -
  *            the current time numeric value - offset from launch. If < current
@@ -80,7 +80,11 @@ event_rt.run = function() {
  */
 event_rt.createEvent = function(func, time, rt_operation) {
 	var operation
-	if (typeof rt_operation === 'string') {
+	if (![ this.START, this.STOP ].includes(func)) {
+		throw "event_rt.createEvent: Invalid Event type argument: '" + func
+				+ "'. Must be '" + this.START + "' or '" + this.STOP + "'."
+	}
+	if (typeof rt_operation == 'string') {
 		operation = Runtime()[rt_operation]
 	} else {
 		operation = rt_operation

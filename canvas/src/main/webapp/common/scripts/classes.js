@@ -120,7 +120,7 @@ function SortedMap (){
 		var splitIx = Math.floor(list.length / 2)
 		var first =  list.slice(0, splitIx)
 		var second = list.slice(splitIx)
-		return this.getNextKeyIx(first)+ this.getNextKeyIx(second)
+		return this.getNextKeyIx(key,first)+ this.getNextKeyIx(key,second)
 	}
 	
 	/**

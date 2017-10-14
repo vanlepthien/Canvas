@@ -8,10 +8,11 @@ const x_alignment = {
 	"center" : -.5,
 	"right" : -1
 }
+
 const y_alignment = {
 	"top" : 0,
 	"center" : -.5,
-	"bottom" : -1
+    "bottom" : -1
 }
 
 var playable_audios = []
@@ -185,17 +186,19 @@ util.getElement = function(id, tag, ns) {
 	}
 }
 
-util.getElementImage = function(rt_operation, ix) {
+util.getElementImage = function(rt_operation, ix, func) {
 	var image_entry = rt_operation.image.images[ix].image
 	if (image_entry.svg) {
 		// console.log("loading svg for "+rt_operation.name)
-		var svgImage = this.getSvgImage(rt_operation, image_entry.svg)
-		return svgImage
+		this.getSvgImage(rt_operation, image_entry.svg, func)
+		return
 	}
-	return image_entry.image
+	var img = image_entry.image
+	img.rt_operation = rt_operation
+	func(img)
 }
 
-util.getSvgImage = function (rt_operation, svg) {
+util.getSvgImage = function (rt_operation, svg, func) {
 	var local
 	if (rt_operation.state.width && rt_operation.state.height) {
 		this.setSvgImageSize(svg, [rt_operation.state.width,rt_operation.state.height])
@@ -208,13 +211,15 @@ util.getSvgImage = function (rt_operation, svg) {
 	var img = new Image()
 	rt_operation.loaded = false
 	img.rt_operation = rt_operation
-	/*
-	 * onload no applicable for local svg element img.onload = function() {
-	 * img.rt_operation.loaded = true }
-	 */
-	var svg_encoded = btoa(unescape(encodeURIComponent(svg.outerHTML)))
-	img.src = "data:image/svg+xml;base64," + svg_encoded
-	return img
+	var encoded = encodeURIComponent(svg.outerHTML)
+	img.onload = function() {
+	  this.rt_operation.loaded = true 
+	  var elapsed = Date.now() - this.start
+	  console.log("Elapsed: "+elapsed)
+	  func(this)
+	}
+	img.start = Date.now()
+	img.src = "data:image/svg+xml," + encoded
 }
 
 util.getSvgImageSize = function (svg) {
@@ -300,7 +305,10 @@ util.setImageState = function(rt_operation){
 					mit[key] = template[key]
 				}
 				mit.interval = mit.interval || 10
-				mit.size = template.values.length || template.period || 1
+				if(template.values){
+					mit.size = template.values.length
+				}
+				mit.size = mit.size || template.period || 1
 				mit.url = imagedef.url
 			}
 		}
@@ -352,6 +360,16 @@ util.setSvgFieldValue = function(image_state,image_meta,template, imageinfo){
 	var svg = imageinfo.svg
 	var element = $(svg).find(image_meta.element)
 	$(element).attr(image_meta.attribute, image_meta.values[image_state.ix] )
+}
+
+util.setSvgTextValue = function(image_state, image_meta ,template, imageinfo){
+	var svg = imageinfo.svg
+	var element = $(svg).find(image_meta.element)
+	if(typeof image_meta.value == 'function'){
+		$(element).html(image_meta.value(image_state, image_meta))
+	} else {
+		$(element).html(image_meta.value)
+	}
 }
 
 util.setSvgFieldTemplate = function(image_state,image_meta,template, imageinfo){
@@ -448,31 +466,49 @@ util.offCanvasActions = function(rt_operation){
 	return false
 }
 
-// util.nextSoundState = function(rt_operation){
-// if(rt_operation.state.switch_audio){
-// rt_operation.state.current_audio.pause()
-// rt_operation.state.switch_audio = false
-// if(rt_operation.state.sound_iteration < 0){
-// rt_operation.state.sound_iteration = 0
-// } else {
-// rt_operation.state.sound_iteration ++
-// }
-// if(rt_operation.state.sound_iteration < rt_operation.audios.length()){
-// rt_operation.state.current_audio =
-// operation.audios[rt_operation.state.sound_iteration]
-// rt_operation.state.current_audio.play()
-// console.log("Playing
-// "+rt_operation.state.current_audio.getAttribute("src")+"("+rt_operation.state.sound_iteration+")")
-// }
-// if(operation.loop){
-// rt_operation.state.sound_iteration = 0
-// rt_operation.state.current_audio =
-// rt_operation.audios[rt_operation.state.sound_iteration]
-// rt_operation.state.current_audio.play()
-// console.log("Replaying
-// "+rt_operation.state.current_audio.getAttribute("src"))
-// } else {
-// rt_operation.initialized = false
-// }
-// }
-// }
+util.getViewbox = function(svg) {
+	var viewbox = svg.attributes.getNamedItem("viewBox").value
+	var items = viewbox.split(/(?:\s*,s*)|\s+/)
+	return items
+}
+
+util.getWidthFromViewbox =  function(svg) {
+	return getViewbox(svg)[2]
+}
+
+util.getHeightFromViewbox = function(svg) {
+	return getViewbox(svg)[3]
+}
+
+util.redraw =  function(rt_operation, fields){
+	var retval = false
+	var f = fields
+	if(fields == undefined) {
+		f = ["image_ix","width","height","x","y"]
+	} 
+	if( rt_operation.previous ){
+		for(var ix in f){
+			var field = f[ix]
+			var prev = rt_operation.previous[field]
+			var curr = rt_operation.state[field]
+			if(prev != curr){
+				retval = true
+				break
+			}
+		}
+	} else {
+		retval = true
+	}
+	var previous = {}
+	for(var ix in f){
+		var field = f[ix]
+		previous[field] = rt_operation.state[field]
+	}	
+	rt_operation.previous = previous
+	return retval
+}
+
+util.setPrevious =  function(rt_operation){
+	var state = rt_operation.state
+	state.previous = state
+}

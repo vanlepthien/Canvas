@@ -158,22 +158,8 @@ function draw() {
 		}
 	}
 	event_rt.run()
-// for (var key in runtime) {
-// var rt_operation = runtime[key]
-// if (inInterval(rt_operation)) {
-// rt_operation["active"] = true
-// run(rt_operation)
-// } else {
-// if ("active" in rt_operation) {
-// if (rt_operation.active) {
-// inactivate(rt_operation)
-// }
-// }
-// rt_operation["active"] = false
-// }
-// }
 	tick++;
-	requestAnimFrame(function() {
+	requestAnimationFrame(function() {
 		draw()
 	})
 }
@@ -259,19 +245,6 @@ function tickToSeconds(tick_value){
 	return tick_value / (60*interval_adjustment)
 }
 
-function getBoundaries(htmlElement) {
-	var rect = htmlElement.getBoundingClientRect();
-	return {
-		left : rect.left + window.scrollX,
-		top : rect.top + window.scrollY,
-		right : rect.right - window.scrollX,
-		bottom : rect.bottom - window.scrollY,
-		width : rect.width - (2 * window.scrollX),
-		height : rect.height - (2 * window.scrollY)
-	}
-}
-
-
 function run(rt_operation) {
 	if (rt_operation.operation) {
 		if ("canvas" in rt_operation) {
@@ -312,14 +285,11 @@ function nominal_ticks() {
 }
 
 function getReference(rt_operation, group, field) {
-	var operation = rt_operation.configuration
-	if ("reference" in operation) {
-		var element_name = operation.reference.element
-		var operation_name = operation.reference.operation
+	if (rt_operation.reference) {
+		var element_name = operation.reference
 		if (element_name in runtime) {
-			var rt_operation = runtime[element_name]
-			if (operation_name in rt_operation.operation) {
-				var ref_operation = rt_operation.operation[operation_name]
+			var ref_operation = runtime[element_name]
+			if (rt_operation.operation == ref_operation.operation) {
 				if (group in ref_operation) {
 					if (field in ref_operation[group]) {
 						return ref_operation[group][field]

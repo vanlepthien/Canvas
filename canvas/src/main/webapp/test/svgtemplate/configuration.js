@@ -14,27 +14,6 @@ var test = {}
 
 test.template = { 
 	0 : {
-		color : {
-			element: "g > g:eq(0)",
-			attribute: "fill",
-			values : Array(512).fill().map((e,i) => function(i){
-				var rad = (i*Math.PI/255.0)
-				var r = (Math.sin(rad) + 1)/2
-				var g = (Math.cos(rad) + 1)/2
-				var b = (Math.sin(-rad) +1)/2
-				console.log(i+" "+rad+" ("+r+","+g+","+b+") ")
-				var r = Math.floor(r*255)
-				var g = Math.floor(g*255)
-				var b = Math.floor(b*255)
-				var ret = util.intToRGBA(r,g,b,1)
-				console.log(" ("+r+","+g+","+b+") "+ret)
-				return ret
-			}(i)),
-			initialIx : 0,
-			interval : 2,
-			method : "setSvgFieldValue",
-			index : "generateArrayIndex",
-		},
 		rotate : {
 			element: "g:eq(0)",
 			attribute: "transform",
@@ -68,7 +47,7 @@ test.template2 = {
 				return ret
 			}(i)),
 			initialIx : 0,
-			interval : 2,
+			interval : 10,
 			method : "setSvgFieldValue",
 			index : "generateArrayIndex",
 		},
@@ -107,7 +86,7 @@ test.template3 = {
 				return ret
 			}(i)),
 			initialIx : 0,
-			interval : 2,
+			interval : 6,
 			method : "setSvgFieldValue",
 			index : "generateArrayIndex",
 		},
@@ -139,7 +118,7 @@ test.template3 = {
 imageset.bugsvg = {
 	image : {
 		0 : {
-			name : "bug2.svg",
+			name : "bug3inkscape.svg",
 			width : 54,
 			height : 56,
 		}
@@ -174,6 +153,23 @@ imageset.desert = {
  show : true,
  }
 
+operation.plainbug = {
+	imageset : "bugsvg",
+	operation: "move",
+	distance : 7,
+	duration : [ 0, "*" ],
+	interval : 10,
+	speed: [.03,.02],
+	position : [ "40%", "60%" ],
+	cycle : false,
+	events : {
+		click : function() {
+			event_rt.createEvent(event_rt.START,"*","beep")
+		},
+	},
+	loop : false,
+}
+
 operation.svgrotate = {
 	imageset : "bugsvg",
 	operation: "move",
@@ -191,7 +187,7 @@ operation.svgrotate = {
 	cycle : false,
 	events : {
 		click : function() {
-			event_rt.createEvent("Start","*","beep")
+			event_rt.createEvent(event_rt.START,"*","beep")
 		},
 	},
 	loop : true,
@@ -215,7 +211,7 @@ operation.svgrotate2 = {
 	cycle : false,
 	events : {
 		click : function() {
-			event_rt.createEvent("Start","*","beep")
+			event_rt.createEvent(event_rt.START,"*","beep")
 		},
 	},
 	loop : true,
@@ -242,7 +238,7 @@ operation.svgrotate3 = {
 	cycle : false,
 	events : {
 		click : function() {
-			event_rt.createEvent("Start","*","beep")
+			event_rt.createEvent(event_rt.START,"*","beep")
 		},
 	},
 	loop : true,
@@ -263,7 +259,7 @@ operation.head = {
 	position: [ "50%", "50%" ],
 	events : {
 		click : function() {
-			event_rt.createEvent("Start","*","beep")
+			event_rt.createEvent(event_rt.START,"*","beep")
 		},
 	},
 	loop : true,

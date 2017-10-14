@@ -163,7 +163,7 @@ rt.setUpDurations = function(rt_operation) {
 
 			switch (Number(iix)) {
 			case 0:
-				event_rt.createEvent("Start", nTime, rt_operation)
+				event_rt.createEvent(event_rt.START, nTime, rt_operation)
 				break
 			case 1:
 				event_rt.createEvent("End", nTime, rt_operation)

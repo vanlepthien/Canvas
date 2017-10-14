@@ -133,12 +133,12 @@ image_rt.isFileType = function(type) {
 
 image_rt.isSvg = image_rt.isFileType(".svg")
 
-image_rt.buildImageEntry = function(name, configuration) {
+image_rt.buildImageEntry = function(name, shared) {
 	var entry = {
 		name : name
 	}
-	for ( var op in configuration) {
-		entry[op] = configuration[op]
+	for ( var op in shared) {
+		entry[op] = shared[op]
 	}
 	return entry
 }
@@ -181,9 +181,6 @@ image_rt.loadImages = function(callback) {
 	if (img_cnt.count == 0) {
 		callback()
 		return
-
-		
-
 	}
 	for ( var key in image_store) {
 		var image_entry = image_store[key]
@@ -205,7 +202,7 @@ image_rt.loadImages = function(callback) {
 			req.onload = function() {
 				if (this.status === 200) {
 					var svg_element = this.responseXML.documentElement
-					var fName = image_entry.name
+					var fName = this.image_entry.name
 					$(svg_element).attr("id", fName)
 					var svg_children = $(svg_element).children()
 					if (svg_children.length > 1) {
