@@ -1,10 +1,10 @@
 h1. Overview
 
-Canvas is a lightweight framework for HTML5 / JavaScript animation. 
+Canvas is a lightweight framework for HTML5 / JavaScript animation.
 
-Canvas is configuration-based - instead of defining animation behavior in 
-executable code, behavior is defined in configuration files. Because the 
-framework code is reused for different elements, it is much smaller than a 
+Canvas is configuration-based - instead of defining animation behavior in
+executable code, behavior is defined in configuration files. Because the
+framework code is reused for different elements, it is much smaller than a
 fully executable animation.
 
 {toc}
@@ -13,7 +13,7 @@ h1. Basics
 
 h2. Scaling
 
-One of the guiding principles behind the framework is that the developer should not have to worry about the device on which an animation is being played. Sizes of graphics object seem to be handled pretty well automatically. 
+One of the guiding principles behind the framework is that the developer should not have to worry about the device on which an animation is being played. Sizes of graphics object seem to be handled pretty well automatically.
 
 h3. Motion
 
@@ -42,7 +42,7 @@ For elements triggered by other than timing events, the start time is specified 
 
 p(((. Input durations are in one of the following formats:
 
-p((((. start 
+p((((. start
 [start, (end)?] | [,end]
 [[start, (end)?] | [,end](,[start, (end)?] | [,end])*]
 
@@ -63,6 +63,7 @@ If "show" has a value of "true", an operation will always be active and duration
 
 - operation := the operation attribute contains the operations that are to be executed for the element
 - usecanvas := specifies an element whose canvas this element should be drawn on
+
 
 h2. Operations
 
@@ -182,9 +183,9 @@ Speed may be specified as a two value array, the first item being speed in the _
 
 bc.. // configuration.js
 configuration["item1"] = { ...
-    operations:{
-        move: {
-            speed: [.3, 0], ...
+    operations : {
+        move : {
+            speed : [.3, 0], ...
         }
     }
 }
@@ -195,16 +196,16 @@ specified in a variable.
 bc.. // configuration.js
 var drift = [.3, 0] ...
 configuration["item1"] = { ...
-    operations:{
-        move: {
-            speed: drift, ...
+    operations :{
+        move : {
+            speed : drift, ...
         }
     }
 }
 configuration["item2"] = { ...
-    operations:{
-        move: {
-            speed: drift, ...
+    operations :{
+        move : {
+            speed : drift, ...
         }
     }
 }
@@ -225,7 +226,7 @@ configuration ["element"] = {
     operation : {
         "move" : {
             speed : {
-                start: [.3, .2],
+                start : [.3, .2],
                 speed : deltaV
             },
             position : [ "20%", "60%" ],
@@ -255,28 +256,26 @@ Initial values and constants may also be defined within rt_operation.speed.
 
 h2. Button Generation
 
-Buttons are fixed elements that cause actions to be triggered - change content,
-switch web pages, initiate or cancel animations, etc.
+Buttons are fixed elements that cause actions to be triggered - change content, switch web pages, initiate or cancel animations, etc.
+Buttons are not different from any other canvas elements (which can trigger actions of all sorts). What is different is that there is code to assist in the generation of buttons. This allows the generation of sets of buttons with far less work than generation of buttons individually.
 
-Buttons are not different from any other canvas elements (which can trigger actions of all sorts). What is different is that there is code to assist in the generation of buttons. 
-This allows the generation of sets of buttons with far less work than generation of 
-buttons individually as "fixed":./basics.html#fixed elements.
+h3. Button specification
 
-h4. Button definition
-
-Button definition is comprised of two parts: a configuration that determines how a set of buttons is to be placed, and a set of button definitions, which indicate the graphic to be displayed, and the events triggered when mouse actions interact with the button.
+Button specification is comprised of two parts: a configuration that determines how a set of buttons is to be placed, and a set of button definitions, which indicate the graphic to be displayed, and the events triggered when mouse actions interact with the button.
 
 The _createMenuButtons_ function takes the button configuration and button definitions to generate configuration imagesets and operation definitions, which are then transformed into the appropriate runtime elements.
 
-h5. Button configuration
+h4. Button configuration
 
 The button configuration defines the following fields:
 
-- distance := The nominal distance to the button. Placing a button at a greater distance may allow other graphic objects to move in front of it, hiding both button and its function. =:
+- distance := The nominal distance to the button. Placing a button at a greater distance may allow other graphic objects to move in front of it, hiding both button and its function. 
 
-- positionIncr := The position increment. This is a two-element array, [dx, dy], where dx is the horizontal offset and dy is the vertical offset. These are multiplied by a button's _ix_ value to calculate the position of the button relative to _positionStart_ Future work may allow specification of dx and dy directly. =:
+- positionIncr := The position increment. This is a two-element array, [dx, dy], where dx is the horizontal offset and dy is the vertical offset. These are multiplied by a button's _ix_ value to calculate the position of the button relative to _positionStart_.
+Future work may allow specification of dx and dy directly. =:
 
-- positionStart := The position of the first button. This is a two-element array, [x, y], the position of the top left corner of the image to be displayed. Future work may allow specification of x and y directly. =:
+- positionStart := The position of the first button. This is a two-element array, [x, y], the position of the top left corner of the image to be displayed. 
+Future work may allow specification of x and y directly. =:
 
 - ix := The default position multiplier of the first button. If zero, the top left corner of the first button image is placed at the _positionStart_ location.
 
@@ -286,21 +285,21 @@ bc.. var menuButtonConfig = {
     distance : 5,
     positionIncr : [ 0, 64 ],
     positionStart : [ 0, 32 ],
-    ix : 0,
+    ix : 0
 }
+h4. Button definitions
 
-h5. Button definition
-
-Because button definition is a shortcut for regular image / operation definition, it makes sense to simplify the definitions as much as possible. To this end, even explicit specification of image files is optional.
+Because button definition is a shortcut for regular image and operation definition, it makes sense to simplify the definitions as much as possible. To this end, even explicit specification of image files is optional.
 
 A button definition is a JavaScript object, with each key being a button name, and the value defining the button attributes.
 These attributes are:
 
-- image(optional) := An array of one or two svg file names. The first file image is the button image displayed when the mouse is not over the button. If the mouse is over the button image, the second file is displayed as the button image. When the mouse is no longer over the button image, the second file image is removed and the first file image is displayed as the button image. If the second file is not specified, and the first file name is of the form _filename_.svg, an attempt is made to locate _filename_<notextile>_overlay.svg.</notextile> If this file exists, it is the source for the second file image.  If the _image_ parameter is not specified, the first file name is _key_.svg, and the second file name is _key_<notextile>_overlay.svg</notextile>, if it exists. =:
+- image := _Optional_ An array of one or two svg file names. The first file image is the button image displayed when the mouse is not over the button. If the mouse is over the button image, the second file is displayed as the button image. When the mouse is no longer over the button image, the second file image is removed and the first file image is displayed as the button image. If the second file is not specified, and the first file name is of the form _filename_.svg, an attempt is made to locate _filename_<notextile>_overlay.svg.</notextile> If this file exists, it is the source for the second file image.  
+If the _image_ parameter is not specified, the first file name is _key_.svg, and the second file name is _key_<notextile>_overlay.svg</notextile>, if it exists. =:
 
-- events := Define mouse events and associated actions for a button. Note that if an overly image is defined for a button, a mouseover event cannot be defined for the button. The event name is one of the common mouse events, the associated value is a function executed when the event occurs. =:
+- events := Define mouse events and associated actions for a button. Note that if an overly image is defined for a button, a mouseover event cannot be defined for the button. The event name is one of the common mouse events, the associated value is a function executed when the event occurs. 
 
-- ix := Position multiplier for this button. Used to alter button position. Affects ix value for subsequent buttons that do not explicitly specify _ix_.[1] =:
+- ix := Position multiplier for this button. Used to alter button position. Affects ix value for subsequent buttons that do not explicitly specify _ix_. 
 
 Example:
 
@@ -329,9 +328,7 @@ bc.. var buttondefs = {
         ix: 4,
     },
 }
-
 createMenuButtons(leftMenuButtonConfig, buttondefs)
-
 h2. SVG
 
 Scaled Vector Graphics (SVG) files allow the definition of scalable images.
@@ -440,7 +437,7 @@ imageset.bugs = {
     image : [ "bug.gif", "bug30.gif", "bug60.gif", "bug90.gif", "bug120.gif",
         "bug150.gif", "bug180.gif", "bug225.gif", "bug270.gif",
         "bug315.gif", "bug.png", "bug.svg" ],
-    configuration: {
+    configuration : {
         distance : 5,
         interval : 10,
         align : [ "left", "top" ],
@@ -452,14 +449,14 @@ p. An alternative imageset definition would have the ability to define individua
 
 bc.. imageset.bugs = {
     image : {
-        0: { name: "bug.gif",
-            width: 54, height:56,
+        0 : { name : "bug.gif",
+            width : 54, height : 56,
         },
         ...
-        11: { name: "bug.svg",
+        11 : { name : "bug.svg",
         },
     },
-    configuration: {
+    configuration : {
         distance : 5, interval : 10,
         align : [ "left", "top" ],
         loop : true
@@ -474,20 +471,20 @@ bc..
 var operation = {}
 
 operation.bugs1 = {
-    imageset: "bugs",
-    operation: "fixed",
-    duration: [0,"*"],
+    imageset : "bugs",
+    operation : "fixed",
+    duration : [0,"*"],
     position : [ 0, 0 ],
-    events: {
-        click: function(){...}
+    events : {
+        click : function(){...}
 }
 
 operation.bugs2 = {
-    imageset: "bugs",
-    duration: [0,"*"],
-    distance: 4,
-    events: {
-        click: function(){...},
+    imageset : "bugs",
+    duration : [0,"*"],
+    distance : 4,
+    events : {
+        click : function(){...},
     speed : {
         dx : .02, dy : .02,
         constant : 2,
@@ -509,7 +506,7 @@ Videosets will use the same general format.
 
 bc.. 
 audioset.taps = {
-    audio: [
+    audio : [
     "c1.mp3","c1.mp3", "f1.mp3", 
     "c1.mp3", "f1.mp3","a2.mp3", 
     "c1.mp3", "f1.mp3","a2.mp3", 
@@ -523,9 +520,9 @@ p. Referred to in an operation:
 
 bc.. 
 operation.taps = {
-    audioset: "taps",
-    operation: "sound",
-    duration: [[5,20],[50,75]]
+    audioset : "taps",
+    operation : "sound",
+    duration : [[5,20],[50,75]]
 }
 
 h6. Videoset
@@ -550,27 +547,27 @@ _Needs to be reformatted to conform with implementation._
 
 bc.. 
 runtime.bugs1 = {
-    operation: "fixed",
+    operation : "fixed",
     distance : 5, interval : 10,
     align : [ "left", "top" ],
     loop : true,
-    images:{ 
-        0: { ref: images["bug.gif"],
-            width: 54.0, height: 56.0,
+    images :{ 
+        0 : { ref : images["bug.gif"],
+            width : 54.0, height : 56.0,
             image = img, // <- the image is instantiated for reuse
         },
         ...
-        11:{
-            ref: images["bug.svg"],
-            width: 54.0, height: 56.0,
+        11 :{
+            ref : images["bug.svg"],
+            width : 54.0, height : 56.0,
             image = img,
         },
-    meta: {
-        imageindexes: [0,1,2,3,4,5,6,7,8,9,10,11]
+    meta : {
+        imageindexes : [0,1,2,3,4,5,6,7,8,9,10,11]
     },
-    state: {
-        x: 0, y: 0,
-        imageIx: 0,
+    state : {
+        x : 0, y : 0,
+        imageIx : 0,
     },
 }
 
@@ -579,19 +576,19 @@ runtime.bugs1 = {
 h5. Image Runtime
 
 bc.. 
-canvas_base.runtime_images.bugs: {
-    image: {
+canvas_base.runtime_images.bugs : {
+    image : {
         "https://something.something.org/site/app/resources/bug.svg" : {
-            url:    "https://something.something.org/site/app/resources/bug.svg",
-            type:   "svg",
-            host:   "something.something.org",
-            path:   "..resources/"
-            file:   "bug.svg",
-            width:  "54",
-            height: "56",
+            url :    "https://something.something.org/site/app/resources/bug.svg",
+            type :   "svg",
+            host :   "something.something.org",
+            path :   "..resources/"
+            file :   "bug.svg",
+            width :  "54",
+            height : "56",
         },
     },
-    configuration: {
+    configuration : {
         interval : 10,
         align : [ "left", "top" ],
         loop : true,
@@ -602,15 +599,15 @@ h5. Internal Image definition
 
 bc.. 
 canvas_base.images["https://something.something.org/site/app/resources/bug.svg"] = {
-    url:    "https://something.something.org/site/app/resources/bug.svg",
-    type:   "svg",
-    host:   "something.something.org",
-    path:   "..resources/"
-    file:   "bug.svg",
-    width:  "54",
-    height: "56",
+    url :    "https://something.something.org/site/app/resources/bug.svg",
+    type :   "svg",
+    host :   "something.something.org",
+    path :   "..resources/"
+    file :   "bug.svg",
+    width :  "54",
+    height : "56",
     // Generated back references to runtime imagesets.
-    runtime_imagesets: [code_base.runtime_images.bugs, code_base.runtime_images.svg],
+    runtime_imagesets : [code_base.runtime_images.bugs, code_base.runtime_images.svg],
 }
 
 h6. Non-SVG file formats
@@ -619,15 +616,15 @@ p. GIF, PNG, and other non-SVG files have fairly basic information, derived from
 
 bc.. 
 canvas_base.images["https://something.something.org/site/app/resources/bug.svg"] = {
-    url:    "https://something.something.org/site/app/resources/bug.gif",
-    type:   "gif",
-    host:   "something.something.org",
-    path:   "../resources/"
-    file:   "bug.gif",
-    width:  "54",
-    height: "56",
+    url :    "https://something.something.org/site/app/resources/bug.gif",
+    type :   "gif",
+    host :   "something.something.org",
+    path :   "../resources/"
+    file :   "bug.gif",
+    width :  "54",
+    height : "56",
     // Generated back references to runtime imagesets.
-    runtime_imagesets: [code_base.runtime_images.bugs],
+    runtime_imagesets : [code_base.runtime_images.bugs],
 }
 
 h6. SVG file formats
@@ -643,18 +640,17 @@ Complete tagging of SVG element content could substitute for SVG expansion.
 
 bc.. 
 canvas_base.images["https://something.something.org/site/app/resources/bug.svg"] = {
-    url:    "https://something.something.org/site/app/resources/bug.svg",
-    type:   "svg",
-    host:   "something.something.org",
-    path:   "..resources/"
-    file:   "bug.svg",
-    width:  "54",
-    height: "56",
+    url :    "https://something.something.org/site/app/resources/bug.svg",
+    type :   "svg",
+    host :   "something.something.org",
+    path :   "..resources/"
+    file :   "bug.svg",
+    width :  "54",
+    height : "56",
     // Generated back references to runtime imagesets.
-    runtime_imagesets: [code_base.runtime_images.bugs, code_base.runtime_images.svg],
-    svg:    $("#svg_doc_id")
+    runtime_imagesets : [code_base.runtime_images.bugs, code_base.runtime_images.svg],
+    svg :    $("#svg_doc_id")
 }
-
 h1. Notes
 
 fn1. Not yet implemented.
@@ -662,4 +658,3 @@ fn1. Not yet implemented.
 fn2. "true" is the current behavior.
 
 fn3. Currently implemented for operation *fixed*.
-

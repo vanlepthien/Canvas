@@ -36,6 +36,7 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 			prev_d = dd
 		}
 	}
+	
 	for ( var key in runtime) {
 		var rt_operation = runtime[key]
 		if ("usecanvas" in rt_operation) {
@@ -44,7 +45,19 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 		} else if ("distance" in rt_operation) {
 			var c = document.createElement("canvas")
 			div.appendChild(c)
-			c.setAttribute("class", "drawing_canvas")
+			if(Modernizr.objectfit ){
+				// Edge 16 only does object-fit for img, not canvas, but Modernizr
+				// doesn't catch it, so we have to figure out if we have Edge.
+				var ua = navigator.userAgent
+				if(ua.includes("Edge/")){
+					c.setAttribute("class", "edge-browser drawing_canvas")
+				}else{
+					c.setAttribute("class", "no-edge-browser drawing_canvas")
+				}
+			} else {
+				// no-objectfix will be set for other browsers
+				c.setAttribute("class", "drawing_canvas")
+			}
 			var zix = distanceMap[rt_operation.distance]
 			c.id = key
 			c.style.zIndex = zix
@@ -99,7 +112,7 @@ canvasses.screenToCanvasPosition = function(canvas, x, y) {
 	if(newX < 0 || newX > canvas.width){
 		return undefined
 	}
-	if(newY < 0 || newX > canvas.height){
+	if(newY < 0 || newY > canvas.height){
 		return undefined
 	}
 	return [ newX, newY ]
@@ -223,6 +236,90 @@ canvasses.clickOnCanvas = function(event) {
 	})
 }
 
+canvasses.mouseEnter = function(event) {
+	event = event || window.event
+	var screenX = event.clientX
+	var screenY = event.clientY
+
+	canvasses.walkcanvasses(function(src) {
+		
+		var xy = canvasses.screenToCanvasPosition(src, screenX, screenY)
+		
+		if(xy == undefined){
+			return false
+		}
+		
+		var x = xy[0]
+		var y = xy[1]
+				
+		var dx = x - src.offsetLeft
+		var dy = y - src.offsetTop
+
+		var ctx = src.getContext("2d")
+
+		var c = ctx.getImageData(dx, dy, 1, 1).data;
+
+		if (canvasses.transparent(c)) {
+			return false
+		} else {
+			var runtime = Runtime()
+			var rt_operation = runtime[src.id]
+			// Clicks ignored if handler not defined for visible layer
+			if (rt_operation.events) {
+				if (rt_operation.events.mouseenter) {
+					rt_operation.events.mouseenter(rt_operation)
+				}
+			}
+			if (debug) {
+				console.log("click " + src.id)
+			}
+			return true
+		}
+	})
+}
+
+canvasses.mouseLeave = function(event) {
+	event = event || window.event
+	var screenX = event.clientX
+	var screenY = event.clientY
+
+	canvasses.walkcanvasses(function(src) {
+		
+		var xy = canvasses.screenToCanvasPosition(src, screenX, screenY)
+		
+		if(xy == undefined){
+			return false
+		}
+		
+		var x = xy[0]
+		var y = xy[1]
+				
+		var dx = x - src.offsetLeft
+		var dy = y - src.offsetTop
+
+		var ctx = src.getContext("2d")
+
+		var c = ctx.getImageData(dx, dy, 1, 1).data;
+
+		if (canvasses.transparent(c)) {
+			return false
+		} else {
+			var runtime = Runtime()
+			var rt_operation = runtime[src.id]
+			// Clicks ignored if handler not defined for visible layer
+			if (rt_operation.events) {
+				if (rt_operation.events.mouseleave) {
+					rt_operation.events.mouseleave(rt_operation)
+				}
+			}
+			if (debug) {
+				console.log("click " + src.id)
+			}
+			return true
+		}
+	})
+}
+
 canvasses.mousemoveOnCanvas = function(event) {
 	event = event || window.event
 	var screenX = event.clientX
@@ -252,8 +349,39 @@ canvasses.mousemoveOnCanvas = function(event) {
 		} else {
 			canvasses.overCanvas = src.id
 			if (debug) {
-				console.log("over " + src.id)
+				var xx = Math.round(x)
+				var yy = Math.round(y)
+				var screenXX = Math.round(screenX)
+				var screenYY = Math.round(screenY)
+				console.log("over " + src.id + " x="+xx+" y="+yy+" screenX="+screenXX+" screenY="+screenYY)
 			}
+			var runtime = Runtime()
+			var rt_operation = runtime[src.id]
+			if (rt_operation.events) {
+				if (rt_operation.events.mouseenter) {
+					rt_operation.events.mouseenter(rt_operation)
+					canvasses.mouseenter_operation = rt_operation
+					canvasses.mouseenter_state = true
+				} else {
+					if(canvasses.mouseenter_state){
+						if(canvasses.mouseenter_operation.events.mouseleave){
+							canvasses.mouseenter_operation.events.mouseleave(canvasses.mouseenter_operation)
+						}
+						canvasses.mouseenter_state = false
+					}
+				}
+			} else {
+				if(canvasses.mouseenter_state){
+					if(canvasses.mouseenter_operation.events.mouseleave){
+						canvasses.mouseenter_operation.events.mouseleave(canvasses.mouseenter_operation)
+					}
+					canvasses.mouseenter_state = false
+				}
+			}
+			if (debug) {
+				console.log("mouseenter " + src.id)
+			}
+
 			return true
 		}
 	})
