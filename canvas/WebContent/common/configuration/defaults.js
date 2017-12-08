@@ -2,7 +2,6 @@ var defaults = {
 	canvascontainer : "canvasses",
 	canvasmodel : "model",
 	resources : "../resources/",
-	common: "../../../canvas/common/",
 }
 
 defaults.imageLoc = defaults.resources + "images/"
