@@ -85,8 +85,8 @@ rt.resolve = function(rt_operation, attr, attribute) {
 
 rt.createRuntimeTemplate = function(rt_operation, template){
 	for(var ix in template){
-		var imageinfo = rt_operation.image.images[ix]
-		imageinfo.template = jQuery.extend(true, {}, template[ix]);
+		var image_entry = rt_operation.image.images[ix]
+		image_entry.template = jQuery.extend(true, {}, template[ix]);
 	}
 }
 
@@ -166,7 +166,7 @@ rt.setUpDurations = function(rt_operation) {
 				event_rt.createEvent(event_rt.START, nTime, rt_operation)
 				break
 			case 1:
-				event_rt.createEvent("End", nTime, rt_operation)
+				event_rt.createEvent(event_rt.STOP, nTime, rt_operation)
 				break
 			default:
 				console.log("in configuration '" + key

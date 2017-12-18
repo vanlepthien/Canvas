@@ -19,7 +19,11 @@ event_rt.run = function() {
 	var events = Events()
 	var running = Running()
 	var operations = Operation()
-	var current_time = tickToSeconds(tick)
+	var current_time = getCurrentTime().toFixed(2)
+//	console.log("Current time: "+current_time+
+//			" tickToSeconds("+tick+"): "+ tickToSeconds(tick)+ 
+//			" tick: "+tick + " interval adj: "+interval_adjustment)
+
 	while (1) {
 		var event_time
 		var event_list
@@ -27,6 +31,7 @@ event_rt.run = function() {
 		if (event_time === undefined || event_time > current_time) {
 			break
 		} else {
+			var diff = (current_time - event_time).toFixed(3)
 			events.shift()
 			// process stopped operations
 			for ( var ix in event_list) {
@@ -36,6 +41,7 @@ event_rt.run = function() {
 					if (typeof rt_operation == 'string') {
 						rt_operation = operations[rt_operation]
 					}
+					console.log(current_time+" Event Time: "+event_time.toFixed(2)+" diff: "+diff+": Stopping "+ rt_operation.name )
 					delete running[rt_operation.name]
 					rt_operation.terminate = true
 					run(rt_operation)
@@ -47,6 +53,7 @@ event_rt.run = function() {
 					var rt_operation = event.operation
 					if (rt_operation) {
 						rt_operation.active = true
+						console.log(current_time+" Event Time: "+event_time.toFixed(2)+" diff: "+diff+": Starting "+ rt_operation.name )
 						running[rt_operation.name] = rt_operation
 					}
 				}
@@ -91,23 +98,22 @@ event_rt.createEvent = function(func, time, rt_operation) {
 	}
 
 	if (!time) {
-		time = tickToSeconds(tick)
+		time = getCurrentTime()
 	}
 
 	if (typeof time != 'number') {
 		if (time == "*") {
-			time = tickToSeconds(tick)
+			time = getCurrentTime()
 		} else if (typeof time == 'string') {
 			if (time.startsWith("*+")) {
 				time = time.substr(2)
 				time = Number(time)
-				time = time + tickToSeconds(tick)
+				time = time + getCurrentTime()
 			} else if (Number.isNumber(time)) {
 				time = Number(time)
 			} else {
 				console.log("Invalid time: " + time + " Event not created.")
 				return
-
 			}
 		}
 	}

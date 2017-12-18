@@ -199,6 +199,8 @@ ops.move = {
 			state.y = xy[1]
 
 			state.tick = tick
+			
+			state.time = getCurrentTime()
 
 			state.image_ix = 0;
 		},
@@ -332,6 +334,7 @@ ops.fixed = {
 				fields = splice(fields,0,state.fields)
 			}
 			if(util.redraw(rt_operation,fields)){
+				rt_operation.refresh = true
 				util.getElementImage(rt_operation, state.image_ix, 
 					function(img){
 						var rt_operation = img.rt_operation
@@ -355,6 +358,7 @@ ops.fixed = {
 
 			var state = {}
 			state.tick = tick
+			state.time = getCurrentTime()
 			state.image_ix = 0
 			state.width = rt_operation.width || rt_operation.image.images[0].width
 			state.height = rt_operation.height
@@ -747,7 +751,7 @@ ops.sound = {
 
 			} else {
 				rt_operation.state.current_audio.pause()
-				rt_operation.state.current_audio.current_time = 0
+				rt_operation.state.current_audio.currentTime = 0
 			}
 			rt_operation.state.sound_iteration = -1
 			rt_operation.initialized = false

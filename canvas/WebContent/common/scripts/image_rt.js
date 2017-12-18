@@ -154,14 +154,19 @@ image_rt.setRuntimeImages = function() {
 		if (rt_operation.image) {
 			for ( var ix in rt_operation.image.images) {
 				var url = rt_operation.image.images[ix].url
-				var image = $.extend(true, {}, images[url].imageinfo)
-				if (image.svg) {
-					var svg = image.svg
+				var imageinfo = $.extend(true, {}, images[url].imageinfo)
+				if (imageinfo.svg) {
+					var svg = imageinfo.svg
 					var clone = $(svg).clone()[0]
 					$(clone).attr(
 							'id',
 							rt_operation.name + "_" + ix + "_"
 									+ $(svg).attr('id'))
+					var svg_image = svg.image
+					var cloned_image = svg_image.cloneNode(true)
+					clone.image = cloned_image
+					console.log(svg)
+					console.log(clone)
 					$(svg).parent().append(clone)
 					rt_operation.image.images[ix].image = {}
 					rt_operation.image.images[ix].image.svg = clone
@@ -227,13 +232,23 @@ image_rt.loadImages = function(callback) {
 					$(svg_div).append(svg)
 					this.image_entry.imageinfo.svg = svg
 					// end of old code
-
+					svg.img_cnt = this.img_cnt
+					util.setSvgImageSize(svg, [this.image_entry.width, this.image_entry.height])
+					svg.callback = callback
+					util.loadSVGToImage(svg,
+							function(img){
+								var svg = img.svg_element
+								svg.img_cnt.count--
+								if(svg.img_cnt.count <= 0){
+									svg.callback()
+								}
+							})
 				} else {
 					console.error(this.statusText);
-				}
-				this.img_cnt.count--
-				if (img_cnt.count == 0) {
-					callback()
+					this.img_cnt.count--
+					if (img_cnt.count <= 0) {
+						callback()
+					}
 				}
 			}
 			req.send()
@@ -243,13 +258,13 @@ image_rt.loadImages = function(callback) {
 			} else {
 				img = new Image();
 			}
-			imageinfo.image = img
-			// imageinfo.image_entry = image_entry
 			img.imageinfo = imageinfo
+			// imageinfo.image_entry = image_entry
 			img.img_cnt = img_cnt
 			img.onload = function() {
 				this.imageinfo.width = this.width
 				this.imageinfo.height = this.height
+				this.imageinfo.image = this
 				this.img_cnt.count--
 				if (this.img_cnt.count == 0) {
 					callback()

@@ -146,6 +146,7 @@ function draw() {
 			var nominal_second = (tick - prev_second_ticks) / (60)
 			console.log("Time:" + (now - start) / 1000 + " tick: " + tick + " Tick seconds " +
 				tick / (60 * interval_adjustment))
+			console.log(" tickToSeconds("+tick+"): "+ tickToSeconds(tick))
 			console.log(" Nominal second: " + nominal_second + " Elapsed Ticks: " + (tick
 				- prev_second_ticks))
 			console.log(" Elapsed: " + elapsed + " Nominal/Elapsed: " + (nominal_second /
@@ -243,6 +244,13 @@ function secondsToTick(seconds){
 
 function tickToSeconds(tick_value){
 	return tick_value / (60*interval_adjustment)
+}
+
+function getCurrentTime(){
+	if(debug) {
+		return tick / 60
+	}
+	return (Date.now() - start)/ 1000
 }
 
 function run(rt_operation) {

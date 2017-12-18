@@ -147,7 +147,7 @@ function createMetaImageInfo(rt_operation, ix, field, values) {
 }
 
 function getSVGField(rt_operation, ix, field, initialization, returnValue) {
-	createOperationMetaImageinfo(rt_operation, ix, field, initialization)
+	createOperationMetaImageInfo(rt_operation, ix, field, initialization)
 	return returnValue
 }
 

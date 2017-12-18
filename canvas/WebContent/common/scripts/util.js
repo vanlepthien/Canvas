@@ -40,11 +40,12 @@ util.getIntervalIx = function(state, interval, count) {
 	if (count <= 1) {
 		return 0
 	}
-	var elapsed = tick - state.tick
-	if (count * interval < elapsed) {
-		state.tick = tick
+	var time = getCurrentTime() 
+	var elapsed = time - state.time
+	if (count * interval / 60 < elapsed) {
+		state.time = time
 	}
-	return Math.floor((elapsed / interval)) % count
+	return Math.floor((elapsed / (interval / 60))) % count
 }
 
 util.nextImageIx = util.getIntervalIx
@@ -187,10 +188,10 @@ util.getElement = function(id, tag, ns) {
 }
 
 util.getElementImage = function(rt_operation, ix, func) {
-	var image_entry = rt_operation.image.images[ix].image
-	if (image_entry.svg) {
+	var image_entry = rt_operation.image.images[ix]
+	if (image_entry.image && image_entry.image.svg) {
 		// console.log("loading svg for "+rt_operation.name)
-		this.getSvgImage(rt_operation, image_entry.svg, func)
+		this.getSvgImage(rt_operation, image_entry.image.svg, func)
 		return
 	}
 	var img = image_entry.image
@@ -208,18 +209,42 @@ util.getSvgImage = function (rt_operation, svg, func) {
 		rt_operation.state.height = imageSize[1]
 		this.setSvgImageSize(svg, imageSize)
 	}
+	if(!rt_operation.refresh){
+		if(svg.image){
+			rt_operation.loaded = true
+			svg.image.rt_operation = rt_operation
+			func(svg.image)
+			return
+		}
+	}
 	var img = new Image()
+	svg.image = img
 	rt_operation.loaded = false
 	img.rt_operation = rt_operation
 	var encoded = encodeURIComponent(svg.outerHTML)
 	img.onload = function() {
 	  this.rt_operation.loaded = true 
 	  var elapsed = Date.now() - this.start
-	  console.log("Elapsed: "+elapsed)
+	  console.log("Elapsed: "+elapsed+ " "+this.rt_operation.name)
 	  func(this)
 	}
 	img.start = Date.now()
 	img.src = "data:image/svg+xml," + encoded
+}
+
+util.loadSVGToImage =  function(svg, callback){
+	var img = new Image()
+	svg.image = img
+	var encoded = encodeURIComponent(svg.outerHTML)
+	img.onload = function() {
+	  var elapsed = Date.now() - this.start
+	  console.log("Elapsed: "+elapsed+ " "+this.svg_element.id)
+	  callback(this)
+	}
+	img.svg_element = svg
+	img.start = Date.now()
+	img.src = "data:image/svg+xml," + encoded
+
 }
 
 util.getSvgImageSize = function (svg) {
