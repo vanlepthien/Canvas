@@ -292,6 +292,7 @@ function nominal_ticks() {
 }
 
 function getReference(rt_operation, group, field) {
+	var runtime = Runtime()
 	if (rt_operation.reference) {
 		var element_name = operation.reference
 		if (element_name in runtime) {

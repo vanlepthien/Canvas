@@ -147,7 +147,7 @@ function createMetaImageInfo(rt_operation, ix, field, values) {
 }
 
 function getSVGField(rt_operation, ix, field, initialization, returnValue) {
-	createOperationMetaImageInfo(rt_operation, ix, field, initialization)
+//	createOperationMetaImageInfo(rt_operation, ix, field, initialization)
 	return returnValue
 }
 
@@ -158,7 +158,7 @@ function generateColorIndex(rt_operation, ix) {
 	return Math.floor((tick / interval) % size)
 }
 
-function generateRotationIndex(re_element, rt_operation, ix) {
+function generateRotationIndex(re_element, rt_operation, ix, initialization) {
 	return getSVGField(
 			rt_operation,
 			rt_operation,

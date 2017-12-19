@@ -47,7 +47,7 @@ media_rt.createRuntimeAudio = function() {
 					audioType = "audio/ogg"
 					break
 				case ".wav":
-					audeoType = "audio/wav"
+					audioType = "audio/wav"
 				}
 				source.setAttribute("type", audioType)
 				audio.audioset = audioset

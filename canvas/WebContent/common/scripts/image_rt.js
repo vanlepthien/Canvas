@@ -63,8 +63,7 @@ image_rt.resolveUrl = function(key, instance) {
 	var type = instance.type
 	var local_url
 	if (!url && !name) {
-		throw "Configuration error in imageset:'" + key + "', image:'"
-				+ image_ix + "' - neither url or name defined."
+		throw "Configuration error in imageset:'" + key + "' - neither url or name defined."
 	}
 	var url_url
 	if (!url) {
@@ -171,7 +170,7 @@ image_rt.setRuntimeImages = function() {
 					rt_operation.image.images[ix].image = {}
 					rt_operation.image.images[ix].image.svg = clone
 				} else {
-					rt_operation.image.images[ix].image = image.image
+					rt_operation.image.images[ix].image = imageinfo.image
 				}
 			}
 		}

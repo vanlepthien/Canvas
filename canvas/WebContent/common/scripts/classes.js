@@ -2,45 +2,49 @@
  * 
  */
 
-function RuntimeElement(name, operation, events, parameters) {
-	if (this.validateName(name) && validateOperation(operation)
-		&& validateEvents( events)
-		&& validateParameters(operation)) {
-		this.name = name
-		this.operation = operation
-		this.events = events
-		this.parameters = parameters
-	}
-}
-
-RuntimeElement.validateName = function( name) {
-	if (typeof name === 'string' || name instanceof String) {
-		return true
-	}
-	console.log("Invalid name encountered in " + this.constructor.name + ": "
-		+ name)
-
-	return false
-}
-
-RuntimeElement.validateOperation = function(operation) {
-	if (operation instanceof RuntimeOperation) {
-		return true
-	}
-	return false
-}
-
-function validateEvents(operation) {
-	if (obj instanceof Object) {
-		for (key in obj) {
-			if (!(obj[key] instanceof Function)) {
-				return false
-			}
-		}
-		return true
-	}
-	return false
-}
+//function RuntimeElement(name, operation, events, parameters) {
+//	if (this.validateName(name) && this.validateOperation(operation)
+//		&& this.validateEvents( events)
+//		&& this.validateParameters(operation)) {
+//		this.name = name
+//		this.operation = operation
+//		this.events = events
+//		this.parameters = parameters
+//	}
+//}
+//
+//RuntimeElement.validateName = function( name) {
+//	if (typeof name === 'string' || name instanceof String) {
+//		return true
+//	}
+//	console.log("Invalid name encountered in " + this.constructor.name + ": "
+//		+ name)
+//
+//	return false
+//}
+//
+//RuntimeElement.validateOperation = function(operation) {
+//	if (operation instanceof RuntimeOperation) {
+//		return true
+//	}
+//	return false
+//}
+//
+//RuntimeElement.validateEvents = function (obj) {
+//	if (obj instanceof Object) {
+//		for (key in obj) {
+//			if (!(obj[key] instanceof Function)) {
+//				return false
+//			}
+//		}
+//		return true
+//	}
+//	return false
+//}
+//
+//RuntimeElement.validateParameters = function(pareameters){
+//	return true
+//}
 
 function SortedMap (){
 	this.map = {}

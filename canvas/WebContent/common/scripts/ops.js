@@ -150,7 +150,7 @@ ops.move = {
 			var state = rt_operation.state
 			var fields = this.default_fields
 			if(state.fields){
-				fields = splice(fields,0,state.fields)
+				fields = fields.concat(state.fields)
 			}
 			if(util.redraw(rt_operation, fields)){
 				util.getElementImage(rt_operation, state.image_ix,
@@ -459,9 +459,9 @@ ops.text = {
 				font_size = ' font-size="'+state.font_size+'" '
 			}
 			
-			if(state.style){
-				style = ' style="'+state.style+'" '
-			}
+//			if(state.style){
+//				style = ' style="'+state.style+'" '
+//			}
 
 			state.svg = '<svg width="'+state.width+'"'+
 							' height="'+state.height+'"'+
@@ -528,7 +528,7 @@ ops.marquee = {
 			if (rt_operation.stroke) {
 				stroke = rt_operation.stroke
 			}
-			marquee = '<svg>' + '<text text-anchor=event_rt.START x="0%" y="50%" '
+			var marquee = '<svg>' + '<text text-anchor=event_rt.START x="0%" y="50%" '
 					+ 'dy="' + dy + '" dx="' + dx + '" '
 			'class="text" font-family="sans-serif"' + ' stroke="' + stroke
 					+ '" fill="' + fill + '">' + rt_operation.text + '</text>'
@@ -841,7 +841,7 @@ ops.video = {
 				console.log("Video Switch")
 				rt_operation.state.switch_video = true
 				// Don't wait for next interval
-				nextState(rt_operation)
+				this.nextState(rt_operation)
 			} else {
 				console.log("Video loop")
 			}

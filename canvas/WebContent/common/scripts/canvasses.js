@@ -155,8 +155,8 @@ canvasses.getScaledPosition = function(x, y, screenWidth, screenHeight, ratio) {
 	var canvasCenterY = screenHeight / 2
 	var nominalCenterX = nominalWidth / 2
 	var nominalCenterY = nominalHeight / 2
-	var scaledX = (x - screenCenterX) * ratio + nominalCenterX
-	var scaledY = (y - screenCenterY) * ratio + nominalCenterY
+	var scaledX = (x - canvasCenterX) * ratio + nominalCenterX
+	var scaledY = (y - canvasCenterY) * ratio + nominalCenterY
 }
 
 // Walk through canvases until non-transparent item found
@@ -188,7 +188,7 @@ canvasses.clickOnThisCanvas = function(event) {
 		}
 	}
 	if (debug) {
-		console.log("click " + src.id)
+		console.log("click " + this.id)
 	}
 }
 
