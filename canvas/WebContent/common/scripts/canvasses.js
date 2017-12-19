@@ -3,7 +3,7 @@
 // canvasses defined in globals.js
 
 canvasses.generateCanvasses = function(id, model_canvas) {
-	var dimensions = this.getGlobalDimensions(model_canvas)
+	var dimensions = canvasses.getGlobalDimensions(model_canvas)
 	var runtime = Runtime()
 	var distances = []
 	var distanceMap = {}
@@ -67,7 +67,7 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 			c.style.left = left + "px"
 			c.style.top = top + "px"
 			rt_operation.canvas = c
-			this.addCanvas(c)
+			canvasses.addCanvas(c)
 			// $(c).click(function(event){
 			// canvasses.clickOnThisCanvas(event)
 			// })
@@ -132,7 +132,7 @@ canvasses.getBoundaries = function(htmlElement) {
 
 canvasses.getGlobalDimensions = function(cm_id) {
 	var model = $("#" + cm_id).get(0)
-	var bnd = this.getBoundaries(model)
+	var bnd = canvasses.getBoundaries(model)
 	var heightRatio = model.clientHeight / model.height
 	heightRatio = heightRatio > 1 ? 1 : heightRatio
 	var widthRatio = model.clientWidth / model.width
@@ -179,18 +179,19 @@ canvasses.walkcanvasses = function(f) {
 	}
 }
 
-canvasses.clickOnThisCanvas = function(event) {
-	var runtime = Runtime()
-	var rt_operation = runtime[this.id]
-	if (rt_operation.events) {
-		if (rt_operation.events.click) {
-			rt_operation.events.click(rt_operation)
-		}
-	}
-	if (debug) {
-		console.log("click " + this.id)
-	}
-}
+//canvasses.clickOnThisCanvas = function(event) {
+//	var runtime = Runtime()
+//	var rt_operation = runtime[event.id]
+//	if (rt_operation.events) {
+//		if (rt_operation.events.click) {
+//			rt_operation.events.click(rt_operation)
+//		}
+//	}
+//	if (debug) {
+//		console.log("click " + event.id)
+//	}
+//}
+//
 
 // This function is called when you click the canvas.
 
@@ -325,7 +326,7 @@ canvasses.mousemoveOnCanvas = function(event) {
 	var screenX = event.clientX
 	var screenY = event.clientY
 
-	this.walkcanvasses(function(src) {
+	canvasses.walkcanvasses(function(src) {
 		var xy = canvasses.screenToCanvasPosition(src, screenX, screenY)
 		
 		if(xy == undefined){
