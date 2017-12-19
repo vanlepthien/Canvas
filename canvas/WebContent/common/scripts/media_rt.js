@@ -20,7 +20,7 @@ media_rt.createRuntimeAudio = function() {
 				audio = audios[url].audio
 			} else {
 				audios[url] = {}
-				var audio = document.createElement("audio")
+				audio = document.createElement("audio")
 				audios[url].audio = audio
 				var configuration = audioset.configuration || {}
 				if (configuration.loop) {

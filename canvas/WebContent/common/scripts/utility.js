@@ -105,7 +105,7 @@ var deltaV_edge = function(rt_operation) {
  *            current logical time
  * @param field -
  *            the name of the field being indexed
- * @ix index - the index of the item to which a transformation is applied
+ * @param ix - the index of the item to which a transformation is applied
  */
 function getValueIndex(rt_operation, tick, field, ix) {
 	if (rt_operation.template && rt_operation.template[ix]

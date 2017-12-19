@@ -159,11 +159,11 @@ var contact = function(address) {
 	return true
 }
 
-function include(loc) {
-	if ($('script[src="' + loc + '"]').length == 0) {
-		document.write('<script src="' + loc + '"><\/script>')
-	}
-}
+//function include(loc) {
+//	if ($('script[src="' + loc + '"]').length == 0) {
+//		document.write('<script src="' + loc + '"><\/script>')
+//	}
+//}
 
 util.getElement = function(id, tag, ns) {
 	var element = document.getElementById(id)

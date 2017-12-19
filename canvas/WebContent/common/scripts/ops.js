@@ -923,8 +923,8 @@ ops.vimeo = {
 
 			var width = rt_operation.width || 640
 			var height = rt_operation.height || 360
-			var top = top || 8
-			var left = left || 8
+			top = top || 8
+			left = left || 8
 			var frameborder = operation.frameborder || 0
 
 			$(iframe).attr("rt_operation", rt_operation.name)

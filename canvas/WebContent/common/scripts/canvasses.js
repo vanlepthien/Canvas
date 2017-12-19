@@ -58,9 +58,9 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 				// no-objectfix will be set for other browsers
 				c.setAttribute("class", "drawing_canvas")
 			}
-			var zix = distanceMap[rt_operation.distance]
+			var zzix = distanceMap[rt_operation.distance]
 			c.id = key
-			c.style.zIndex = zix
+			c.style.zIndex = zzix
 			c.width = width
 			c.height = height
 			c.style.position = "absolute"

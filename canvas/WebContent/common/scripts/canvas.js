@@ -91,20 +91,19 @@ function buildImageEntry(name, configuration) {
 	return entry
 }
 
-
-
-function loadLocalSvg(xml, img, imageSize, onload) {
-	var xml = rt_operation.svg
-	img = new Image();
-	xml = insertImageSize(xml, imageSize)
-	var DOMURL = window.URL || window.webkitURL || window;
-	var svg = new Blob([ xml ], {
-		type : 'image/svg+xml'
-	})
-	var url = DOMURL.createObjectURL(svg)
-	onload()
-	img.src = url
-}
+//function loadLocalSvg(xml, img, imageSize, onload) {
+//	var xml = rt_operation.svg
+//	img = new Image();
+//	xml = insertImageSize(xml, imageSize)
+//	var DOMURL = window.URL || window.webkitURL || window;
+//	var svg = new Blob([ xml ], {
+//		type : 'image/svg+xml'
+//	})
+//	var url = DOMURL.createObjectURL(svg)
+//	onload()
+//	img.src = url
+//}
+//
 
 var svg_regex = /([\s\S]*[<]svg[\s\S]*)(viewBox=)(\"|\')\s*(\S+)\s*(\S+)\s*(\S+)\s*(\S*)\s*\3([\s\S]*)/
 var svg_replace2 = "$1 width='$6' height='$7' $2$3$4 $5 $6 $7$3$8"
@@ -307,9 +306,4 @@ function getReference(rt_operation, group, field) {
 		}
 	}
 	return null
-}
-
-var contact = function(address) {
-	linkTo(address)
-	return true
 }

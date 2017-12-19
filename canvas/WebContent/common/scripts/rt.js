@@ -47,7 +47,6 @@ rt.resolve = function(rt_operation, attr, attribute) {
 	}
 		
 	case "size": {
-		var width, height
 		if (Array.isArray(attribute)) {
 			switch (attribute.length) {
 			case 0: {

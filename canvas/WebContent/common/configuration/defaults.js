@@ -7,6 +7,6 @@ var defaults = {
 defaults.imageLoc = defaults.resources + "images/"
 defaults.audioLoc = defaults.resources + "audio/"
 
-function include(loc){
-	document.write('<script src="'+loc+'"><\/script>')
-}
+//function include(loc){
+//	document.write('<script src="'+loc+'"><\/script>')
+//}
