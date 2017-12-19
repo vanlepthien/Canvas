@@ -26,19 +26,19 @@ image_rt.createRuntimeImages = function() {
 		var images = {}
 		if (Array.isArray(imageset.image)) {
 			for ( var ix in imageset.image) {
-				images[ix] = this.buildImageEntry(imageset.image[ix], shared)
+				images[ix] = image_rt.buildImageEntry(imageset.image[ix], shared)
 			}
 		} else if (typeof imageset.image == "object") {
 			$.extend(true, images, imageset.image)
 		} else if (typeof imageset.image == 'string') {
-			images[0] = this.buildImageEntry(imageset.image, shared)
+			images[0] = image_rt.buildImageEntry(imageset.image, shared)
 		}
 
 		for ( var image_ix in images) {
 			var instance = images[image_ix]
-			var image_remap = this.resolveUrl(key, instance)
+			var image_remap = image_rt.resolveUrl(key, instance)
 			for ( var attr in images[image_ix]) {
-				this.resolve(attr, instance)
+				image_rt.resolve(attr, instance)
 			}
 
 			if (!image_store[instance.url]) {
@@ -98,7 +98,7 @@ image_rt.resolveUrl = function(key, instance) {
 		instance.path = path
 	}
 	if (!type) {
-		instance.type = this.fileType(name)
+		instance.type = image_rt.fileType(name)
 	}
 	url = url_url.href
 	instance.url = url

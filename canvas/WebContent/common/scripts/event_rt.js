@@ -87,9 +87,9 @@ event_rt.run = function() {
  */
 event_rt.createEvent = function(func, time, rt_operation) {
 	var operation
-	if (![ this.START, this.STOP ].includes(func)) {
+	if (![ event_rt.START, event_rt.STOP ].includes(func)) {
 		throw "event_rt.createEvent: Invalid Event type argument: '" + func
-				+ "'. Must be '" + this.START + "' or '" + this.STOP + "'."
+				+ "'. Must be '" + event_rt.START + "' or '" + event_rt.STOP + "'."
 	}
 	if (typeof rt_operation == 'string') {
 		operation = Runtime()[rt_operation]

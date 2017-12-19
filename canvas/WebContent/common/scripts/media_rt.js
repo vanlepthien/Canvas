@@ -51,8 +51,8 @@ media_rt.createRuntimeAudio = function() {
 				}
 				source.setAttribute("type", audioType)
 				audio.audioset = audioset
-				audio.onended = function() {
-					media_rt.switchAudio(this.operation)
+				audio.onended = function(item) {
+					media_rt.switchAudio(item.operation)
 				}
 				audio.oncanplay = function() {
 					// is this irrelevant?

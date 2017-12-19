@@ -61,7 +61,7 @@ util.getPositionVector = function(pos, image_size, canvas_size) {
 }
 
 util.valueToPosition = function(field, range, direction = 1) {
-	var value = this.toNumber(field)
+	var value = util.toNumber(field)
 	var result = value.value
 	if (value.isPercent) {
 		result = value.value * range
@@ -191,7 +191,7 @@ util.getElementImage = function(rt_operation, ix, func) {
 	var image_entry = rt_operation.image.images[ix]
 	if (image_entry.image && image_entry.image.svg) {
 		// console.log("loading svg for "+rt_operation.name)
-		this.getSvgImage(rt_operation, image_entry.image.svg, func)
+		util.getSvgImage(rt_operation, image_entry.image.svg, func)
 		return
 	}
 	var img = image_entry.image
@@ -202,12 +202,12 @@ util.getElementImage = function(rt_operation, ix, func) {
 util.getSvgImage = function (rt_operation, svg, func) {
 	var local
 	if (rt_operation.state.width && rt_operation.state.height) {
-		this.setSvgImageSize(svg, [rt_operation.state.width,rt_operation.state.height])
+		util.setSvgImageSize(svg, [rt_operation.state.width,rt_operation.state.height])
 	} else {
-		var imageSize = this.getSvgImageSize(svg)
+		var imageSize = util.getSvgImageSize(svg)
 		rt_operation.state.width = imageSize[0]
 		rt_operation.state.height = imageSize[1]
-		this.setSvgImageSize(svg, imageSize)
+		util.setSvgImageSize(svg, imageSize)
 	}
 	if(!rt_operation.refresh){
 		if(svg.image){
@@ -222,11 +222,11 @@ util.getSvgImage = function (rt_operation, svg, func) {
 	rt_operation.loaded = false
 	img.rt_operation = rt_operation
 	var encoded = encodeURIComponent(svg.outerHTML)
-	img.onload = function() {
-	  this.rt_operation.loaded = true 
-	  var elapsed = Date.now() - this.start
-	  console.log("Elapsed: "+elapsed+ " "+this.rt_operation.name)
-	  func(this)
+	img.onload = function(image) {
+	  image.rt_operation.loaded = true 
+	  var elapsed = Date.now() - image.start
+	  console.log("Elapsed: "+elapsed+ " "+image.rt_operation.name)
+	  func(image)
 	}
 	img.start = Date.now()
 	img.src = "data:image/svg+xml," + encoded
@@ -236,10 +236,10 @@ util.loadSVGToImage =  function(svg, callback){
 	var img = new Image()
 	svg.image = img
 	var encoded = encodeURIComponent(svg.outerHTML)
-	img.onload = function() {
-	  var elapsed = Date.now() - this.start
-	  console.log("Elapsed: "+elapsed+ " "+this.svg_element.id)
-	  callback(this)
+	img.onload = function(image) {
+	  var elapsed = Date.now() - image.start
+	  console.log("Elapsed: "+elapsed+ " "+image.svg_element.id)
+	  callback(image)
 	}
 	img.svg_element = svg
 	img.start = Date.now()
@@ -250,14 +250,14 @@ util.loadSVGToImage =  function(svg, callback){
 util.getSvgImageSize = function (svg) {
 	var imageSize = []
 	var width = $(svg).attr("width")
-	width = this.normalizeSize(width)
+	width = util.normalizeSize(width)
 	if (!width) {
-		width = this.getWidthFromViewbox(svg)
+		width = util.getWidthFromViewbox(svg)
 	}
 	var height = $(svg).attr("height")
-	height = this.normalizeSize(height)
+	height = util.normalizeSize(height)
 	if (!height) {
-		height = this.getHeightFromViewbox(svg)
+		height = util.getHeightFromViewbox(svg)
 	}
 	return [ width, height ]
 }
@@ -369,7 +369,7 @@ util.setImageState = function(rt_operation){
 		if(template.index){
 			sit.ix = util[template.index](sit,mit)
 		} else if(!first_time){
-			sit.ix = this.getIntervalIx(sit,mit.interval,mit.size)
+			sit.ix = util.getIntervalIx(sit,mit.interval,mit.size)
 		}
 		if(template.method){
 			util[template.method](sit, mit, template,imagedef.image)
@@ -378,7 +378,7 @@ util.setImageState = function(rt_operation){
 }
 
 util.generateArrayIndex = function(image_state,image_meta){
-	return this.getIntervalIx(image_state,image_meta.interval, image_meta.size)
+	return util.getIntervalIx(image_state,image_meta.interval, image_meta.size)
 }
 
 util.setSvgFieldValue = function(image_state,image_meta,template, imageinfo){
@@ -404,7 +404,7 @@ util.setSvgFieldTemplate = function(image_state,image_meta,template, imageinfo){
 	var attribute = image_meta.attribute
 	var value = image_meta.values[image_state.ix]
 	var field = image_meta.field
-	var replacement = this.replaceField(pattern,field,value)
+	var replacement = util.replaceField(pattern,field,value)
 	$(element).attr(attribute, replacement )
 }
 
@@ -480,7 +480,7 @@ util.offCanvas = function(rt_operation){
 }
 
 util.offCanvasActions = function(rt_operation){
-	if(this.offCanvas(rt_operation)){
+	if(util.offCanvas(rt_operation)){
 		if(rt_operation.events.off_canvas){
 			rt_operation.events.off_canvas()
 		} else {

@@ -6,14 +6,14 @@
 ops.bounce = {
 	run : function(rt_operation) {
 		if(rt_operation.terminate){
-			this.inactivate(rt_operation)
+			ops.bounce.inactivate(rt_operation)
 			return
 		}
 
 		if (rt_operation.initialized) {
-			this.nextState(rt_operation)
+			ops.bounce.nextState(rt_operation)
 		} else {
-			this.newState(rt_operation)
+			ops.bounce.newState(rt_operation)
 			rt_operation.initialized = true
 		}
 		if (util.redraw(rt_operation)) {
@@ -135,20 +135,20 @@ ops.move = {
 		
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.move.inactivate(rt_operation)
 				return
 			}
 
 			if (rt_operation.initialized) {
-				this.nextState(rt_operation)
+				ops.move.nextState(rt_operation)
 			} else {
-				this.newState(rt_operation)
+				ops.move.newState(rt_operation)
 				rt_operation.initialized = true
 			}
 			util.setImageState(rt_operation)
-			this.updateState(rt_operation)
+			ops.move.updateState(rt_operation)
 			var state = rt_operation.state
-			var fields = this.default_fields
+			var fields = ops.move.default_fields
 			if(state.fields){
 				fields = fields.concat(state.fields)
 			}
@@ -228,9 +228,9 @@ ops.move = {
 				state.y_pos -= rt_operation.canvas.width
 			}
 
-			state.x_vector = this.getVector(state.x_pos, meta.width,
+			state.x_vector = ops.move.getVector(state.x_pos, meta.width,
 					rt_operation.canvas.width)
-			state.y_vector = this.getVector(state.y_pos, meta.height,
+			state.y_vector = ops.move.getVector(state.y_pos, meta.height,
 					rt_operation.canvas.height)
 		},
 
@@ -272,13 +272,13 @@ ops.run = {
 				return
 			}
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.run.inactivate(rt_operation)
 				return
 			}
 			if(rt_operation.initialized){
-				this.nextState(rt_operation)
+				ops.run.nextState(rt_operation)
 			} else {
-				this.newState(rt_operation)
+				ops.run.newState(rt_operation)
 				rt_operation.initialized = true
 			}
 			if(rt_operation.run && typeof rt_operation.run == "function"){
@@ -317,19 +317,19 @@ ops.fixed = {
 
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.fixed.inactivate(rt_operation)
 				return
 			}
 			if (rt_operation.initialized) {
-				this.nextState(rt_operation)
+				ops.fixed.nextState(rt_operation)
 			} else {
-				this.newState(rt_operation)
+				ops.fixed.newState(rt_operation)
 				rt_operation.initialized = true;
 			}
 			
 			util.setImageState(rt_operation)
 			var state = rt_operation.state
-			var fields = this.default_fields
+			var fields = ops.fixed.default_fields
 			if(state.fields){
 				fields = splice(fields,0,state.fields)
 			}
@@ -405,11 +405,11 @@ ops.fixed = {
 ops.text = {
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.text.inactivate(rt_operation)
 				return
 			}
 			if (!rt_operation.initialized) {
-				this.newState(rt_operation)
+				ops.text.newState(rt_operation)
 				rt_operation.initialized = true;
 				var meta = rt_operation.meta
 				var context = rt_operation.context
@@ -495,11 +495,11 @@ ops.text = {
 ops.marquee = {
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.marquee.inactivate(rt_operation)
 				return
 			}
 			if (!rt_operation.initialized) {
-				this.newState(rt_operation)
+				ops.marquee.newState(rt_operation)
 				rt_operation.initialized = true;
 				var meta = rt_operation.meta
 				var context = rt_operation.context
@@ -552,19 +552,19 @@ ops.pan = {
 
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.pan.inactivate(rt_operation)
 				return
 			}
 			if (rt_operation.initialized) {
-				this.nextState(rt_operation)
+				ops.pan.nextState(rt_operation)
 			} else {
-				this.newState(rt_operation)
+				ops.pan.newState(rt_operation)
 				rt_operation.initialized = true
 			}
-			this.updateState(rt_operation)
+			ops.pan.updateState(rt_operation)
 			var state = rt_operation.state
 			var context = rt_operation.context
-			var fields = this.default_fields
+			var fields = ops.pan.default_fields
 			if(state.fields){
 				fields = splice(fields,0,state.fields)
 			}
@@ -642,7 +642,7 @@ ops.pan = {
 ops.fill = {
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.fill.inactivate(rt_operation)
 				return
 			}
 
@@ -688,15 +688,15 @@ ops.fill = {
 ops.sound = {
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.sound.inactivate(rt_operation)
 				return
 			}
 
 			var state
 			if (rt_operation.initialized) {
-				this.nextState(rt_operation)
+				ops.sound.nextState(rt_operation)
 			} else {
-				this.newState(rt_operation)
+				ops.sound.newState(rt_operation)
 				rt_operation.initialized = true
 			}
 		},
@@ -774,15 +774,15 @@ ops.sound = {
 ops.video = {
 		run : function video(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.video.inactivate(rt_operation)
 				return
 			}
 
 			var state
 			if (rt_operation.initialized) {
-				this.nextState(rt_operation)
+				ops.video.nextState(rt_operation)
 			} else {
-				this.newState(rt_operation)
+				ops.video.newState(rt_operation)
 				rt_operation.initialized = true
 			}
 		},
@@ -841,7 +841,7 @@ ops.video = {
 				console.log("Video Switch")
 				rt_operation.state.switch_video = true
 				// Don't wait for next interval
-				this.nextState(rt_operation)
+				ops.video.nextState(rt_operation)
 			} else {
 				console.log("Video loop")
 			}
@@ -868,7 +868,7 @@ ops.vimeo = {
 
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
-				this.inactivate(rt_operation)
+				ops.vimeo.inactivate(rt_operation)
 				return
 			}
 
@@ -879,7 +879,7 @@ ops.vimeo = {
 				
 
 			}
-			this.newState(rt_operation)
+			ops.vimeo.newState(rt_operation)
 			rt_operation.initialized = true
 		},
 
@@ -952,7 +952,7 @@ ops.vimeo = {
 					player.on("ended", function(status) {
 						console.log("vimeo ended")
 						console.log(status)
-						var iframe = this.element
+						var iframe = ops.vimeo.element
 						var name = $(iframe).attr("rt_operation")
 						$(iframe).remove()
 						var runtime = Runtime()

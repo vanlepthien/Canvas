@@ -16,18 +16,18 @@ rt.createRuntime = function() {
 		rt_operation.name = key
 		for ( var attr in op) {
 			var attribute = op[attr]
-			this.resolve(rt_operation, attr, attribute)
+			rt.resolve(rt_operation, attr, attribute)
 		}
 		if(op.imageset && op.template){
-			this.createRuntimeTemplate(rt_operation,op.template)
+			rt.createRuntimeTemplate(rt_operation,op.template)
 		}
-		this.setUpDefaults(rt_operation)
+		rt.setUpDefaults(rt_operation)
 	}
 }
 
 rt.resolve = function(rt_operation, attr, attribute) {
-	if (this.attr_backmap[attr]) {
-		var map = this.attr_backmap[attr]
+	if (rt.attr_backmap[attr]) {
+		var map = rt.attr_backmap[attr]
 		map[attribute] = rt_operation.name
 	}
 	switch (attr) {
@@ -94,7 +94,7 @@ rt.setUpDefaults = function(rt_operation) {
 	rt_operation.initialized = false
 	rt_operation.meta = {}
 
-	this.setUpDurations(rt_operation)
+	rt.setUpDurations(rt_operation)
 }
 
 /**
