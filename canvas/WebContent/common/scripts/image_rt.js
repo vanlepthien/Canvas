@@ -203,10 +203,11 @@ image_rt.loadImages = function(callback) {
 			req.overrideMimeType("image/svg+xml");
 			req.img_cnt = img_cnt
 			req.image_entry = image_entry
-			req.onload = function() {
-				if (this.status === 200) {
-					var svg_element = this.responseXML.documentElement
-					var fName = this.image_entry.name
+			req.onload = function(event) {
+				var request = event.target
+				if (request.status === 200) {
+					var svg_element = request.responseXML.documentElement
+					var fName = request.image_entry.name
 					$(svg_element).attr("id", fName)
 					var svg_children = $(svg_element).children()
 					if (svg_children.length > 1) {
@@ -214,7 +215,7 @@ image_rt.loadImages = function(callback) {
 						var g = $(svg_element).children()[0]
 						$(g).append(svg_children)
 					}
-					// this.image_entry.imageinfo.svgelement = svg_element
+					// request.image_entry.imageinfo.svgelement = svg_element
 
 					// The following code placed the svg in the current document
 					// #svgDiv element instead, we will now keep the original
@@ -229,10 +230,10 @@ image_rt.loadImages = function(callback) {
 						$(svg_div).css("visibility", "hidden")
 					}
 					$(svg_div).append(svg)
-					this.image_entry.imageinfo.svg = svg
+					request.image_entry.imageinfo.svg = svg
 					// end of old code
-					svg.img_cnt = this.img_cnt
-					util.setSvgImageSize(svg, [this.image_entry.width, this.image_entry.height])
+					svg.img_cnt = request.img_cnt
+					util.setSvgImageSize(svg, [request.image_entry.width, request.image_entry.height])
 					svg.callback = callback
 					util.loadSVGToImage(svg,
 							function(img){
@@ -243,8 +244,8 @@ image_rt.loadImages = function(callback) {
 								}
 							})
 				} else {
-					console.error(this.statusText);
-					this.img_cnt.count--
+					console.error(request.statusText);
+					request.img_cnt.count--
 					if (img_cnt.count <= 0) {
 						callback()
 					}
@@ -260,12 +261,13 @@ image_rt.loadImages = function(callback) {
 			img.imageinfo = imageinfo
 			// imageinfo.image_entry = image_entry
 			img.img_cnt = img_cnt
-			img.onload = function() {
-				this.imageinfo.width = this.width
-				this.imageinfo.height = this.height
-				this.imageinfo.image = this
-				this.img_cnt.count--
-				if (this.img_cnt.count == 0) {
+			img.onload = function(event) {
+				var image = event.target
+				image.imageinfo.width = image.width
+				image.imageinfo.height = image.height
+				image.imageinfo.image = image
+				image.img_cnt.count--
+				if (image.img_cnt.count == 0) {
 					callback()
 				}
 			}

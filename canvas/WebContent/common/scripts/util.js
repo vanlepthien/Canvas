@@ -159,11 +159,11 @@ var contact = function(address) {
 	return true
 }
 
-//function include(loc) {
-//	if ($('script[src="' + loc + '"]').length == 0) {
-//		document.write('<script src="' + loc + '"><\/script>')
-//	}
-//}
+// function include(loc) {
+// if ($('script[src="' + loc + '"]').length == 0) {
+// document.write('<script src="' + loc + '"><\/script>')
+// }
+// }
 
 util.getElement = function(id, tag, ns) {
 	var element = document.getElementById(id)
@@ -222,11 +222,12 @@ util.getSvgImage = function (rt_operation, svg, func) {
 	rt_operation.loaded = false
 	img.rt_operation = rt_operation
 	var encoded = encodeURIComponent(svg.outerHTML)
-	img.onload = function(image) {
-	  image.rt_operation.loaded = true 
-	  var elapsed = Date.now() - image.start
-	  console.log("Elapsed: "+elapsed+ " "+image.rt_operation.name)
-	  func(image)
+	img.onload = function(event) {
+		var image = event.target
+		image.rt_operation.loaded = true 
+		var elapsed = Date.now() - image.start
+		console.log("Elapsed: "+elapsed+ " "+image.rt_operation.name)
+		func(image)
 	}
 	img.start = Date.now()
 	img.src = "data:image/svg+xml," + encoded
@@ -236,10 +237,11 @@ util.loadSVGToImage =  function(svg, callback){
 	var img = new Image()
 	svg.image = img
 	var encoded = encodeURIComponent(svg.outerHTML)
-	img.onload = function(image) {
-	  var elapsed = Date.now() - image.start
-	  console.log("Elapsed: "+elapsed+ " "+image.svg_element.id)
-	  callback(image)
+	img.onload = function(event) {
+		var image = event.target
+		var elapsed = Date.now() - image.start
+		console.log("Elapsed: "+elapsed+ " "+image.svg_element.id)
+		callback(image)
 	}
 	img.svg_element = svg
 	img.start = Date.now()

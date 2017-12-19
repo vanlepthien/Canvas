@@ -853,7 +853,6 @@ ops.vimeo = {
 		 * vimeo
 		 * 
 		 * @param rt_operation
-		 * @param rt_operation
 		 * @returns
 		 * 
 		 * Unlike most other operations, this just dynamically loads the video
