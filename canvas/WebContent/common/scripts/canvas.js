@@ -1,5 +1,7 @@
 /**
- * 
+ *
+ * Copyright 2017 William Van Lepthien 
+ *
  */
 'use strict'
 
