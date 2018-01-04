@@ -25,7 +25,7 @@ function preload() {
 	runNextInitialization("loadImages")
 }
 
-function init() {
+function initcanvas() {
 	// This must be run by a button click to activate audios on mobile devices
 	image_rt.setRuntimeImages()
 	media_rt.loadAudio()
@@ -45,7 +45,7 @@ var initializations = {
 			console.log("Start button")
 		} else {
 			console.log("No Start button")
-			init()
+			initcanvas()
 		}
 	}
 }
@@ -63,7 +63,7 @@ function makeButtonVisible() {
 
 function runapp() {
 	if ($("#start_button")) {
-		$("#start_button").attr("hidden", "hidden")
+		$("#start_button").hide()
 	}
 	draw()
 }

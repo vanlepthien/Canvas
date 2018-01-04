@@ -67,9 +67,12 @@ media_rt.createRuntimeAudio = function() {
 
 media_rt.loadAudio = function() {
 	$("#audios").children("audio").each(function() {
-		this.load()
-		this.play()
-		this.pause()
+		var promise = this.play()
+		if( promise !== undefined){
+			promise.then(_ => {
+				this.pause()
+			})
+		}
 	})
 }
 

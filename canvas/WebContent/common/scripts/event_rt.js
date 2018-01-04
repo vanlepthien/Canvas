@@ -41,10 +41,14 @@ event_rt.run = function() {
 					if (typeof rt_operation == 'string') {
 						rt_operation = operations[rt_operation]
 					}
-					console.log(current_time+" Event Time: "+event_time.toFixed(2)+" diff: "+diff+": Stopping "+ rt_operation.name )
-					delete running[rt_operation.name]
-					rt_operation.terminate = true
-					run(rt_operation)
+					if(rt_operation){
+						console.log(current_time+" Event Time: "+event_time.toFixed(2)+" diff: "+diff+": Stopping "+ rt_operation.name )
+						delete running[rt_operation.name]
+						rt_operation.terminate = true
+						run(rt_operation)
+					} else {
+						console.log(current_time+" Event Time: "+event_time.toFixed(2)+" diff: "+diff+": Attrempt to stop "+ event.operation + " failed. Could not find operation." )
+					}
 				}
 			}
 			for ( var ix in event_list) {
