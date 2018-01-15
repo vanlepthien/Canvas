@@ -164,4 +164,9 @@ function SortedMap() {
 		var value = this.map[key]
 		return [ key, value ]
 	}
+	
+	this.clean = function(){
+		this.map = {}
+		this.keyList = []
+	}
 }

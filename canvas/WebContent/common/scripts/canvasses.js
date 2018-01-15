@@ -3,7 +3,8 @@
 // canvasses defined in globals.js
 
 canvasses.generateCanvasses = function(id, model_canvas) {
-	var dimensions = canvasses.getGlobalDimensions(model_canvas)
+	
+	var dimensions = defaults.canvas
 	var runtime = Runtime()
 	var distances = []
 	var distanceMap = {}

@@ -1,7 +1,7 @@
 /**
- *
- * Copyright 2017 William Van Lepthien 
- *
+ * 
+ * Copyright 2017 William Van Lepthien
+ * 
  */
 'use strict'
 
@@ -16,7 +16,19 @@ var nominal_tick = 0
 function preload() {
 	// start button should be hidden, but make sure
 	// TODO: dynamically create start button here?
+	
+	if ($("#start_button").length) {
+		console.log("Start button")
+	} else {
+		console.log("No Start button")
+		initialize()
+	}
+}
 
+function initialize(){
+	if ($("#start_button").length) {
+		$("#start_button").css("display","none")
+	}
 	image_rt.createRuntimeImages()
 	media_rt.createRuntimeAudio()
 	media_rt.createRuntimeVideo()
@@ -41,12 +53,7 @@ var initializations = {
 	},
 	// if html has start button, let it initialize things
 	"init" : function() {
-		if ($("#start_button").length) {
-			console.log("Start button")
-		} else {
-			console.log("No Start button")
-			initcanvas()
-		}
+		initcanvas()
 	}
 }
 
@@ -58,12 +65,12 @@ function runNextInitialization(initializer) {
 }
 
 function makeButtonVisible() {
-	$("#start_button").removeAttr("hidden")
+	$("#start_button").css("display","initial")
 }
 
 function runapp() {
 	if ($("#start_button")) {
-		$("#start_button").hide()
+		$("#start_button").css("display","none")
 	}
 	draw()
 }
@@ -93,18 +100,18 @@ function buildImageEntry(name, configuration) {
 	return entry
 }
 
-//function loadLocalSvg(xml, img, imageSize, onload) {
-//	var xml = rt_operation.svg
-//	img = new Image();
-//	xml = insertImageSize(xml, imageSize)
-//	var DOMURL = window.URL || window.webkitURL || window;
-//	var svg = new Blob([ xml ], {
-//		type : 'image/svg+xml'
-//	})
-//	var url = DOMURL.createObjectURL(svg)
-//	onload()
-//	img.src = url
-//}
+// function loadLocalSvg(xml, img, imageSize, onload) {
+// var xml = rt_operation.svg
+// img = new Image();
+// xml = insertImageSize(xml, imageSize)
+// var DOMURL = window.URL || window.webkitURL || window;
+// var svg = new Blob([ xml ], {
+// type : 'image/svg+xml'
+// })
+// var url = DOMURL.createObjectURL(svg)
+// onload()
+// img.src = url
+// }
 //
 
 var svg_regex = /([\s\S]*[<]svg[\s\S]*)(viewBox=)(\"|\')\s*(\S+)\s*(\S+)\s*(\S+)\s*(\S*)\s*\3([\s\S]*)/
