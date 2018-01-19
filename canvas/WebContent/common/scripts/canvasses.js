@@ -11,8 +11,8 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 	var div = $("#" + id).get(0)
 	var s = 0
 	var max_distance = Number.NEGATIVE_INFINITY
-	var width = screen.width
-	var height = screen.height
+	var width = dimensions.width
+	var height = dimensions.height
 	var top = 0
 	var left = 0
 	for ( var key in runtime) {
