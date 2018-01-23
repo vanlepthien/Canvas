@@ -3,8 +3,17 @@
 // canvasses defined in globals.js
 
 canvasses.generateCanvasses = function(id, model_canvas) {
-	
+
 	var dimensions = defaults.canvas
+	if (!dimensions) {
+		dimensions = {
+			width : window.screen.availableWidth,
+			height : window.screen.availableHeight,
+			top : 0,
+			left : 0,
+			generated : true,
+		}
+	}
 	var runtime = Runtime()
 	var distances = []
 	var distanceMap = {}
@@ -13,8 +22,21 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 	var max_distance = Number.NEGATIVE_INFINITY
 	var width = dimensions.width
 	var height = dimensions.height
-	var top = 0
-	var left = 0
+	if (!dimensions.generated) {
+		var ratio = dimensions.width / dimensions.height
+		var nominalwidth = window.screen.availHeight * ratio
+		var viewport = $("head meta[name='viewport']")
+		if (viewport.length > 0) {
+			$(viewport)
+					.attr(
+							"content",
+							"width="
+									+ nominalwidth
+									+ ", initial-scale=1.0, maximum-scale=1.0, user-scalable=0")
+		}
+	}
+	var top = dimensions.top || 0
+	var left = dimensions.left || 0
 	for ( var key in runtime) {
 		var rt_operation = runtime[key]
 		if ("distance" in rt_operation) {
@@ -175,6 +197,18 @@ canvasses.walkcanvasses = function(f) {
 			var canvas = zMap[oKey]
 			if (f(canvas)) {
 				return
+
+				
+
+								
+
+				
+
+												
+
+				
+
+								
 
 				
 

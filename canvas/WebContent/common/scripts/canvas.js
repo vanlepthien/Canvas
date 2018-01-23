@@ -19,16 +19,20 @@ function preload() {
 	
 	if ($("#start_button").length) {
 		console.log("Start button")
+		initializations.init = function() {
+			initcanvas()
+		}
 	} else {
 		console.log("No Start button")
-		initialize()
+		initializations.init = function() {
+			initcanvas()
+			initaudio()
+		}
 	}
+	initialize()
 }
 
 function initialize(){
-	if ($("#start_button").length) {
-		$("#start_button").css("display","none")
-	}
 	image_rt.createRuntimeImages()
 	media_rt.createRuntimeAudio()
 	media_rt.createRuntimeVideo()
@@ -38,8 +42,14 @@ function initialize(){
 }
 
 function initcanvas() {
-	// This must be run by a button click to activate audios on mobile devices
 	image_rt.setRuntimeImages()
+}
+
+function initaudio() {
+	// This must be run by a button click to activate audios on mobile devices
+	if ($("#start_button").length) {
+		$("#start_button").css("display","none")
+	}
 	media_rt.loadAudio()
 	runapp()
 }
@@ -52,9 +62,7 @@ var initializations = {
 		})
 	},
 	// if html has start button, let it initialize things
-	"init" : function() {
-		initcanvas()
-	}
+	"init" : function(){}
 }
 
 function runNextInitialization(initializer) {
