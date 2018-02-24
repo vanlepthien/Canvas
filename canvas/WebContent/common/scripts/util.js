@@ -366,6 +366,7 @@ util.setImageState = function(rt_operation){
 	}
 	for (var templateName in state_image.templates){
 		var sit = state_image.templates[templateName]
+		sit.operation = rt_operation
 		var mit = meta_image.templates[templateName]
 		var template = imagedef.template[templateName]
 		if(template.index){
@@ -399,14 +400,34 @@ util.setSvgTextValue = function(image_state, image_meta ,template, imageinfo){
 	}
 }
 
-util.setSvgFieldTemplate = function(image_state,image_meta,template, imageinfo){
+util.updateSvgTextValue = function(image_state, image_meta, template, imageinfo){
 	var svg = imageinfo.svg
-	var element = $(svg).find(image_meta.element) 
-	var pattern = image_meta.pattern
+	var element = $(svg).find(image_meta.element)[0]
+	var content = $(element).html()
+	var field = image_meta.field ? image_meta.field : template.field
+	var value
+	if(typeof image_meta.value == 'function'){
+		value = image_meta.value(image_state,image_meta)
+	} else {
+		value = image_meta.value
+	}
+	var replacement = util.replaceField(content,field,value)
+	$(element).html(replacement)
+}
+
+util.updateSvgFieldValue = function(image_state,image_meta,template, imageinfo){
+	var svg = imageinfo.svg
 	var attribute = image_meta.attribute
-	var value = image_meta.values[image_state.ix]
-	var field = image_meta.field
-	var replacement = util.replaceField(pattern,field,value)
+	var element = $(svg).find(image_meta.element)[0]
+	var content = $(element).attr(attribute)
+	var value
+	if(typeof image_meta.value == 'function'){
+		value = image_meta.value(image_state,image_meta)
+	} else {
+		value = image_meta.value
+	}
+	var field = image_meta.field ? image_meta.field : template.field
+	var replacement = util.replaceField(content,field,value)
 	$(element).attr(attribute, replacement )
 }
 
@@ -456,9 +477,12 @@ util.getInitialPosition = function(rt_operation){
 	} else {
 		y_align = y_alignment.center
 	}
+	
+	var width = rt_operation.state.width
+	var height = rt_operation.state.height
 
-	x = x += rt_operation.image.images[0].width * x_align
-	y = y += rt_operation.image.images[0].height * y_align
+	x = x += width * x_align
+	y = y += height * y_align
 	return [x,y]
 }
 
@@ -483,10 +507,10 @@ util.offCanvas = function(rt_operation){
 
 util.offCanvasActions = function(rt_operation){
 	if(util.offCanvas(rt_operation)){
-		if(rt_operation.events.off_canvas){
+		if(rt_operation.events && rt_operation.events.off_canvas){
 			rt_operation.events.off_canvas()
 		} else {
-			event_rt.createEvent("Stop","*",rt_operation)
+			event_rt.createEvent(event_rt.STOP,"*",rt_operation)
 		}
 		return true
 	}

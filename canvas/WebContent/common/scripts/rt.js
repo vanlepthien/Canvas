@@ -18,8 +18,8 @@ rt.createRuntime = function() {
 			var attribute = op[attr]
 			rt.resolve(rt_operation, attr, attribute)
 		}
-		if(op.imageset && op.template){
-			rt.createRuntimeTemplate(rt_operation,op.template)
+		if (op.imageset && op.template) {
+			rt.createRuntimeTemplate(rt_operation, op.template)
 		}
 		rt.setUpDefaults(rt_operation)
 	}
@@ -36,16 +36,17 @@ rt.resolve = function(rt_operation, attr, attribute) {
 		rt_operation.image = {}
 		if (imagemap[attribute]) {
 			for ( var iAttr in imagemap[attribute]) {
-				rt_operation.image[iAttr] = $.extend(true,{},imagemap[attribute][iAttr])
+				rt_operation.image[iAttr] = $.extend(true, {},
+						imagemap[attribute][iAttr])
 			}
 		}
 		break
 	}
-	case "template":{
+	case "template": {
 		// Template handled after imageset
 		break
 	}
-		
+
 	case "size": {
 		if (Array.isArray(attribute)) {
 			switch (attribute.length) {
@@ -77,13 +78,19 @@ rt.resolve = function(rt_operation, attr, attribute) {
 		}
 	}
 	default: {
-		rt_operation[attr] = attribute
+		if (Array.isArray(attribute)) {
+			rt_operation[attr] = attribute.slice(0)
+		} else if (attribute !== null && typeof attribute === 'object') {
+			rt_operation[attr] = Object.assign({}, attribute)
+		} else {
+			rt_operation[attr] = attribute
+		}
 	}
 	}
 }
 
-rt.createRuntimeTemplate = function(rt_operation, template){
-	for(var ix in template){
+rt.createRuntimeTemplate = function(rt_operation, template) {
+	for ( var ix in template) {
 		var image_entry = rt_operation.image.images[ix]
 		image_entry.template = jQuery.extend(true, {}, template[ix]);
 	}
@@ -92,7 +99,7 @@ rt.createRuntimeTemplate = function(rt_operation, template){
 rt.setUpDefaults = function(rt_operation) {
 
 	rt_operation.initialized = false
-	rt_operation.meta = {}
+	rt_operation.meta = rt_operation.meta || {}
 
 	rt.setUpDurations(rt_operation)
 }
@@ -175,4 +182,3 @@ rt.setUpDurations = function(rt_operation) {
 		}
 	}
 }
-

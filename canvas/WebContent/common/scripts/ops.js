@@ -63,16 +63,22 @@ ops.bounce = {
 			direction = 1
 		}
 
+
+		var state = rt_operation.state || {}
+
+		state.width = rt_operation.width || rt_operation.image.images[0].width || rt_operation.image.images[0].image.width
+		state.height = rt_operation.height
+		|| rt_operation.image.images[0].height|| rt_operation.image.images[0].image.height
+		
+		rt_operation.state = state
+		
+		// util.getInitialPosition reeuires rt_operation.state.width and
+		// rt_operation.state.height to be set
+		
 		var xy = util.getInitialPosition(rt_operation)
 
 		x = xy[0]
 		y = xy[1]
-
-		var state = {}
-
-		state.width = rt_operation.width || rt_operation.image.images[0].width
-		state.height = rt_operation.height
-				|| rt_operation.image.images[0].height
 
 		var x_left = x
 		var x_right = x + state.width
@@ -82,9 +88,8 @@ ops.bounce = {
 		state.x = x
 		state.y = y
 		state.direction = direction
-		rt_operation.state = state
 
-		var meta = {}
+		var meta = rt_operation.meta || {}
 		meta.top = top
 		meta.bottom = bottom
 		rt_operation.meta = meta
@@ -162,15 +167,34 @@ ops.move = {
 						var state = rt_operation.state
 			
 						if (state.prev) {
-							context.clearRect(state.prev.x - 5, state.prev.y - 5,
+							if (rt_operation.cycle) {
+								for ( var x_ix in state.prev.x_vector) {
+									for ( var y_ix in state.prev.y_vector) {
+										var clear_x = state.prev.x_vector[x_ix] - state.width * 0.1
+										var clear_y = state.prev.y_vector[y_ix] - state.height * 0.1
+										var clear_width = state.prev.width * 1.2
+										var clear_height = state.prev.height * 1.2
+										console.log("clear "+rt_operation.name+": ("+clear_x+", "+clear_y+", "+clear_width+", "+clear_height+")")
+										context.clearRect(clear_x, clear_y, clear_width, clear_height)
+// context.rect(clear_x,clear_y,clear_width,clear_height)
+// context.stroke()
+									}
+								}
+							} else {
+								context.clearRect(state.prev.x - 5, state.prev.y - 5,
 									state.prev.width + 10, state.prev.height + 10)
+							}
 						}
 			
 						if (rt_operation.cycle) {
 							for ( var x_ix in state.x_vector) {
 								for ( var y_ix in state.y_vector) {
-									context.drawImage(img, state.x_vector[x_ix],
-											state.y_vector[y_ix])
+									var draw_x = state.x_vector[x_ix] 
+									var draw_y = state.y_vector[y_ix] 
+									var draw_width = state.width
+									var draw_height = state.height
+									console.log("draw  "+rt_operation.name+": ("+draw_x+", "+draw_y+", "+draw_width+", "+draw_height+")")
+									context.drawImage(img, state.x_vector[x_ix],state.y_vector[y_ix])
 								}
 							}
 						} else {
@@ -182,12 +206,12 @@ ops.move = {
 		},
 
 		newState : function(rt_operation) {
-			var state = {}
-			state.width = rt_operation.width || rt_operation.image.images[0].width
+			var state = rt_operation.state || {}
+			state.width = rt_operation.width || rt_operation.image.images[0].width || rt_operation.image.images[0].image.width
 			state.height = rt_operation.height
-					|| rt_operation.image.images[0].height
+			|| rt_operation.image.images[0].height|| rt_operation.image.images[0].image.height
 			rt_operation.state = state
-			var meta = {}
+			var meta = rt_operation.meta || {}
 			meta.interval = 10
 			if (rt_operation.interval) {
 				meta.interval = rt_operation.interval
@@ -228,9 +252,9 @@ ops.move = {
 				state.y_pos -= rt_operation.canvas.width
 			}
 
-			state.x_vector = ops.move.getVector(state.x_pos, meta.width,
+			state.x_vector = ops.move.getVector(state.x_pos, state.width,
 					rt_operation.canvas.width)
-			state.y_vector = ops.move.getVector(state.y_pos, meta.height,
+			state.y_vector = ops.move.getVector(state.y_pos, state.height,
 					rt_operation.canvas.height)
 		},
 
@@ -293,7 +317,7 @@ ops.run = {
 		},
 		
 		newState: function(rt_operation){
-			rt_operation.state = {}
+			rt_operation.state = rt_operation.state || {}
 			for(var key in rt_operation){
 				if(!(typeof rt_operation[key] == "function")){
 					rt_operation.state[key] = rt_operation[key]
@@ -356,7 +380,7 @@ ops.fixed = {
 
 		newState : function(rt_operation) {
 
-			var state = {}
+			var state = rt_operation.state || {}
 			state.tick = tick
 			state.time = getCurrentTime()
 			state.image_ix = 0
@@ -375,7 +399,7 @@ ops.fixed = {
 				rt_operation.position = position
 			}
 
-			var meta = {}
+			var meta = rt_operation.meta  || {}
 
 			var xy = util.getInitialPosition(rt_operation)
 			state.x = meta.x = xy[0]
@@ -422,7 +446,7 @@ ops.text = {
 
 		newState : function(rt_operation) {
 			
-			var state = {}
+			var state = rt_operation.state || {}
 			
 			for(var key in rt_operation){
 				var type = typeof rt_operation[key]
@@ -459,9 +483,9 @@ ops.text = {
 				font_size = ' font-size="'+state.font_size+'" '
 			}
 			
-//			if(state.style){
-//				style = ' style="'+state.style+'" '
-//			}
+// if(state.style){
+// style = ' style="'+state.style+'" '
+// }
 
 			state.svg = '<svg width="'+state.width+'"'+
 							' height="'+state.height+'"'+
@@ -492,60 +516,61 @@ ops.text = {
 
 	}
 
-ops.marquee = {
-		run : function(rt_operation) {
-			if(rt_operation.terminate){
-				ops.marquee.inactivate(rt_operation)
-				return
-			}
-			if (!rt_operation.initialized) {
-				ops.marquee.newState(rt_operation)
-				rt_operation.initialized = true;
-				var meta = rt_operation.meta
-				var context = rt_operation.context
-				context.clearRect(0, 0, rt_operation.canvas.width,
-						rt_operation.canvas.height)
-				context.drawImage(rt_operation.image.images[0].image, meta.x,
-						meta.y)
-			}
-		},
-
-		newState : function(rt_operation) {
-			var dx = .1
-			var dy = 0
-
-			if (rt_operation.speed) {
-				dx = rt_operation.speed[0]
-				dy = rt_operation.speed[1]
-			}
-
-			var fill = "#000000"
-			if (rt_operation.fill) {
-				fill = rt_operation.fill
-			}
-
-			var stroke = "#000000"
-			if (rt_operation.stroke) {
-				stroke = rt_operation.stroke
-			}
-			var marquee = '<svg>' + '<text text-anchor=event_rt.START x="0%" y="50%" '
-					+ 'dy="' + dy + '" dx="' + dx + '" '
-			'class="text" font-family="sans-serif"' + ' stroke="' + stroke
-					+ '" fill="' + fill + '">' + rt_operation.text + '</text>'
-					+ '</svg>'
-		},
-		
-		inactivate : function(rt_operation) {
-			rt_operation.initialized = false
-			rt_operation.active = false
-			rt_operation.terminate = false
-			delete rt_operation.previous
-			if(rt_operation.context){
-				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
-			}
-		},
-
-	}
+// ops.marquee = {
+// run : function(rt_operation) {
+// if(rt_operation.terminate){
+// ops.marquee.inactivate(rt_operation)
+// return
+// }
+// if (!rt_operation.initialized) {
+// ops.marquee.newState(rt_operation)
+// rt_operation.initialized = true;
+// var meta = rt_operation.meta
+// var context = rt_operation.context
+// context.clearRect(0, 0, rt_operation.canvas.width,
+// rt_operation.canvas.height)
+// context.drawImage(rt_operation.image.images[0].image, meta.x,
+// meta.y)
+// }
+// },
+//
+// newState : function(rt_operation) {
+// var dx = .1
+// var dy = 0
+//
+// if (rt_operation.speed) {
+// dx = rt_operation.speed[0]
+// dy = rt_operation.speed[1]
+// }
+//
+// var fill = "#000000"
+// if (rt_operation.fill) {
+// fill = rt_operation.fill
+// }
+//
+// var stroke = "#000000"
+// if (rt_operation.stroke) {
+// stroke = rt_operation.stroke
+// }
+// var marquee = '<svg>' + '<text text-anchor=event_rt.START x="0%" y="50%" '
+// + 'dy="' + dy + '" dx="' + dx + '" '
+// 'class="text" font-family="sans-serif"' + ' stroke="' + stroke
+// + '" fill="' + fill + '">' + rt_operation.text + '</text>'
+// + '</svg>'
+// },
+//		
+// inactivate : function(rt_operation) {
+// rt_operation.initialized = false
+// rt_operation.active = false
+// rt_operation.terminate = false
+// delete rt_operation.previous
+// if(rt_operation.context){
+// rt_operation.context.clearRect(0, 0, rt_operation.canvas.width,
+// rt_operation.canvas.height)
+// }
+// },
+//
+// }
 
 ops.pan = {
 		default_fields:  ["x","y"],
@@ -588,11 +613,11 @@ ops.pan = {
 		},
 
 		newState : function(rt_operation) {
-			var state = {}
+			var state = rt_operation.state || {}
 			state.x = 0
 			state.y = 0
 			rt_operation.state = state
-			var meta = {}
+			var meta = rt_operation.meta || {}
 			meta.width = rt_operation.width || rt_operation.image.images[0].width
 					|| rt_operation.image.images[0].image.width
 			meta.height = rt_operation.height
@@ -704,10 +729,10 @@ ops.sound = {
 		newState : function(rt_operation) {
 			var rt_audios = RuntimeAudio()
 			var rt_audioset = rt_audios[rt_operation.audioset]
-			rt_operation.state = {}
-			rt_operation.state.sound_iteration = 0
+			rt_operation.state = rt_operation.state || {}
+			rt_operation.state.sound_iteration = rt_operation.state.sound_iteration || 0
 			rt_operation.state.current_audio = rt_audioset.audios[rt_operation.state.sound_iteration]
-			rt_operation.state.switch_audio = false
+			rt_operation.state.switch_audio = rt_operation.state.switch_audio || false
 			rt_operation.state.current_audio.operation = rt_operation
 			rt_operation.state.current_audio.play()
 			console.log("Playing "
@@ -788,8 +813,8 @@ ops.video = {
 		},
 
 		newState : function(rt_operation) {
-			rt_operation.state = {}
-			rt_operation.state.video_iteration = 0
+			rt_operation.state = rt_operation.state || {}
+			rt_operation.state.video_iteration = rt_operation.state.video_iteration || 0
 			rt_operation.state.current_video = rt_operation.videos[rt_operation.state.video_iteration]
 			rt_operation.state.switch_video = rt_operation.switch_video
 			rt_operation.state.current_video.play()
@@ -940,12 +965,12 @@ ops.vimeo = {
 			$(iframe).css("left", left)
 			$(iframe).css("z-index", 1000)
 
-			var meta = {}
-			meta.iframe = iframe
+// var meta = {}
+// meta.iframe = iframe
 
 			try {
 				var player = new Vimeo.Player(iframe)
-				meta.player = player
+// meta.player = player
 
 				if (rt_operation.erase) {
 					player.on("ended", function(status) {
