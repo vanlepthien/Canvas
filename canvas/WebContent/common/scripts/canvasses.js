@@ -100,12 +100,6 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 	$(".drawing_canvas").click(function(event) {
 		canvasses.clickOnCanvas(event)
 	})
-	// $(".drawing_canvas").mouseleave(function(event) {
-	// canvasses.mouseEvent(event)
-	// })
-	// $(".drawing_canvas").mouseout(function(event) {
-	// canvasses.mouseEvent(event)
-	// })
 	$(".drawing_canvas").mousemove(function(event) {
 		canvasses.mousemoveOnCanvas(event)
 	})
@@ -203,37 +197,6 @@ canvasses.walkcanvasses = function(f) {
 			var canvas = zMap[oKey]
 			if (f(canvas)) {
 				return
-
-				
-
-								
-
-				
-
-			}
-		}
-	}
-}
-
-canvasses.walkcanvasses2 = function(event, f) {
-	var canvas_map = CanvasMap()
-	var zKeys = Object.keys(canvas_map).sort().reverse()
-	for ( var zIx in zKeys) {
-		var zKey = zKeys[zIx]
-		var zMap = canvas_map[zKey]
-		var oKeys = Object.keys(zMap).sort().reverse()
-		for ( var oIx in oKeys) {
-			var oKey = oKeys[oIx]
-			var canvas = zMap[oKey]
-			if (f(event, canvas)) {
-				return
-
-				
-
-								
-
-				
-
 			}
 		}
 	}
@@ -296,57 +259,12 @@ canvasses.clickOnCanvas = function(event) {
 		}
 	})
 }
-// This function is called when you click the canvas.
-
-canvasses.mouseEvent = function(event) {
-	event = event || window.event
-	var screenX = event.clientX
-	var screenY = event.clientY
-	console.log("MouseEvent: " + event.type)
-
-	canvasses.walkcanvasses2(event, function(event, src) {
-
-		var xy = canvasses.screenToCanvasPosition(src, screenX, screenY)
-
-		if (xy == undefined) {
-			return false
-		}
-
-		var x = xy[0]
-		var y = xy[1]
-
-		var dx = x - src.offsetLeft
-		var dy = y - src.offsetTop
-
-		var ctx = src.getContext("2d")
-
-		var c = ctx.getImageData(dx, dy, 1, 1).data;
-
-		if (canvasses.transparent(c)) {
-			return false
-		} else {
-			var runtime = Runtime()
-			var rt_operation = runtime[src.id]
-			// Clicks ignored if handler not defined for visible layer
-			if (rt_operation.events) {
-				if (rt_operation.events[event.type]) {
-					console.log("  executing " + rt_operation.name + " "
-							+ event.type)
-					rt_operation.events[event.type](rt_operation)
-				}
-			}
-			if (debug) {
-				console.log(event.type + " " + src.id)
-			}
-			return true
-		}
-	})
-}
 
 canvasses.mouseEnter = function(event) {
 	event = event || window.event
 	var screenX = event.clientX
 	var screenY = event.clientY
+
 	canvasses.walkcanvasses(function(src) {
 
 		var xy = canvasses.screenToCanvasPosition(src, screenX, screenY)
@@ -431,82 +349,74 @@ canvasses.mousemoveOnCanvas = function(event) {
 	var screenX = event.clientX
 	var screenY = event.clientY
 
-	canvasses
-			.walkcanvasses(function(src) {
-				var xy = canvasses
-						.screenToCanvasPosition(src, screenX, screenY)
+	canvasses.walkcanvasses(function(src) {
+		var xy = canvasses.screenToCanvasPosition(src, screenX, screenY)
 
-				if (xy == undefined) {
-					return false
-				}
+		if (xy == undefined) {
+			return false
+		}
 
-				var x = xy[0]
-				var y = xy[1]
+		var x = xy[0]
+		var y = xy[1]
 
-				var id = src.id
-				var dx = x - src.offsetLeft
-				var dy = y - src.offsetTop
+		var id = src.id
+		var dx = x - src.offsetLeft
+		var dy = y - src.offsetTop
 
-				var ctx = src.getContext("2d")
+		var ctx = src.getContext("2d")
 
-				var c = ctx.getImageData(dx, dy, 1, 1).data;
+		var c = ctx.getImageData(dx, dy, 1, 1).data;
 
-				if (canvasses.transparent(c)) {
-					canvasses.overCanvas = ""
-					return false
-				} else {
-					canvasses.overCanvas = src.id
-					if (debug) {
-						var xx = Math.round(x)
-						var yy = Math.round(y)
-						var screenXX = Math.round(screenX)
-						var screenYY = Math.round(screenY)
-						console.log("over " + src.id + " x=" + xx + " y=" + yy
-								+ " screenX=" + screenXX + " screenY="
-								+ screenYY)
-					}
-					var runtime = Runtime()
-					var rt_operation = runtime[src.id]
-
-					if (canvasses.mouseenter_operation) {
-						if (rt_operation.name != canvasses.mouseenter_operation.name) {
-							var remove_operation = true
-							if (canvasses.mouseenter_operation.events.mouseleave) {
-								if (debug) {
-									console
-											.log("executing "
-													+ canvasses.mouseenter_operation.name
-													+ " mouseleave")
-								}
-								remove_operation = canvasses.mouseenter_operation.events
-										.mouseleave(
-												canvasses.mouseenter_operation,
-												rt_operation)
-							}
-							if (remove_operation) {
-								delete canvasses.mouseenter_operation
-							}
+		if (canvasses.transparent(c)) {
+			canvasses.overCanvas = ""
+			return false
+		} else {
+			canvasses.overCanvas = src.id
+			if (debug) {
+				var xx = Math.round(x)
+				var yy = Math.round(y)
+				var screenXX = Math.round(screenX)
+				var screenYY = Math.round(screenY)
+				console.log("over " + src.id + " x=" + xx + " y=" + yy
+						+ " screenX=" + screenXX + " screenY=" + screenYY)
+			}
+			var runtime = Runtime()
+			var rt_operation = runtime[src.id]
+			if (canvasses.mouseenter_operation) {
+				if (rt_operation.name != canvasses.mouseenter_operation.name) {
+					var remove_operation = true
+					if (canvasses.mouseenter_operation.events.mouseleave) {
+						if (debug) {
+							console.log("executing "
+								+ canvasses.mouseenter_operation.name
+								+ " mouseleave")
 						}
+						remove_operation = canvasses.mouseenter_operation.events
+								.mouseleave(canvasses.mouseenter_operation, rt_operation)
 					}
-
-					if (rt_operation.events) {
-						if (rt_operation.events.mouseenter) {
-							if (debug) {
-								console.log("executing " + rt_operation.name
-										+ " mouseenter")
-							}
-							rt_operation.events.mouseenter(rt_operation)
-							canvasses.mouseenter_operation = rt_operation
-						}
+					if (remove_operation) {
+						delete canvasses.mouseenter_operation
 					}
-
-					if (debug) {
-						console.log("mouseenter " + src.id)
-					}
-
-					return true
 				}
-			})
+			}
+
+			if (rt_operation.events) {
+				if (rt_operation.events.mouseenter) {
+					if (debug) {
+						console.log("executing " + rt_operation.name
+							+ " mouseenter")
+					}
+					rt_operation.events.mouseenter(rt_operation)
+					canvasses.mouseenter_operation = rt_operation
+				}
+			}
+			if (debug) {
+				console.log("mouseenter " + src.id)
+			}
+
+			return true
+		}
+	})
 
 }
 

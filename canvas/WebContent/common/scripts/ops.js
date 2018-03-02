@@ -355,7 +355,7 @@ ops.fixed = {
 			var state = rt_operation.state
 			var fields = ops.fixed.default_fields
 			if(state.fields){
-				fields = fields.concat(state.fields)
+				fields = fields.concat(state.fields) 
 			}
 			if(util.redraw(rt_operation,fields)){
 				rt_operation.refresh = true

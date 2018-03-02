@@ -187,7 +187,6 @@ image_rt.loadImages = function(callback) {
 	if (img_cnt.count == 0) {
 		callback()
 		return
-
 	}
 	for ( var key in image_store) {
 		var image_entry = image_store[key]
@@ -230,7 +229,7 @@ image_rt.loadImages = function(callback) {
 					if (svg_div.length == 0) {
 						$("body").append("<div id=\"svgDiv\"></div>")
 						svg_div = $("#svgDiv")
-						$(svg_div).css("visibility", "hidden") 
+						$(svg_div).css("visibility", "hidden")
 					}
 					$(svg_div).append(svg)
 					request.image_entry.imageinfo.svg = svg
@@ -239,13 +238,14 @@ image_rt.loadImages = function(callback) {
 					util.setSvgImageSize(svg, [ request.image_entry.width,
 							request.image_entry.height ])
 					svg.callback = callback
-					util.loadSVGToImage(svg, function(img) {
-						var svg = img.svg_element
-						svg.img_cnt.count--
-						if (svg.img_cnt.count <= 0) {
-							svg.callback()
-						}
-					})
+					util.loadSVGToImage(svg,
+							function(img){
+								var svg = img.svg_element
+								svg.img_cnt.count--
+								if(svg.img_cnt.count <= 0){
+									svg.callback()
+								}
+							})
 				} else {
 					console.error(request.statusText);
 					request.img_cnt.count--
