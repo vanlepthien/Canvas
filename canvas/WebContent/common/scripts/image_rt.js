@@ -26,7 +26,8 @@ image_rt.createRuntimeImages = function() {
 		var images = {}
 		if (Array.isArray(imageset.image)) {
 			for ( var ix in imageset.image) {
-				images[ix] = image_rt.buildImageEntry(imageset.image[ix], shared)
+				images[ix] = image_rt.buildImageEntry(imageset.image[ix],
+						shared)
 			}
 		} else if (typeof imageset.image == "object") {
 			$.extend(true, images, imageset.image)
@@ -63,7 +64,8 @@ image_rt.resolveUrl = function(key, instance) {
 	var type = instance.type
 	var local_url
 	if (!url && !name) {
-		throw "Configuration error in imageset:'" + key + "' - neither url or name defined."
+		throw "Configuration error in imageset:'" + key
+				+ "' - neither url or name defined."
 	}
 	var url_url
 	if (!url) {
@@ -185,6 +187,7 @@ image_rt.loadImages = function(callback) {
 	if (img_cnt.count == 0) {
 		callback()
 		return
+
 	}
 	for ( var key in image_store) {
 		var image_entry = image_store[key]
@@ -227,22 +230,22 @@ image_rt.loadImages = function(callback) {
 					if (svg_div.length == 0) {
 						$("body").append("<div id=\"svgDiv\"></div>")
 						svg_div = $("#svgDiv")
-						$(svg_div).css("visibility", "hidden")
+						$(svg_div).css("visibility", "hidden") 
 					}
 					$(svg_div).append(svg)
 					request.image_entry.imageinfo.svg = svg
 					// end of old code
 					svg.img_cnt = request.img_cnt
-					util.setSvgImageSize(svg, [request.image_entry.width, request.image_entry.height])
+					util.setSvgImageSize(svg, [ request.image_entry.width,
+							request.image_entry.height ])
 					svg.callback = callback
-					util.loadSVGToImage(svg,
-							function(img){
-								var svg = img.svg_element
-								svg.img_cnt.count--
-								if(svg.img_cnt.count <= 0){
-									svg.callback()
-								}
-							})
+					util.loadSVGToImage(svg, function(img) {
+						var svg = img.svg_element
+						svg.img_cnt.count--
+						if (svg.img_cnt.count <= 0) {
+							svg.callback()
+						}
+					})
 				} else {
 					console.error(request.statusText);
 					request.img_cnt.count--

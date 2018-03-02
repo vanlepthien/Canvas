@@ -18,7 +18,7 @@ event_rt.STOP = "Stop"
 event_rt.run = function() {
 	var events = Events()
 	var running = Running()
-	var operations = Operation()
+	var runtime = Runtime()
 	var current_time = getCurrentTime().toFixed(2)
 //	console.log("Current time: "+current_time+
 //			" tickToSeconds("+tick+"): "+ tickToSeconds(tick)+ 
@@ -39,7 +39,7 @@ event_rt.run = function() {
 				if (event.type == event_rt.STOP) {
 					var rt_operation = event.operation
 					if (typeof rt_operation == 'string') {
-						rt_operation = operations[rt_operation]
+						rt_operation = runtime[rt_operation]
 					}
 					if(rt_operation){
 						console.log(current_time+" Event Time: "+event_time.toFixed(2)+" diff: "+diff+": Stopping "+ rt_operation.name )

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 132">
+	<defs>
+		<style id="text_style">.cls-2{fill:${color};font-size:120px;font-family:sans-serif, monospace;}</style>
+	</defs>
+	<title>text</title>
+	<g id="Layer_2" data-name="Layer 2">
+		<g id="Shell">
+			<text id="text_value" class="cls-2" transform="translate(0 100)">abcdefghijklmnop</text>
+		</g>
+	</g>
+</svg>
