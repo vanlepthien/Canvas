@@ -148,7 +148,6 @@ image_rt.imageCnt = 0
 
 image_rt.setRuntimeImages = function() {
 	var runtime = Runtime();
-	var imageMap = RuntimeImage()
 	var images = Images();
 	for ( var key in runtime) {
 		var rt_operation = runtime[key]
@@ -168,7 +167,7 @@ image_rt.setRuntimeImages = function() {
 					clone.image = cloned_image
 					console.log(svg)
 					console.log(clone)
-					$(svg).parent().append(clone)
+//					$(svg).parent().append(clone)
 					rt_operation.image.images[ix].image = {}
 					rt_operation.image.images[ix].image.svg = clone
 				} else {

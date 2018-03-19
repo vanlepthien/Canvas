@@ -277,7 +277,9 @@ function run(rt_operation) {
 				rt_operation.context = context
 			}
 		}
-		// console.log("Invoking "+rt_operation.name+"::"+op_name)
+		if(debug){
+			console.log("Invoking "+rt_operation.name+"::"+rt_operation.operation)
+		}
 		try {
 			ops[rt_operation.operation].run(rt_operation)
 		} catch (e) {

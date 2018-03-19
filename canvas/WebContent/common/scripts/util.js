@@ -390,6 +390,29 @@ util.setSvgFieldValue = function(image_state,image_meta,template, imageinfo){
 	$(element).attr(image_meta.attribute, image_meta.values[image_state.ix] )
 }
 
+util.setSvgCellValue = function(svg,element_id,template,value,rt_operation){
+	var element = $(svg).find(element_id)
+	var val = ""
+	if(typeof(template.value) === 'function'){
+		val = template.value(rt_operation,value)
+	} else {
+		val = value
+	}
+	$(element).html(val)
+}
+
+util.setSvgStyleValue = function(svg,element_id,template,value,rt_operation){
+	var element = $(svg).find(element_id)
+	var val = ""
+	if(typeof(template.value) === 'function'){
+		val = template.value(rt_operation,value)
+	} else {
+		val = value
+	}
+	$(element).css(template.field,val)
+}
+
+
 util.setSvgTextValue = function(image_state, image_meta ,template, imageinfo){
 	var svg = imageinfo.svg
 	var element = $(svg).find(image_meta.element)

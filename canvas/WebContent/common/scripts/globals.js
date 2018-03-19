@@ -8,6 +8,8 @@ canvas_base.event = new SortedMap()
 
 canvas_base.imageset = {}
 
+canvas_base.template = {}
+
 canvas_base.audioset = {}
 
 canvas_base.videoset = {}
@@ -65,6 +67,7 @@ canvasses.overCanvas = ""
 
 var Runtime = function(){return canvas_base.runtime}
 var Events = function(){return canvas_base.event}
+var Templates = function(){return canvas_base.template}
 var Running = function(){return canvas_base.running}
 var ImageSet = function(){return canvas_base.imageset}
 var AudioSet = function(){return canvas_base.audioset}

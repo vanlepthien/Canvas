@@ -7,8 +7,8 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 	var dimensions = defaults.canvas
 	if (!dimensions) {
 		dimensions = {
-			width : window.screen.availableWidth,
-			height : window.screen.availableHeight,
+			width : document.documentElement.clientWidth,
+			height : document.documentElement.clientHeight,
 			top : 0,
 			left : 0,
 			generated : true,
@@ -249,6 +249,13 @@ canvasses.clickOnCanvas = function(event) {
 			// Clicks ignored if handler not defined for visible layer
 			if (rt_operation.events) {
 				if (rt_operation.events.click) {
+					if(!rt_operation.state){ // state should always be defined, but...
+						rt_operation.state = {}
+					}
+					var state = rt_operation.state
+					state.click = []
+					state.click.x = dx
+					state.click.y = dy
 					rt_operation.events.click(rt_operation)
 				}
 			}
