@@ -26,7 +26,6 @@ ops.bounce = {
 						state.y)
 			}
 		}
-		util.setPrevious(rt_operation)
 	},
 
 	newState : function(rt_operation) {
@@ -136,7 +135,7 @@ ops.bounce = {
 }
 
 ops.move = {
-		default_fields:  ["image_ix","width","height","x","y"],
+		default_fields:  ["image_ix","width","height","x","y", "hspeed", "vspeed"],
 		
 		run : function(rt_operation) {
 			if(rt_operation.terminate){
@@ -165,25 +164,36 @@ ops.move = {
 						context.globalAlpha = 1.0
 						
 						var state = rt_operation.state
+						var previous = rt_operation.previous
 			
-						if (state.prev) {
+						if (previous) {
 							if (rt_operation.cycle) {
-								for ( var x_ix in state.prev.x_vector) {
-									for ( var y_ix in state.prev.y_vector) {
-										var clear_x = state.prev.x_vector[x_ix] - state.width * 0.1
-										var clear_y = state.prev.y_vector[y_ix] - state.height * 0.1
-										var clear_width = state.prev.width * 1.2
-										var clear_height = state.prev.height * 1.2
-										console.log("clear "+rt_operation.name+": ("+clear_x+", "+clear_y+", "+clear_width+", "+clear_height+")")
+								for ( var x_ix in state.x_vector) {
+									for ( var y_ix in state.y_vector) {
+										var clear_x = state.x_vector[x_ix] - (5+Math.abs(state.hspeed))
+										var clear_y = state.y_vector[y_ix] - (5+Math.abs(state.vspeed))
+										var clear_width = previous.width *  2*(5+Math.abs(state.hspeed))
+										var clear_height = previous.height * 2*(5+Math.abs(state.vspeed))
+										console.log("clear "+rt_operation.name+": ("+clear_x+", "+clear_y+", "+(clear_x+clear_width)+", "+(clear_y+clear_height)+")")
 										context.clearRect(clear_x, clear_y, clear_width, clear_height)
 // context.rect(clear_x,clear_y,clear_width,clear_height)
 // context.stroke()
 									}
 								}
 							} else {
-								context.clearRect(state.prev.x - 5, state.prev.y - 5,
-									state.prev.width + 10, state.prev.height + 10)
+								context.clearRect(
+										previous.x - (5+Math.abs(state.hspeed)), 
+										previous.y - (5+Math.abs(state.vspeed)),
+										previous.width + 2*(5+Math.abs(state.hspeed)), 
+										previous.height +2*(5+Math.abs(state.vspeed)))
 							}
+						} else {
+							context.clearRect(
+									state.x - (5+Math.abs(state.hspeed)), 
+									state.y - (5+Math.abs(state.vspeed)),
+									state.width + 2*(5+Math.abs(state.hspeed)), 
+									state.height + 2*(5+Math.abs(state.vspeed))
+									)
 						}
 			
 						if (rt_operation.cycle) {
@@ -207,6 +217,9 @@ ops.move = {
 
 		newState : function(rt_operation) {
 			var state = rt_operation.state || {}
+			var speed = util.getSpeed(rt_operation)
+			state.hspeed = speed.hspeed
+			state.vspeed = speed.vspeed
 			state.width = rt_operation.width || rt_operation.image.images[0].width || rt_operation.image.images[0].image.width
 			state.height = rt_operation.height
 			|| rt_operation.image.images[0].height|| rt_operation.image.images[0].image.height
@@ -232,8 +245,9 @@ ops.move = {
 		nextState : function(rt_operation) {
 			var state = rt_operation.state
 			var meta = rt_operation.meta
-			state.prev = state
 			var speed = util.getSpeed(rt_operation)
+			state.hspeed = speed.hspeed
+			state.vspeed = speed.vspeed
 			state.x = (state.x + speed.hspeed) % rt_operation.canvas.width
 			state.y = (state.y + speed.vspeed) % rt_operation.canvas.height
 			var image_cnt = Object.keys(rt_operation.image.images).length

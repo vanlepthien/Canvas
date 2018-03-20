@@ -375,7 +375,7 @@ util.setImageState = function(rt_operation){
 			sit.ix = util.getIntervalIx(sit,mit.interval,mit.size)
 		}
 		if(template.method){
-			util[template.method](sit, mit, template,imagedef.image)
+			util[template.method](sit, mit, template,imagedef.image, rt_operation)
 		}
 	}
 }
@@ -412,52 +412,52 @@ util.setSvgStyleValue = function(svg,element_id,template,value,rt_operation){
 	$(element).css(template.field,val)
 }
 
-
-util.setSvgTextValue = function(image_state, image_meta ,template, imageinfo){
-	var svg = imageinfo.svg
-	var element = $(svg).find(image_meta.element)
-	if(typeof image_meta.value == 'function'){
-		$(element).html(image_meta.value(image_state, image_meta))
+util.setSvgAttributeValue = function(svg,element_id,template,value,rt_operation){
+	var element = $(svg).find(element_id)
+	var val = ""
+	if(typeof(template.value) === 'function'){
+		val = template.value(rt_operation,value)
 	} else {
-		$(element).html(image_meta.value)
+		val = value
 	}
+	$(element).attr(template.field,val)
 }
 
-util.updateSvgTextValue = function(image_state, image_meta, template, imageinfo){
+
+util.setSvgTextValue = function(image_state, image_meta ,template, imageinfo, rt_operation){
 	var svg = imageinfo.svg
-	var element = $(svg).find(image_meta.element)[0]
-	var content = $(element).html()
-	var field = image_meta.field ? image_meta.field : template.field
-	var value
-	if(typeof image_meta.value == 'function'){
-		value = image_meta.value(image_state,image_meta)
-	} else {
-		value = image_meta.value
-	}
-	var replacement = util.replaceField(content,field,value)
-	$(element).html(replacement)
+	var element_id = image_meta.element
+	var value = image_meta.value
+	util.setSvgCellValue(svg, element_id,template, value, rt_operation)
+// var element = $(svg).find(image_meta.element)
+// if(typeof image_meta.value == 'function'){
+// $(element).html(image_meta.value(image_state, image_meta))
+// } else {
+// $(element).html(image_meta.value)
+// }
 }
 
-util.updateSvgFieldValue = function(image_state,image_meta,template, imageinfo){
+util.setSvgCssValue = function(image_state, image_meta, template, imageinfo, rt_operation){
 	var svg = imageinfo.svg
-	var attribute = image_meta.attribute
-	var element = $(svg).find(image_meta.element)[0]
-	var content = $(element).attr(attribute)
-	var value
-	if(typeof image_meta.value == 'function'){
-		value = image_meta.value(image_state,image_meta)
-	} else {
-		value = image_meta.value
-	}
-	var field = image_meta.field ? image_meta.field : template.field
-	var replacement = util.replaceField(content,field,value)
-	$(element).attr(attribute, replacement )
+	var element_id = image_meta.element
+	var value = image_meta.value
+	util.setSvgStyleValue(svg,element_id,template,value,rt_operation)
+// var content = $(element).html()
+// var field = image_meta.field ? image_meta.field : template.field
+// var value
+// if(typeof image_meta.value == 'function'){
+// value = image_meta.value(image_state,image_meta)
+// } else {
+// value = image_meta.value
+// }
+// var replacement = util.replaceField(content,field,value)
+// $(element).html(replacement)
 }
 
-util.replaceField = function(string,field,value){
-		var keystring = "${"+field+"}"
-		return string.split(keystring).join(value)
-}
+// util.replaceField = function(string,field,value){
+// var keystring = "${"+field+"}"
+// return string.split(keystring).join(value)
+// }
 
 util.getInitialPosition = function(rt_operation){
 	var x = Number.MAX_VALUE
@@ -580,9 +580,4 @@ util.redraw =  function(rt_operation, fields){
 	}	
 	rt_operation.previous = previous
 	return retval
-}
-
-util.setPrevious =  function(rt_operation){
-	var state = rt_operation.state
-	state.previous = state
 }
