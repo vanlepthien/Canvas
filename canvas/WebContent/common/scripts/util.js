@@ -488,6 +488,9 @@ util.getInitialPosition = function(rt_operation){
 
 	var x_align,
 		y_align
+		
+	var x_shift = 0
+	var y_shift = 0
 
 	if (align[0] in x_alignment) {
 		x_align = x_alignment[align[0]]
@@ -501,11 +504,19 @@ util.getInitialPosition = function(rt_operation){
 		y_align = y_alignment.center
 	}
 	
-	var width = rt_operation.state.width
-	var height = rt_operation.state.height
+	var width = rt_operation.state.width 
+	var height = rt_operation.state.height 
+	
+	if(x_align != 0){
+		x_shift = width * x_align
+	}
+	
+	if(y_align != 0){
+		y_shift = width * y_align
+	}
 
-	x = x += width * x_align
-	y = y += height * y_align
+	x = x += x_shift
+	y = y += y_shift
 	return [x,y]
 }
 
@@ -524,8 +535,9 @@ util.offCanvas = function(rt_operation){
 	}
 	var y_bottom = y + rt_operation.state.height
 	if (y_bottom < 0){
-		return 0
+		return true
 	}
+	return false
 }
 
 util.offCanvasActions = function(rt_operation){
@@ -538,6 +550,14 @@ util.offCanvasActions = function(rt_operation){
 		return true
 	}
 	return false
+}
+
+util.getFileType = function(file){
+	var last = file.lastIndexOf(".")
+	if(last == -1){
+		return ""
+	}
+	return file.substring(last)
 }
 
 util.getViewbox = function(svg) {
