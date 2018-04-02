@@ -49,13 +49,11 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 	distances.sort(function(a, b) {
 		return a - b
 	}).reverse()
-	var zix = 1
 	var prev_d = Number.MAX_VALUE;
 	for ( var ix in distances) {
 		var dd = distances[ix]
 		if (prev_d != dd) {
-			distanceMap[dd] = zix
-			zix++
+			distanceMap[dd] = 1100 - dd
 			prev_d = dd
 		}
 	}
@@ -64,7 +62,7 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 		var rt_operation = runtime[key]
 		if ("usecanvas" in rt_operation) {
 			var base_element = runtime[rt_operation.usecanvas]
-			rt_operation["canvas"] = base_element.canvas
+			rt_operation.canvas = base_element.canvas
 		} else if ("distance" in rt_operation) {
 			var c = document.createElement("canvas")
 			div.appendChild(c)
@@ -197,6 +195,7 @@ canvasses.walkcanvasses = function(f) {
 			var canvas = zMap[oKey]
 			if (f(canvas)) {
 				return
+
 			}
 		}
 	}
@@ -249,10 +248,7 @@ canvasses.clickOnCanvas = function(event) {
 			// Clicks ignored if handler not defined for visible layer
 			if (rt_operation.events) {
 				if (rt_operation.events.click) {
-					if(!rt_operation.state){ // state should always be defined, but...
-						rt_operation.state = {}
-					}
-					var state = rt_operation.state
+					var state = rt_operation.state || {}
 					state.click = []
 					state.click.x = dx
 					state.click.y = dy
@@ -356,74 +352,80 @@ canvasses.mousemoveOnCanvas = function(event) {
 	var screenX = event.clientX
 	var screenY = event.clientY
 
-	canvasses.walkcanvasses(function(src) {
-		var xy = canvasses.screenToCanvasPosition(src, screenX, screenY)
+	canvasses
+			.walkcanvasses(function(src) {
+				var xy = canvasses
+						.screenToCanvasPosition(src, screenX, screenY)
 
-		if (xy == undefined) {
-			return false
-		}
-
-		var x = xy[0]
-		var y = xy[1]
-
-		var id = src.id
-		var dx = x - src.offsetLeft
-		var dy = y - src.offsetTop
-
-		var ctx = src.getContext("2d")
-
-		var c = ctx.getImageData(dx, dy, 1, 1).data;
-
-		if (canvasses.transparent(c)) {
-			canvasses.overCanvas = ""
-			return false
-		} else {
-			canvasses.overCanvas = src.id
-			if (debug) {
-				var xx = Math.round(x)
-				var yy = Math.round(y)
-				var screenXX = Math.round(screenX)
-				var screenYY = Math.round(screenY)
-				console.log("over " + src.id + " x=" + xx + " y=" + yy
-						+ " screenX=" + screenXX + " screenY=" + screenYY)
-			}
-			var runtime = Runtime()
-			var rt_operation = runtime[src.id]
-			if (canvasses.mouseenter_operation) {
-				if (rt_operation.name != canvasses.mouseenter_operation.name) {
-					var remove_operation = true
-					if (canvasses.mouseenter_operation.events.mouseleave) {
-						if (debug) {
-							console.log("executing "
-								+ canvasses.mouseenter_operation.name
-								+ " mouseleave")
-						}
-						remove_operation = canvasses.mouseenter_operation.events
-								.mouseleave(canvasses.mouseenter_operation, rt_operation)
-					}
-					if (remove_operation) {
-						delete canvasses.mouseenter_operation
-					}
+				if (xy == undefined) {
+					return false
 				}
-			}
 
-			if (rt_operation.events) {
-				if (rt_operation.events.mouseenter) {
+				var x = xy[0]
+				var y = xy[1]
+
+				var id = src.id
+				var dx = x - src.offsetLeft
+				var dy = y - src.offsetTop
+
+				var ctx = src.getContext("2d")
+
+				var c = ctx.getImageData(dx, dy, 1, 1).data;
+
+				if (canvasses.transparent(c)) {
+					canvasses.overCanvas = ""
+					return false
+				} else {
+					canvasses.overCanvas = src.id
 					if (debug) {
-						console.log("executing " + rt_operation.name
-							+ " mouseenter")
+						var xx = Math.round(x)
+						var yy = Math.round(y)
+						var screenXX = Math.round(screenX)
+						var screenYY = Math.round(screenY)
+						console.log("over " + src.id + " x=" + xx + " y=" + yy
+								+ " screenX=" + screenXX + " screenY="
+								+ screenYY)
 					}
-					rt_operation.events.mouseenter(rt_operation)
-					canvasses.mouseenter_operation = rt_operation
-				}
-			}
-			if (debug) {
-				console.log("mouseenter " + src.id)
-			}
+					var runtime = Runtime()
+					var rt_operation = runtime[src.id]
+					if (canvasses.mouseenter_operation) {
+						if (rt_operation.name != canvasses.mouseenter_operation.name) {
+							var remove_operation = true
+							if (canvasses.mouseenter_operation.events.mouseleave) {
+								if (debug) {
+									console
+											.log("executing "
+													+ canvasses.mouseenter_operation.name
+													+ " mouseleave")
+								}
+								remove_operation = canvasses.mouseenter_operation.events
+										.mouseleave(
+												canvasses.mouseenter_operation,
+												rt_operation)
+							}
+							if (remove_operation) {
+								delete canvasses.mouseenter_operation
+							}
+						}
+					}
 
-			return true
-		}
-	})
+					if (rt_operation.events) {
+						if (rt_operation.events.mouseenter) {
+							if (debug) {
+								console.log("executing " + rt_operation.name
+										+ " mouseenter")
+							}
+							rt_operation.events.mouseenter(rt_operation)
+							canvasses.mouseenter_operation = rt_operation
+						}
+					}
+					if (debug) {
+						console.log("mouseenter " + src.id)
+					}
+
+					return true
+				}
+			})
 
 }
 

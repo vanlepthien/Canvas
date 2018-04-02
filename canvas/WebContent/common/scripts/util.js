@@ -380,6 +380,78 @@ util.setImageState = function(rt_operation){
 	}
 }
 
+util.setImageState3D = function(rt_operation){
+	var state = rt_operation.state
+	var meta = rt_operation.meta
+	var image_ix = state.image_ix
+	var imagedef = rt_operation.image.images[image_ix]
+	var meta_image
+	if(!meta.images){
+		meta.images = {}
+	}
+	if(meta.images[image_ix]){
+		meta_image = meta.images[image_ix]
+	} else {
+		meta_image = {}
+		meta_image.templates = {}
+		meta.images[image_ix] = meta_image
+		if(imagedef.template){
+			for(var templateName in imagedef.template){
+				var template = imagedef.template[templateName]
+				meta_image.templates[templateName] = {}
+				var mit = meta_image.templates[templateName]
+				for(var key in template){
+					mit[key] = template[key]
+				}
+				mit.interval = mit.interval || 10
+				if(template.values){
+					mit.size = template.values.length
+				}
+				mit.size = mit.size || template.period || 1
+				mit.url = imagedef.url
+			}
+		}
+	}
+	var state_image
+	if(!state.images){
+		state.images = {}
+	}
+	var first_time
+	if(state.images[image_ix]){
+		state_image = state.images[image_ix]
+	} else {
+		first_time = true
+		state_image = {}
+		state.images[image_ix] = state_image
+		state_image.width = imagedef.width
+		state_image.height = imagedef.height
+		state_image.templates = {}
+		if(imagedef.template){
+			for(var templateName in imagedef.template){
+				var template = imagedef.template[templateName]
+				state_image.templates[templateName] = {}
+				var sit = state_image.templates[templateName]
+				sit.ix = template.initialIx || 0
+				sit.tick = tick
+			}
+		}
+	}
+	for (var templateName in state_image.templates){
+		var sit = state_image.templates[templateName]
+		sit.operation = rt_operation
+		var mit = meta_image.templates[templateName]
+		var template = imagedef.template[templateName]
+		if(template.index){
+			sit.ix = util[template.index](sit,mit)
+		} else if(!first_time){
+			sit.ix = util.getIntervalIx(sit,mit.interval,mit.size)
+		}
+		if(template.method){
+			util[template.method](sit, mit, template,imagedef.image, rt_operation)
+		}
+	}
+}
+
 util.generateArrayIndex = function(image_state,image_meta){
 	return util.getIntervalIx(image_state,image_meta.interval, image_meta.size)
 }

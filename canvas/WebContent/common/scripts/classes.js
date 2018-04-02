@@ -45,7 +45,6 @@
 //RuntimeElement.validateParameters = function(pareameters){
 //	return true
 //}
-
 /**
  * Implement a Sorted map
  * 
@@ -164,9 +163,92 @@ function SortedMap() {
 		var value = this.map[key]
 		return [ key, value ]
 	}
-	
-	this.clean = function(){
+
+	this.clean = function() {
 		this.map = {}
 		this.keyList = []
 	}
 }
+
+function CImage(svg) {
+
+	this.prev = undefined
+	this.x = 0
+	this.y = 0
+	this.width = 0
+	this.height = 0
+	this.svg = svg
+}
+
+CImage.prototype.setSize = function(width, height){
+	this.width = width
+	this.height = height
+}
+
+/**
+ * Prepares active SVG file for template manipulation
+ * 
+ * @param prepared
+ *            Callback function: called when load finished. Parameters are
+ *            (loaded, image) loaded - true if svg loaded, false if not svg or
+ *            load failed image - contains the loaded image
+ * 
+ */
+CImage.prototype.getImage = function(template, callback) {
+	if (template) {
+		var svg_html = this.svg.outerHTML
+		this.temp_svg = $(svg_html)[0]
+		for ( var key in template) {
+			var t = template[key]
+			var element_id = t.element
+			util[t.method](temp_svg, element_id, t, cell.value, rt_operation)
+		}
+		this.loadSVGToImage(temp_svg, function(image) {
+			callback(true, image)
+		})
+	} else {
+		if (svg.image) {
+			callback(true, image)
+		}
+		this.loadSVGToImage(svg, function(image) {
+			callback(true, image)
+		})
+
+	}
+}
+
+CImage.prototype.loadSVGToImage =  function(svg, callback){
+	var viewBox = svg.attribute("viewbox")
+	var vb = viewbox.split(/,s*|\s+/)
+	if(this.width){
+		svg.attribute("width", this.width)
+	} else {
+		if(svg.attribute(width)){
+			this.width = svg.attribute("width")
+		} else {
+			this.width = vb[2]
+		}
+	}
+	if(this.height){
+		svg.attribute("height", this.height)
+	} else {
+		if(svg.attribute("height")){
+			this.height = svg.attribute("height")
+		} else {
+			this.width = vb[3]			
+		}
+	}
+	var img = new Image()
+	svg.image = img
+	var encoded = encodeURIComponent(svg.outerHTML)
+	img.onload = function(event) {
+		var image = event.target
+		var elapsed = Date.now() - image.start
+		console.log("Elapsed: "+elapsed+ " "+image.svg_element.id)
+		callback(image)
+	}
+	img.svg_element = svg
+	img.start = Date.now()
+	img.src = "data:image/svg+xml," + encoded
+}
+

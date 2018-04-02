@@ -22,6 +22,8 @@ canvas_base.runtime_videos = {}
 
 canvas_base.images = {}
 
+canvas_base.cimages = {}
+
 canvas_base.audios = {}
 
 canvas_base.videos = {}
@@ -76,6 +78,7 @@ var RuntimeImage = function(){return canvas_base.runtime_images}
 var RuntimeAudio = function(){return canvas_base.runtime_audios}
 var RuntimeVideo = function(){return canvas_base.runtime_videos}
 var Images = function(){return canvas_base.images}
+var CImages = function(){return canvas_base.cimages}
 var Audios = function(){return canvas_base.audios}
 var Videos = function(){return canvas_base.videos}
 var Operation = function(){return canvas_base.operation}
