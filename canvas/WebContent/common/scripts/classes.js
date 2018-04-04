@@ -180,9 +180,30 @@ function CImage(svg) {
 	this.svg = svg
 }
 
-CImage.prototype.setSize = function(width, height){
+CImage.prototype.setSize = function(width, height) {
 	this.width = width
 	this.height = height
+}
+
+CImage.prototype.getSVGSize = function() {
+	return util.getSVGImageSize(this.svg)
+}
+
+CImage.prototype.setZ = function(z) {
+	this.z = z
+}
+
+CImage.prototype.setXYZ = function(x,y,z) {
+	this.x = x
+	this.y = y
+	this.z = z
+}
+
+CImage.prototype.getSize = function() {
+	if (this.width && this.height) {
+		return [ this.width, this.height ]
+	}
+	return util.getSVGImageSize(this.svg)
 }
 
 /**
@@ -207,48 +228,63 @@ CImage.prototype.getImage = function(template, callback) {
 			callback(true, image)
 		})
 	} else {
-		if (svg.image) {
-			callback(true, image)
-		}
-		this.loadSVGToImage(svg, function(image) {
+		// if (this.svg.image) {
+		// callback(true, this.svg.image)
+		// }
+		this.loadSVGToImage(this.svg, function(image) {
 			callback(true, image)
 		})
 
 	}
 }
 
-CImage.prototype.loadSVGToImage =  function(svg, callback){
-	var viewBox = svg.attribute("viewbox")
-	var vb = viewbox.split(/,s*|\s+/)
-	if(this.width){
-		svg.attribute("width", this.width)
+CImage.prototype.loadSVGToImage = function(svg, callback) {
+	var viewBox = $(svg).attr("viewBox")
+	var vb = viewBox.split(/,s*|\s+/)
+	if (this.width) {
 	} else {
-		if(svg.attribute(width)){
-			this.width = svg.attribute("width")
+		if (svg.attribute(width)) {
+			this.width = $(svg).attr("width")
 		} else {
 			this.width = vb[2]
 		}
 	}
-	if(this.height){
-		svg.attribute("height", this.height)
+	if (this.height) {
 	} else {
-		if(svg.attribute("height")){
-			this.height = svg.attribute("height")
+		if ($(svg).attr("height")) {
+			this.height = $(svg).attr("height")
 		} else {
-			this.width = vb[3]			
+			this.width = vb[3]
 		}
 	}
-	var img = new Image()
-	svg.image = img
-	var encoded = encodeURIComponent(svg.outerHTML)
-	img.onload = function(event) {
-		var image = event.target
-		var elapsed = Date.now() - image.start
-		console.log("Elapsed: "+elapsed+ " "+image.svg_element.id)
-		callback(image)
-	}
-	img.svg_element = svg
-	img.start = Date.now()
-	img.src = "data:image/svg+xml," + encoded
-}
 
+	if (this.z > 1 && this.z <= 1000) {
+
+		$(svg).attr("width", this.width / this.z)
+		$(svg).attr("height", this.height / this.z)
+
+		var img = new Image()
+		svg.image = img
+		var encoded = encodeURIComponent(svg.outerHTML)
+		img.onload = function(event) {
+			var image = event.target
+			var elapsed = Date.now() - image.start
+			console.log("Elapsed: " + elapsed + " " + image.svg_element.id)
+			callback(image)
+		}
+		img.svg_element = svg
+		img.start = Date.now()
+		img.src = "data:image/svg+xml," + encoded
+	} else {
+		var img = new Image()
+		img.width = 0
+		img.height = 0
+		img.alt=""
+		img.onload = function(event) {
+			var image = event.target
+			callback(image)
+		}
+		img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs%3D"
+	}
+	
+}

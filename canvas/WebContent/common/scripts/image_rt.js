@@ -132,7 +132,7 @@ image_rt.isFileType = function(type) {
 	}
 }
 
-image_rt.isSvg = image_rt.isFileType(".svg")
+image_rt.isSVG = image_rt.isFileType(".svg")
 
 image_rt.buildImageEntry = function(name, shared) {
 	var entry = {
@@ -234,7 +234,7 @@ image_rt.loadImages = function(callback) {
 					request.image_entry.imageinfo.svg = svg
 					// end of old code
 					svg.img_cnt = request.img_cnt
-					util.setSvgImageSize(svg, [ request.image_entry.width,
+					util.setSVGImageSize(svg, [ request.image_entry.width,
 							request.image_entry.height ])
 					svg.callback = callback
 					util.loadSVGToImage(svg,

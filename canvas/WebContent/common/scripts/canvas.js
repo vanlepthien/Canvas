@@ -93,7 +93,7 @@ var isFileType = function(type) {
 	}
 }
 
-var isSvg = isFileType(".svg")
+var isSVG = isFileType(".svg")
 
 var loadedSVGs = 0
 var svgImages = {}
@@ -108,7 +108,7 @@ function buildImageEntry(name, configuration) {
 	return entry
 }
 
-// function loadLocalSvg(xml, img, imageSize, onload) {
+// function loadLocalSVG(xml, img, imageSize, onload) {
 // var xml = rt_operation.svg
 // img = new Image();
 // xml = insertImageSize(xml, imageSize)

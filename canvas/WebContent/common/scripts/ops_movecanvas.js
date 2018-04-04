@@ -5,83 +5,25 @@ ops.movecanvas = {
 
 	run : function(rt_operation) {
 		if(rt_operation.terminate){
-			ops.move.inactivate(rt_operation)
+			ops.movecanvas.inactivate(rt_operation)
 			return
 		}
 	
 		if (rt_operation.initialized) {
-			ops.move.nextState(rt_operation)
+			ops.movecanvas.nextState(rt_operation)
 		} else {
-			ops.move.newState(rt_operation)
+			ops.movecanvas.newState(rt_operation)
 			rt_operation.initialized = true
 		}
 		util.setImageState(rt_operation)
 		ops.movecanvas.updateState(rt_operation)
 		var state = rt_operation.state
-		var fields = ops.move.default_fields
+		var fields = ops.movecanvas.default_fields
 		if(state.fields){
 			fields = fields.concat(state.fields)
 		}
 		if(util.redraw(rt_operation, fields)){
-			if(!ops.movecanvas.redraw_canvas(rt_operation)){
-				ops.movecanvas.redraw_image(rt_operation)
-			}
-// util.getElementImage(rt_operation, state.image_ix,
-// function(img){
-// var rt_operation = img.rt_operation
-// var context = rt_operation.context
-// context.globalAlpha = 1.0
-//							
-// var state = rt_operation.state
-// var previous = rt_operation.previous
-//				
-// if (previous) {
-// if (rt_operation.cycle) {
-// for ( var x_ix in state.x_vector) {
-// for ( var y_ix in state.y_vector) {
-// var clear_x = state.x_vector[x_ix] - (5+Math.abs(state.xspeed))
-// var clear_y = state.y_vector[y_ix] - (5+Math.abs(state.yspeed))
-// var clear_width = previous.width * 2*(5+Math.abs(state.xspeed))
-// var clear_height = previous.height * 2*(5+Math.abs(state.yspeed))
-//									
-// console.log("clear "+rt_operation.name+": ("+clear_x+", "+clear_y+", "+
-// (clear_x+clear_width)+", "+(clear_y+clear_height)+")")
-// context.clearRect(clear_x, clear_y, clear_width, clear_height)
-// }
-// }
-// } else {
-// context.clearRect(
-// previous.x - (5+Math.abs(state.xspeed)),
-// previous.y - (5+Math.abs(state.yspeed)),
-// previous.width + 2*(5+Math.abs(state.xspeed)),
-// previous.height +2*(5+Math.abs(state.yspeed)))
-// }
-// } else {
-// context.clearRect(
-// state.x - (5+Math.abs(state.xspeed)),
-// state.y - (5+Math.abs(state.yspeed)),
-// state.width + 2*(5+Math.abs(state.xspeed)),
-// state.height + 2*(5+Math.abs(state.yspeed))
-// )
-// }
-//				
-// if (rt_operation.cycle) {
-// for ( var x_ix in state.x_vector) {
-// for ( var y_ix in state.y_vector) {
-// var draw_x = state.x_vector[x_ix]
-// var draw_y = state.y_vector[y_ix]
-// var draw_width = state.width
-// var draw_height = state.height
-// console.log("draw "+rt_operation.name+": ("+draw_x+", "+draw_y+","+
-// draw_width+", "+draw_height+")")
-// context.drawImage(img, state.x_vector[x_ix],state.y_vector[y_ix])
-// }
-// }
-// } else {
-// context.drawImage(img, state.x, state.y)
-// }
-// }
-// )
+			ops.movecanvas.redraw_image(rt_operation)
 		}
 	},
 
@@ -90,8 +32,16 @@ ops.movecanvas = {
 		var cimages = CImages()
 		var runtime_images = RuntimeImage()
 		var images = Images()
+		var operation = Operation()
+		
+		var state
 
-		var state = rt_operation.state || {}
+		if(rt_operation.state) {
+			state = rt_operation.state
+		} else {
+			state = {}
+			rt_operation.state = state
+		}
 		
 		state.images = state.images || {}
 
@@ -103,37 +53,43 @@ ops.movecanvas = {
 		state.rotation = rt_operation.rotation || 0
 		state.rotation_speed = rt_operation.rotation_speed || 0
 
-		var rt_image = runtime_images[rt_operation.imageset]
+		var rt_image = runtime_images[operation[rt_operation.name].imageset]
 		
 		for (var key in rt_image.images){
-			var iInfo = rt_image.image[key]
+			var iInfo = rt_image.images[key]
 			var fileName = iInfo.name
 			var iWidth = iInfo.width
 			var iHeight = iInfo.height
-			var iUrl = iInfo.url
-			if(cimages[iUrl]){
-				state.images[key] = cimages[iUrl]
+			var iURL = iInfo.url
+			if(cimages[iURL]){
+				state.images[key] = cimages[iURL]
 			} else {
 				var image = images[iURL]
 				if(image.type != "svg"){
 					console.log("CImage image must be SVG:")
 					console.log("    ops.movecanvas.newstate: imageset["+
 							rt_operation.imageset+"]["+key+"] url "+
-							iUrl);
-					throw "CImage image must be SVG. url: "+ iUrl
+							iURL);
+					throw "CImage image must be SVG. url: "+ iURL
 				}
 				var cimage = new CImage(image.imageinfo.svg)
+				if(iWidth && iHeight){
+					cimage.setSize(iWidth,iHeight)
+				}
 				state.cimages = state.cimages || []
 				state.cimages.push(cimage)
 			}
 		}
-		state.width = rt_operation.width 
-		state.height = rt_operation.height
+		
+		var svg_size = state.cimages[0].getSize()
+		
+		state.width = rt_operation.width || svg_size[0]
+		state.height = rt_operation.height || svg_size[1]
 
 		var xyz = util.getInitial3DPosition(rt_operation)
 		state.x = xyz[0]
 		state.y = xyz[1]
-		state.y = xyz[2]
+		state.z = xyz[2]
 
 		state.tick = tick
 
@@ -180,9 +136,9 @@ ops.movecanvas = {
 			state.y_pos -= rt_operation.canvas.width
 		}
 
-		state.x_vector = ops.move.getVector(state.x_pos, state.width,
+		state.x_vector = ops.movecanvas.getVector(state.x_pos, state.width,
 				rt_operation.canvas.width)
-		state.y_vector = ops.move.getVector(state.y_pos, state.height,
+		state.y_vector = ops.movecanvas.getVector(state.y_pos, state.height,
 				rt_operation.canvas.height)
 	},
 
@@ -213,16 +169,16 @@ ops.movecanvas = {
 		var previous = rt_operation.previous
 		var state = rt_operation.state
 		var change = []
-		if(previous.x != state.x || previous.y != state.y){
+		if(drawarea.x != state.x || drawarea.y != state.y){
 			change.push("xy")
 		}
-		if(previous.z != state.z){
+		if(drawarea.z != state.z){
 			if (change.length > 0) {
 				return false
 			}
 			change.push("z")
 		}
-		if(previous.rotation != state.rotation){
+		if(drawarea.rotation != state.rotation){
 			if (change.length > 0) {
 				return false
 			}
@@ -232,10 +188,10 @@ ops.movecanvas = {
 		switch(option){
 		case "xy":
 			{
-			var dx = (state.x  - previous.x) * (1 / z)
-			var dy = (state.y - previous.y) * (1 / z)
-			state.canvas_position.x = previous.canvas_position.x + dx
-			state.canvas_position.y = previous.canvas_position.y + dy
+			var dx = (state.x  - drawarea.x) * (1 / z)
+			var dy = (state.y - drawarea.y) * (1 / z)
+			state.canvas_position.x = drawarea.canvas_position.x + dx
+			state.canvas_position.y = drawarea.canvas_position.y + dy
 			var ctx = rt_operation.canvas.context
 			
 			// TODO Put stuff here
@@ -262,22 +218,35 @@ ops.movecanvas = {
 		var operation = Operation()
 		var templates = Templates()
 		var state = rt_operation.state
-		var cimage = state.cimages[state.imageIx]
+		var cimage = state.cimages[state.image_ix]
 		var template = null
 		if(templates[operation[rt_operation.name]]){
-			var template = templates[operation[rt_operation.name]][state.imageIx] ||templates[operation[rt_operation.name]][0]||null
+			var template = templates[operation[rt_operation.name]][state.image_ix] ||templates[operation[rt_operation.name]][0]||null
 		}
 		cimage.setSize(state.width,state.height)
+		cimage.setXYZ(state.x,state.y,state.z)
 		cimage.getImage(template,
-			function(image){
+			function(status,image){
 				var context = rt_operation.context
-				if(rt_operation.previous){
-					previous =rt_operation.previous
-					context.clearRect(previous.drawarea.x,previous.drawarea.y,previous.drawarea.width,previous.drawarea.height)
+				if(rt_operation.state.drawarea){
+					var drawarea = rt_operation.state.drawarea
+					var x = Math.max(0,drawarea.x - 3)
+					var y = Math.max(0,drawarea.y - 3)
+					var width = Math.min(drawarea.width +6, rt_operation.canvas.width - x)
+					var height = Math.min(drawarea.height +6, rt_operation.canvas.height - y)
+					context.clearRect(x, y, width, height)
 				} else {
 					context.clearRect(0, 0, rt_operation.canvas.width,
 							rt_operation.canvas.height)
 				}
+				var state = rt_operation.state
+				state.drawarea = {}
+				var drawarea = state.drawarea
+				drawarea.x = state.x
+				drawarea.y = state.y
+				drawarea.width = image.width
+				drawarea.height = image.height
+				context.drawImage(image, drawarea.x, drawarea.y)
 			}
 		)
 	},
