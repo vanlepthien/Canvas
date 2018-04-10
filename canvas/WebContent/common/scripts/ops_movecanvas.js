@@ -159,9 +159,12 @@ ops.movecanvas = {
 		rt_operation.active = false
 		rt_operation.terminate = false
 		delete rt_operation.previous
+		
 		if (rt_operation.context) {
-			rt_operation.context.clearRect(0, 0, rt_operation.canvas.width,
+			if(typeof rt_operation.clear == 'undefined' || rt_operation.clear){
+				context.clearRect(0, 0, rt_operation.canvas.width,
 					rt_operation.canvas.height)
+			}
 		}
 	},
 	
@@ -195,7 +198,7 @@ ops.movecanvas = {
 			var ctx = rt_operation.canvas.context
 			
 			// TODO Put stuff here
-			ctx(save)
+			// ctx(save)
 			return true
 			}
 		case "z":
@@ -228,16 +231,9 @@ ops.movecanvas = {
 		cimage.getImage(template,
 			function(status,image){
 				var context = rt_operation.context
-				if(rt_operation.state.drawarea){
-					var drawarea = rt_operation.state.drawarea
-					var x = Math.max(0,drawarea.x - 3)
-					var y = Math.max(0,drawarea.y - 3)
-					var width = Math.min(drawarea.width +6, rt_operation.canvas.width - x)
-					var height = Math.min(drawarea.height +6, rt_operation.canvas.height - y)
-					context.clearRect(x, y, width, height)
-				} else {
+				if(typeof rt_operation.clear == 'undefined' || rt_operation.clear){
 					context.clearRect(0, 0, rt_operation.canvas.width,
-							rt_operation.canvas.height)
+						rt_operation.canvas.height)
 				}
 				var state = rt_operation.state
 				state.drawarea = {}

@@ -170,7 +170,7 @@ util.get3DSpeed = function(rt_operation) {
 	return {
 		xspeed : speed[0] * scale / interval_adjustment,
 		yspeed : speed[1] * scale / interval_adjustment,
-		zspeed : speed[2]
+		zspeed : speed[2] / interval_adjustment
 	}
 }
 

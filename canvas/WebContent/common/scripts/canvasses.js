@@ -82,7 +82,7 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 			}
 			var zzix = distanceMap[rt_operation.distance]
 			c.id = key
-			c.style.zIndex = zzix
+			c.style.zIndex = Math.floor(zzix)
 			c.width = width
 			c.height = height
 			c.style.position = "absolute"

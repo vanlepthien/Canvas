@@ -149,6 +149,8 @@ function generateId(inString) {
 var prev = Date.now()
 var prev_second_ticks = 0
 var interval_adjustment = 1
+var nominal_second = 1
+var prev_interval_ticks = 0
 
 function draw() {
 	var runtime = Runtime()
@@ -159,7 +161,7 @@ function draw() {
 		var elapsed = (now - prev) / 1000
 		if (elapsed > 1) {
 			// adjust at one second increments
-			var nominal_second = (tick - prev_second_ticks) / (60)
+			nominal_second = (tick - prev_second_ticks) / (60)
 			console.log("Time:" + (now - start) / 1000 + " tick: " + tick + " Tick seconds " +
 				tick / (60 * interval_adjustment))
 			console.log(" tickToSeconds("+tick+"): "+ tickToSeconds(tick))
@@ -170,6 +172,7 @@ function draw() {
 			console.log(" Old Interval Adjustment: " + interval_adjustment)
 			interval_adjustment = ((nominal_second / elapsed) + interval_adjustment) / 2
 			console.log("   New Interval Adjustment: " + interval_adjustment)
+			prev_interval_ticks = tick - prev_second_ticks
 			prev_second_ticks = tick
 			prev = now
 		}

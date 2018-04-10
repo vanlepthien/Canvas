@@ -687,6 +687,11 @@ ops.fill = {
 
 			var context = rt_operation.context
 			if (rt_operation.color) {
+				if(rt_operation.prev_color){
+					if(rt_operation.color == rt_operation.prev_color){
+						return
+					}
+				}
 				context.fillStyle = rt_operation.color
 			} else {
 				context.fillStyle = 'purple'
@@ -711,6 +716,7 @@ ops.fill = {
 			} else {
 				context.fillRect(0, 0, context.canvas.width, context.canvas.height)
 			}
+			rt_operation.prev_color = rt_operation.color
 		},
 		
 		inactivate : function(rt_operation) {

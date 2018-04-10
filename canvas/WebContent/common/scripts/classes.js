@@ -177,7 +177,10 @@ function CImage(svg) {
 	this.y = 0
 	this.width = 0
 	this.height = 0
-	this.svg = svg
+	this.svg = $(svg.outerHTML)[0]
+	// this.svg = svg
+	// var svg_html = this.svg.outerHTML
+	// this.temp_svg = $(svg_html)[0]
 }
 
 CImage.prototype.setSize = function(width, height) {
@@ -193,7 +196,7 @@ CImage.prototype.setZ = function(z) {
 	this.z = z
 }
 
-CImage.prototype.setXYZ = function(x,y,z) {
+CImage.prototype.setXYZ = function(x, y, z) {
 	this.x = x
 	this.y = y
 	this.z = z
@@ -279,12 +282,12 @@ CImage.prototype.loadSVGToImage = function(svg, callback) {
 		var img = new Image()
 		img.width = 0
 		img.height = 0
-		img.alt=""
+		img.alt = ""
 		img.onload = function(event) {
 			var image = event.target
 			callback(image)
 		}
 		img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs%3D"
 	}
-	
+
 }
