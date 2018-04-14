@@ -162,7 +162,7 @@ ops.movecanvas = {
 		
 		if (rt_operation.context) {
 			if(typeof rt_operation.clear == 'undefined' || rt_operation.clear){
-				context.clearRect(0, 0, rt_operation.canvas.width,
+				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width,
 					rt_operation.canvas.height)
 			}
 		}
