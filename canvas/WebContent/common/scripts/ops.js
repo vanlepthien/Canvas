@@ -301,6 +301,8 @@ ops.clear = {
 			var context = rt_operation.context
 			context.clearRect(0, 0, rt_operation.canvas.width,
 					rt_operation.canvas.height)
+			var running = Running()
+			delete running[rt_operation.name]
 		}
 	}
 

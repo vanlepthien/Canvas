@@ -61,8 +61,7 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 	for ( var key in runtime) {
 		var rt_operation = runtime[key]
 		if ("usecanvas" in rt_operation) {
-			var base_element = runtime[rt_operation.usecanvas]
-			rt_operation.canvas = base_element.canvas
+			continue
 		} else if ("distance" in rt_operation) {
 			var c = document.createElement("canvas")
 			div.appendChild(c)
@@ -93,6 +92,14 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 			// $(c).click(function(event){
 			// canvasses.clickOnThisCanvas(event)
 			// })
+		}
+	}
+	// Resolve "usecanvas" after canvasses defined
+	for ( var key in runtime) {
+		var rt_operation = runtime[key]
+		if ("usecanvas" in rt_operation) {
+			var base_element = runtime[rt_operation.usecanvas]
+			rt_operation.canvas = base_element.canvas
 		}
 	}
 	$(".drawing_canvas").click(function(event) {
