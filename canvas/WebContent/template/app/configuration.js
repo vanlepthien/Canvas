@@ -140,7 +140,7 @@ configuration["svgtemplate"] = {
 							interval:10,
 							transform: "ejs",
 							field: "color",
-							method: getSvgField,
+							method: getSVGField,
 							index: generateColorIndex
 						
 					},
@@ -150,7 +150,7 @@ configuration["svgtemplate"] = {
 							interval: 10,
 							transform : "element",
 							field : "rotate",
-							method: getSvgField,
+							method: getSVGField,
 							position: 0,
 							delta: 1,
 							index: generateRotationIndex

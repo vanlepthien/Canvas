@@ -117,6 +117,63 @@ util.getSpeed = function(rt_operation) {
 	}
 }
 
+util.getSpeed = function(rt_operation) {
+	var d
+	if ("distance" in rt_operation) {
+		d = rt_operation.distance
+		d = Math.max(1, d)
+	} else {
+		d = canvasses.max_distance
+	}
+	var scale = canvasses.max_distance / d;
+
+	var speed
+	if (rt_operation.speed) {
+		if (Array.isArray(rt_operation.speed)) {
+			speed = rt_operation.speed
+		} else {
+			var op = rt_operation.speed.speed
+			speed = op(rt_operation)
+		}
+	} else {
+		speed = [ 0, 0 ]
+	}
+	return {
+		hspeed : speed[0] * scale / interval_adjustment,
+		vspeed : speed[1] * scale / interval_adjustment
+	}
+}
+
+util.get3DSpeed = function(rt_operation) {
+	var d
+	if(rt_operation.state.z){
+		d = Math.max(1,rt_operation.state.z)
+	} else if ("distance" in rt_operation) {
+		d = Math.max(1, rt_operation.distance)
+	} else {
+		d = canvasses.max_distance
+	}
+	
+	var scale = 1000 / d;
+
+	var speed =[ 0, 0, 0 ]
+	if (rt_operation.speed) {
+		if(typeof rt_operation.speed == 'function'){
+			speed = rt_operation.speed(rt_operation)
+		} else if (Array.isArray(rt_operation.speed)) {
+			speed = rt_operation.speed
+		} else if (rt_operation.speed.speed){
+			// For backwards compatability
+			speed = rt_operation.speed.speed(rt_operation)
+		}
+	} 
+	return {
+		xspeed : speed[0] * scale / interval_adjustment,
+		yspeed : speed[1] * scale / interval_adjustment,
+		zspeed : speed[2] / interval_adjustment
+	}
+}
+
 util.toNumber = function(string) {
 	if (isNaN(string)) {
 		var isPercent = string.trim().slice(-1) == "%"
@@ -152,6 +209,26 @@ util.getPosition = function(rt_operation) {
 		}
 	}
 	return [ x, y ]
+}
+
+util.get3DPosition = function(rt_operation) {
+	var x = null
+	var y = null
+	var z = null
+	if ("position" in rt_operation) {
+		if (Array.isArray(rt_operation.position)) {
+			if (rt_operation.position.length > 0) {
+				x = util.valueToPosition(rt_operation.position[0], rt_operation.canvas.width)
+				if (rt_operation.position.length > 1) {
+					y = util.valueToPosition(rt_operation.position[1], rt_operation.canvas.height)
+				}
+			}
+		}
+	}
+	if(rt_operation.distance){
+		z = rt_operation.distance
+	} 
+	return [ x, y, z ]
 }
 
 var contact = function(address) {
@@ -191,7 +268,7 @@ util.getElementImage = function(rt_operation, ix, func) {
 	var image_entry = rt_operation.image.images[ix]
 	if (image_entry.image && image_entry.image.svg) {
 		// console.log("loading svg for "+rt_operation.name)
-		util.getSvgImage(rt_operation, image_entry.image.svg, func)
+		util.getSVGImage(rt_operation, image_entry.image.svg, func)
 		return
 	}
 	var img = image_entry.image
@@ -199,15 +276,15 @@ util.getElementImage = function(rt_operation, ix, func) {
 	func(img)
 }
 
-util.getSvgImage = function (rt_operation, svg, func) {
+util.getSVGImage = function (rt_operation, svg, func) {
 	var local
 	if (rt_operation.state.width && rt_operation.state.height) {
-		util.setSvgImageSize(svg, [rt_operation.state.width,rt_operation.state.height])
+		util.setSVGImageSize(svg, [rt_operation.state.width,rt_operation.state.height])
 	} else {
-		var imageSize = util.getSvgImageSize(svg)
+		var imageSize = util.getSVGImageSize(svg)
 		rt_operation.state.width = imageSize[0]
 		rt_operation.state.height = imageSize[1]
-		util.setSvgImageSize(svg, imageSize)
+		util.setSVGImageSize(svg, imageSize)
 	}
 	if(!rt_operation.refresh){
 		if(svg.image){
@@ -249,7 +326,7 @@ util.loadSVGToImage =  function(svg, callback){
 
 }
 
-util.getSvgImageSize = function (svg) {
+util.getSVGImageSize = function (svg) {
 	var imageSize = []
 	var width = $(svg).attr("width")
 	width = util.normalizeSize(width)
@@ -264,7 +341,7 @@ util.getSvgImageSize = function (svg) {
 	return [ width, height ]
 }
 
-util.setSvgImageSize = function (svg, imageSize) {
+util.setSVGImageSize = function (svg, imageSize) {
 	$(svg).attr("width", imageSize[0])
 	$(svg).attr("height", imageSize[1])
 }
@@ -380,17 +457,89 @@ util.setImageState = function(rt_operation){
 	}
 }
 
+util.setImageState3D = function(rt_operation){
+	var state = rt_operation.state
+	var meta = rt_operation.meta
+	var image_ix = state.image_ix
+	var imagedef = rt_operation.image.images[image_ix]
+	var meta_image
+	if(!meta.images){
+		meta.images = {}
+	}
+	if(meta.images[image_ix]){
+		meta_image = meta.images[image_ix]
+	} else {
+		meta_image = {}
+		meta_image.templates = {}
+		meta.images[image_ix] = meta_image
+		if(imagedef.template){
+			for(var templateName in imagedef.template){
+				var template = imagedef.template[templateName]
+				meta_image.templates[templateName] = {}
+				var mit = meta_image.templates[templateName]
+				for(var key in template){
+					mit[key] = template[key]
+				}
+				mit.interval = mit.interval || 10
+				if(template.values){
+					mit.size = template.values.length
+				}
+				mit.size = mit.size || template.period || 1
+				mit.url = imagedef.url
+			}
+		}
+	}
+	var state_image
+	if(!state.images){
+		state.images = {}
+	}
+	var first_time
+	if(state.images[image_ix]){
+		state_image = state.images[image_ix]
+	} else {
+		first_time = true
+		state_image = {}
+		state.images[image_ix] = state_image
+		state_image.width = imagedef.width
+		state_image.height = imagedef.height
+		state_image.templates = {}
+		if(imagedef.template){
+			for(var templateName in imagedef.template){
+				var template = imagedef.template[templateName]
+				state_image.templates[templateName] = {}
+				var sit = state_image.templates[templateName]
+				sit.ix = template.initialIx || 0
+				sit.tick = tick
+			}
+		}
+	}
+	for (var templateName in state_image.templates){
+		var sit = state_image.templates[templateName]
+		sit.operation = rt_operation
+		var mit = meta_image.templates[templateName]
+		var template = imagedef.template[templateName]
+		if(template.index){
+			sit.ix = util[template.index](sit,mit)
+		} else if(!first_time){
+			sit.ix = util.getIntervalIx(sit,mit.interval,mit.size)
+		}
+		if(template.method){
+			util[template.method](sit, mit, template,imagedef.image, rt_operation)
+		}
+	}
+}
+
 util.generateArrayIndex = function(image_state,image_meta){
 	return util.getIntervalIx(image_state,image_meta.interval, image_meta.size)
 }
 
-util.setSvgFieldValue = function(image_state,image_meta,template, imageinfo){
+util.setSVGFieldValue = function(image_state,image_meta,template, imageinfo){
 	var svg = imageinfo.svg
 	var element = $(svg).find(image_meta.element)
 	$(element).attr(image_meta.attribute, image_meta.values[image_state.ix] )
 }
 
-util.setSvgCellValue = function(svg,element_id,template,value,rt_operation){
+util.setSVGCellValue = function(svg,element_id,template,value,rt_operation){
 	var element = $(svg).find(element_id)
 	var val = ""
 	if(typeof(template.value) === 'function'){
@@ -401,7 +550,7 @@ util.setSvgCellValue = function(svg,element_id,template,value,rt_operation){
 	$(element).html(val)
 }
 
-util.setSvgStyleValue = function(svg,element_id,template,value,rt_operation){
+util.setSVGStyleValue = function(svg,element_id,template,value,rt_operation){
 	var element = $(svg).find(element_id)
 	var val = ""
 	if(typeof(template.value) === 'function'){
@@ -412,7 +561,7 @@ util.setSvgStyleValue = function(svg,element_id,template,value,rt_operation){
 	$(element).css(template.field,val)
 }
 
-util.setSvgAttributeValue = function(svg,element_id,template,value,rt_operation){
+util.setSVGAttributeValue = function(svg,element_id,template,value,rt_operation){
 	var element = $(svg).find(element_id)
 	var val = ""
 	if(typeof(template.value) === 'function'){
@@ -424,11 +573,11 @@ util.setSvgAttributeValue = function(svg,element_id,template,value,rt_operation)
 }
 
 
-util.setSvgTextValue = function(image_state, image_meta ,template, imageinfo, rt_operation){
+util.setSVGTextValue = function(image_state, image_meta ,template, imageinfo, rt_operation){
 	var svg = imageinfo.svg
 	var element_id = image_meta.element
 	var value = image_meta.value
-	util.setSvgCellValue(svg, element_id,template, value, rt_operation)
+	util.setSVGCellValue(svg, element_id,template, value, rt_operation)
 // var element = $(svg).find(image_meta.element)
 // if(typeof image_meta.value == 'function'){
 // $(element).html(image_meta.value(image_state, image_meta))
@@ -437,11 +586,11 @@ util.setSvgTextValue = function(image_state, image_meta ,template, imageinfo, rt
 // }
 }
 
-util.setSvgCssValue = function(image_state, image_meta, template, imageinfo, rt_operation){
+util.setSVGCssValue = function(image_state, image_meta, template, imageinfo, rt_operation){
 	var svg = imageinfo.svg
 	var element_id = image_meta.element
 	var value = image_meta.value
-	util.setSvgStyleValue(svg,element_id,template,value,rt_operation)
+	util.setSVGStyleValue(svg,element_id,template,value,rt_operation)
 // var content = $(element).html()
 // var field = image_meta.field ? image_meta.field : template.field
 // var value
@@ -518,6 +667,14 @@ util.getInitialPosition = function(rt_operation){
 	x = x += x_shift
 	y = y += y_shift
 	return [x,y]
+}
+
+util.getInitial3DPosition = function(rt_operation){
+	var x
+	var y
+	[x,y] = util.getInitialPosition(rt_operation)
+	var z = rt_operation.distance || 1000
+	return[x, y, z]
 }
 
 util.offCanvas = function(rt_operation){
@@ -600,4 +757,8 @@ util.redraw =  function(rt_operation, fields){
 	}	
 	rt_operation.previous = previous
 	return retval
+}
+
+util.getRotationSpeed = function(rt_operation){
+	return rt_operation.rotation_speed || 0
 }
