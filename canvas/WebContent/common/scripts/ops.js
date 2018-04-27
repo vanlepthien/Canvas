@@ -725,6 +725,7 @@ ops.fill = {
 			rt_operation.initialized = false
 			rt_operation.active = false
 			rt_operation.terminate = false
+			delete rt_operation.prev_color
 			delete rt_operation.previous
 			if(rt_operation.context){
 				rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
