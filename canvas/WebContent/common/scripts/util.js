@@ -762,3 +762,18 @@ util.redraw =  function(rt_operation, fields){
 util.getRotationSpeed = function(rt_operation){
 	return rt_operation.rotation_speed || 0
 }
+
+util.inactivate = function(rt_operation){
+    rt_operation.initialized = false
+    rt_operation.active = false
+    rt_operation.terminate = false
+    delete rt_operation.previous
+    if(rt_operation.context){
+        rt_operation.context.clearRect(0, 0, rt_operation.canvas.width, rt_operation.canvas.height)
+    }
+    if(rt_operation.quiesce){
+        if(typeof rt_operation.quiesce == "function"){
+            rt_operation.quiesce(rt_operation)
+        }
+    }
+}
