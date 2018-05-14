@@ -89,9 +89,6 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 			c.style.top = top + "px"
 			rt_operation.canvas = c
 			canvasses.addCanvas(c)
-			// $(c).click(function(event){
-			// canvasses.clickOnThisCanvas(event)
-			// })
 		}
 	}
 	// Resolve "usecanvas" after canvasses defined
@@ -192,11 +189,13 @@ canvasses.getScaledPosition = function(x, y, screenWidth, screenHeight, ratio) {
 
 canvasses.walkcanvasses = function(f) {
 	var canvas_map = CanvasMap()
-	var zKeys = Object.keys(canvas_map).sort().reverse()
+	var keys = Object.keys(canvas_map).map(Number);
+	var sKeys = keys.sort((a,b) => a-b)
+	var zKeys = sKeys.reverse()
 	for ( var zIx in zKeys) {
 		var zKey = zKeys[zIx]
 		var zMap = canvas_map[zKey]
-		var oKeys = Object.keys(zMap).sort().reverse()
+		var oKeys = Object.keys(zMap).map(Number).sort((a,b) => a-b).reverse()
 		for ( var oIx in oKeys) {
 			var oKey = oKeys[oIx]
 			var canvas = zMap[oKey]
@@ -207,20 +206,6 @@ canvasses.walkcanvasses = function(f) {
 		}
 	}
 }
-
-// canvasses.clickOnThisCanvas = function(event) {
-// var runtime = Runtime()
-// var rt_operation = runtime[event.id]
-// if (rt_operation.events) {
-// if (rt_operation.events.click) {
-// rt_operation.events.click(rt_operation)
-// }
-// }
-// if (debug) {
-// console.log("click " + event.id)
-// }
-// }
-//
 
 // This function is called when you click the canvas.
 
