@@ -606,6 +606,9 @@ ops.fill = {
         } else {
             context.fillStyle = 'purple'
         }
+        if(rt_operation.alpha){
+            context.globalAlpha = Math.max(0,Math.min(1,rt_operation.alpha))
+        }
         if ( rt_operation.shape ) {
             var shape = rt_operation.shape
             var func = shape["function"]

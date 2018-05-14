@@ -777,3 +777,11 @@ util.inactivate = function(rt_operation){
         }
     }
 }
+
+util.getOpKey = function(){
+    var key = ""
+    for (var i = 0; i < arguments.length; i++) {
+        key = key + "_" + arguments[i].toString()
+    }
+    return key
+}

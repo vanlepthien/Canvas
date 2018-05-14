@@ -219,13 +219,10 @@ ops.movecanvas = {
 
 	redraw_image: function(rt_operation){
 		var operation = Operation()
-		var templates = Templates()
 		var state = rt_operation.state
 		var cimage = state.cimages[state.image_ix]
-		var template = null
-		if(templates[operation[rt_operation.name]]){
-			var template = templates[operation[rt_operation.name]][state.image_ix] ||templates[operation[rt_operation.name]][0]||null
-		}
+		var imageDef = rt_operation.image.images[state.image_ix]
+		var template = imageDef.template
 		cimage.setSize(state.width,state.height)
 		cimage.setXYZ(state.x,state.y,state.z)
 		cimage.getImage(template,
