@@ -441,7 +441,14 @@ util.setImageState = function(rt_operation){
 			}
 		}
 	}
+	if (state_image.templates.init){
+	    var template = imagedef.template.init
+        util.runSVGInit(template, rt_operation)
+	}
 	for (var templateName in state_image.templates){
+	    if(templateName == "init"){
+	        continue
+	    }
 		var sit = state_image.templates[templateName]
 		sit.operation = rt_operation
 		var mit = meta_image.templates[templateName]
@@ -514,6 +521,9 @@ util.setImageState3D = function(rt_operation){
 		}
 	}
 	for (var templateName in state_image.templates){
+	    if(template_name == "init"){
+	        continue
+	    }
 		var sit = state_image.templates[templateName]
 		sit.operation = rt_operation
 		var mit = meta_image.templates[templateName]
@@ -533,10 +543,10 @@ util.generateArrayIndex = function(image_state,image_meta){
 	return util.getIntervalIx(image_state,image_meta.interval, image_meta.size)
 }
 
-util.setSVGFieldValue = function(image_state,image_meta,template, imageinfo){
-	var svg = imageinfo.svg
-	var element = $(svg).find(image_meta.element)
-	$(element).attr(image_meta.attribute, image_meta.values[image_state.ix] )
+util.setSVGIndexedFieldValue = function(image_state,image_meta,template, imageinfo){
+    var svg = imageinfo.svg
+    var element = $(svg).find(image_meta.element)
+    $(element).attr(image_meta.attribute, image_meta.values[image_state.ix] )
 }
 
 util.setSVGCellValue = function(svg,element_id,template,value,rt_operation){
@@ -551,14 +561,22 @@ util.setSVGCellValue = function(svg,element_id,template,value,rt_operation){
 }
 
 util.setSVGStyleValue = function(svg,element_id,template,value,rt_operation){
-	var element = $(svg).find(element_id)
-	var val = ""
-	if(typeof(template.value) === 'function'){
-		val = template.value(rt_operation,value)
-	} else {
-		val = value
-	}
-	$(element).css(template.field,val)
+    var element = $(svg).find(element_id)
+    var val = ""
+    if(typeof(template.value) === 'function'){
+        val = template.value(rt_operation,value)
+    } else {
+        val = value
+    }
+    $(element).css(template.field,val)
+}
+
+util.runSVGInit = function(template, rt_operation){
+    if(typeof(template.value) === 'function'){
+        template.value(rt_operation)
+    } else {
+        console.log("no 'value' function defined for template initializer invoked by "+rt_operation.name+".")
+    }
 }
 
 util.setSVGAttributeValue = function(svg,element_id,template,value,rt_operation){
@@ -572,6 +590,13 @@ util.setSVGAttributeValue = function(svg,element_id,template,value,rt_operation)
 	$(element).attr(template.field,val)
 }
 
+util.setSVGFieldValue = function(image_state,image_meta,template, imageinfo){
+    var svg = imageinfo.svg
+    var element_id = image_meta.element
+    var value = image_meta.value
+    var rt_operation = image_state.operation
+    util.setSVGAttributeValue(svg, element_id,template, value, rt_operation)
+}
 
 util.setSVGTextValue = function(image_state, image_meta ,template, imageinfo, rt_operation){
 	var svg = imageinfo.svg
@@ -784,4 +809,92 @@ util.getOpKey = function(){
         key = key + "_" + arguments[i].toString()
     }
     return key
+}
+
+util.getFont = function(element){
+    var font = $(element).css("font")
+    if(font){
+        return font
+    }
+    var fontStyle = $(element).css("font-style")
+    var fontVariant = $(element).css("font-variant")
+    var fontWeight = $(element).css("font-weight")
+    var fontSize = $(element).css("font-size")
+    var fontFamily = $(element).css("font-family")
+    return fontStyle + " " +fontVariant + " " +fontWeight + " " +fontSize + " " +fontFamily
+// font-style font-variant font-weight font-size/line-height font-family
+}
+
+util.createTextBox = function(elementArray, text, max_width){
+    var element = elementArray[0]
+    util.work = util.work || {}
+    util.work.canvas = util.work.canvas || document.createElement("canvas")
+    var context = util.work.canvas.getContext('2d')
+    var font= $(element).css("font") || util.getFont($(element))
+    context.font = font
+    var left = text
+    var chunks = []
+    var height = 0
+    var descent = 4
+    while(true){
+        var measure = context.measureText(left)
+        var width = measure.width
+        if(height == 0){
+        // get uniform height
+            descent = measure.fontBoundingBoxDescent
+            height = (measure.emHeightAscent + descent) 
+        }
+        if(width <= max_width ){
+            chunks.push(left)
+            break;
+        } 
+        var ratio = max_width / width
+        var next = Math.floor(left.length * ratio)
+        var check = left.substr(0,next)
+
+        while(true) {
+            measure = context.measureText(check)
+            width = measure.width
+            if(width <= max_width){
+                chunks.push(check)
+                left = left.substring(next)
+                break
+            }
+            var ratio = max_width / width
+            var next = Math.floor(check.length * ratio)
+            var check = left.substr(0,next)
+        }
+    
+    } 
+    
+    var x  = $(element).attr("x")
+    var y  = $(element).attr("y")
+    
+    var boxHeight = 0
+    for(var ix in chunks){
+        var chunk = chunks[ix]
+        var attr = {}
+        attr.x = parseFloat(x)
+        attr.y = parseFloat(y) + boxHeight
+        var tspan = util.createSVGElement("tspan",attr,chunk)
+        element.appendChild(tspan)
+        boxHeight += height
+    }
+    boxHeight += descent
+
+    var retVal = {
+            width: max_width,
+            height: boxHeight
+    }
+    return retVal
+}
+
+util.createSVGElement = function(tag,attributes,value){
+    var element = document.createElementNS("http://www.w3.org/2000/svg",tag)
+    for (var attrName in attributes){
+        element.setAttribute(attrName,attributes[attrName])
+    }
+    var text  = document.createTextNode(value)
+    element.textContent = value
+    return element    
 }
