@@ -33,6 +33,7 @@ function preload() {
 }
 
 function initialize(){
+    svg_rt.createRuntimeSVGImages()
 	image_rt.createRuntimeImages()
 	media_rt.createRuntimeAudio()
 	media_rt.createRuntimeVideo()

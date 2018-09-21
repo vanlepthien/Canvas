@@ -1,5 +1,7 @@
 'use strict'
 
+var global_dimensions = {}
+
 var canvas_base = {}
 
 canvas_base.runtime = {}
@@ -32,6 +34,8 @@ canvas_base.operation = {}
 
 canvas_base.running = {}
 
+canvas_base.svg = {}
+
 // Derived backwards map of imageset to runtime
 // entries created in rt_resolve
 
@@ -48,17 +52,21 @@ var rt = {}
 // operations methods container
 var ops = {}
 
-//runtime image methods container
+// runtime image methods container
 
 var image_rt = {}
 
-//runtime audio and video methods container
+// runtime audio and video methods container
 
 var media_rt = {}
 
 // event methods container
 
 var event_rt = {}
+
+// svg methods container
+
+var svg_rt = {}
 
 // canvas management
 
@@ -67,20 +75,57 @@ canvasses.overCanvas = ""
 
 // Define functions to access globals
 
-var Runtime = function(){return canvas_base.runtime}
-var Events = function(){return canvas_base.event}
-var Templates = function(){return canvas_base.template}
-var Running = function(){return canvas_base.running}
-var ImageSet = function(){return canvas_base.imageset}
-var AudioSet = function(){return canvas_base.audioset}
-var VideoSet = function(){return canvas_base.videoset}
-var RuntimeImage = function(){return canvas_base.runtime_images}
-var RuntimeAudio = function(){return canvas_base.runtime_audios}
-var RuntimeVideo = function(){return canvas_base.runtime_videos}
-var Images = function(){return canvas_base.images}
-var CImages = function(){return canvas_base.cimages}
-var Audios = function(){return canvas_base.audios}
-var Videos = function(){return canvas_base.videos}
-var Operation = function(){return canvas_base.operation}
-var CanvasMap = function(){return canvas_base.canvas_map}
-var ImageToRuntime = function(){return canvas_base.image_runtime_map}
+var Runtime = function() {
+    return canvas_base.runtime
+}
+var Events = function() {
+    return canvas_base.event
+}
+var Templates = function() {
+    return canvas_base.template
+}
+var Running = function() {
+    return canvas_base.running
+}
+var ImageSet = function() {
+    return canvas_base.imageset
+}
+var AudioSet = function() {
+    return canvas_base.audioset
+}
+var VideoSet = function() {
+    return canvas_base.videoset
+}
+var RuntimeImage = function() {
+    return canvas_base.runtime_images
+}
+var RuntimeAudio = function() {
+    return canvas_base.runtime_audios
+}
+var RuntimeVideo = function() {
+    return canvas_base.runtime_videos
+}
+var Images = function() {
+    return canvas_base.images
+}
+var CImages = function() {
+    return canvas_base.cimages
+}
+var Audios = function() {
+    return canvas_base.audios
+}
+var Videos = function() {
+    return canvas_base.videos
+}
+var Operation = function() {
+    return canvas_base.operation
+}
+var CanvasMap = function() {
+    return canvas_base.canvas_map
+}
+var ImageToRuntime = function() {
+    return canvas_base.image_runtime_map
+}
+var SVG = function() {
+    return canvas_base.svg
+}

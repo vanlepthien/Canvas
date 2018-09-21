@@ -14,6 +14,9 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 			generated : true,
 		}
 	}
+	
+	global_dimensions = dimensions;
+	
 	var runtime = Runtime()
 	var distances = []
 	var distanceMap = {}
@@ -60,9 +63,15 @@ canvasses.generateCanvasses = function(id, model_canvas) {
 
 	for ( var key in runtime) {
 		var rt_operation = runtime[key]
-		if ("usecanvas" in rt_operation) {
-			continue
-		} else if ("distance" in rt_operation) {
+        if ("usecanvas" in rt_operation) {
+            continue
+        }
+        if (rt_operation.operation == "svg") {
+            var _svg = $(rt_operation.svgid)
+            _svg.css("z-index", distanceMap[rt_operation.distance])
+            continue;
+		} 
+        if ("distance" in rt_operation) {
 			var c = document.createElement("canvas")
 			div.appendChild(c)
 			if (Modernizr.objectfit) {

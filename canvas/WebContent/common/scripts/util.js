@@ -636,21 +636,22 @@ util.setSVGCssValue = function(image_state, image_meta, template, imageinfo, rt_
 util.getInitialPosition = function(rt_operation){
 	var x = Number.MAX_VALUE
 	var y = Number.MAX_VALUE
+	var baseDimensions = rt_operation.canvas || global_dimensions
 	if ("position" in rt_operation) {
 		if (Array.isArray(rt_operation.position)) {
 			if (rt_operation.position.length > 0) {
-				x = util.valueToPosition(rt_operation.position[0], rt_operation.canvas.width)
+				x = util.valueToPosition(rt_operation.position[0], baseDimensions.width)
 			}
 			if (rt_operation.position.length > 1) {
-				y = util.valueToPosition(rt_operation.position[1], rt_operation.canvas.height)
+				y = util.valueToPosition(rt_operation.position[1], baseDimensions.height)
 			}
 		}
 	}
 	if (x == Number.MAX_VALUE) {
-		x = rt_operation.canvas.width / 2
+		x = baseDimensions.width / 2
 	}
 	if (y == Number.MAX_VALUE) {
-		y = rt_operation.canvas.height / 2
+		y = baseDimensions.height / 2
 	}
 
 	var align
