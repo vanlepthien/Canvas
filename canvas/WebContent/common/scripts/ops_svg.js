@@ -32,8 +32,17 @@ ops.svg = {
 		var svg_elements = SVG()
 		var operation = Operation()
 		
+		var xy = util.getInitialPosition( rt_operation )
+
+        var x = xy[0]
+        var y = xy[1]
+
+		
 		var state = rt_operation.state || {}
 		rt_operation.state = state
+		
+		state.x = x
+		state.y = y
 				
 	    var meta = rt_operation.meta || {}
 		rt_operation.meta = meta
@@ -70,6 +79,11 @@ ops.svg = {
 		state.display = true
 
 		meta.interval = rt_operation.interval || 10
+		
+        if ( rt_operation.init && typeof rt_operation.init == "function" ) {
+            rt_operation.init( rt_operation )
+        }
+
 	},
 
 	nextState : function(rt_operation) {
@@ -82,17 +96,18 @@ ops.svg = {
 		var meta = rt_operation.meta
         if(rt_operation.action){
             rt_operation.action(rt_operation)
-        } else{
-            var speed = util.get3DSpeed(rt_operation)
-            state.xspeed = speed.xspeed
-            state.yspeed = speed.yspeed
-            state.zspeed = speed.zspeed
-            state.x = (state.x + speed.xspeed) % global_dimensions.width
-            state.y = (state.y + speed.yspeed) % global_dimensions.height
-            state.z = state.z + speed.zspeed
-            var rotationSpeed = util.getRotationSpeed(rt_operation)
-            state.rotation = state.rotation + rotationSpeed
         }
+		
+        var speed = util.get3DSpeed(rt_operation)
+        state.xspeed = speed.xspeed
+        state.yspeed = speed.yspeed
+        state.zspeed = speed.zspeed
+        state.x = (state.x + speed.xspeed) % global_dimensions.width
+        state.y = (state.y + speed.yspeed) % global_dimensions.height
+        state.z = state.z + speed.zspeed
+        var rotationSpeed = util.getRotationSpeed(rt_operation)
+        state.rotation = state.rotation + rotationSpeed
+        
 		state.x_pos = state.x
 		if (state.x_pos > 0) {
 			state.x_pos -= global_dimensions.width
