@@ -687,7 +687,7 @@ util.getInitialPosition = function(rt_operation){
 	}
 	
 	if(y_align != 0){
-		y_shift = width * y_align
+		y_shift = height * y_align
 	}
 
 	x = x += x_shift

@@ -259,6 +259,9 @@ CImage.prototype.updateSVG = function() {
     if (this.y) {
         this.svg.setAttribute("y", this.y)
     }
+    $(this.svg).css("position", "fixed")
+    $(this.svg).css("top", this.x)
+    $(this.svg).css("left", this.y)
 }
 
 CImage.prototype.loadSVGToImage =
