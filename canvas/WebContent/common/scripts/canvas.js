@@ -122,7 +122,7 @@ function buildImageEntry(name, configuration) {
 // img.src = url
 // }
 //
-
+//               1                    12        23     3   4   4   5   5   6   6   7   7     8       8
 var svg_regex = /([\s\S]*[<]svg[\s\S]*)(viewBox=)(\"|\')\s*(\S+)\s*(\S+)\s*(\S+)\s*(\S*)\s*\3([\s\S]*)/
 var svg_replace2 = "$1 width='$6' height='$7' $2$3$4 $5 $6 $7$3$8"
 
